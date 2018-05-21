@@ -1,5 +1,7 @@
 # kafka-junit
 
+[![Build Status](https://travis-ci.org/mguenther/kafka-junit.svg?branch=master)](https://travis-ci.org/mguenther/kafka-junit.svg)
+
 This repository contains JUnit rule implementations that enables developers to start and stop a complete Kafka cluster from within a JUnit test. It furthermore provides convenient accessors to interact with the embedded Kafka cluster in a non-obtrusive way.
 
 ## Using kafka-junit in your tests
@@ -224,7 +226,9 @@ cluster.send(sendRequest);
 #### Consuming only values
 
 ```java
-ReadKeyValues<Object, String> readRequest = ReadKeyValues.<Object, String>from("test-topic").useDefaults();
+ReadKeyValues<Object, String> readRequest = ReadKeyValues
+  .<Object, String>from("test-topic")
+  .useDefaults();
 
 List<String> values = cluster.readValues(readRequest);
 
@@ -234,7 +238,9 @@ assertThat(values.size(), is(3));
 #### Consuming key-values
 
 ```java
-ReadKeyValues<String, String> readRequest = ReadKeyValues.<String, String>from("test-topic").useDefaults();
+ReadKeyValues<String, String> readRequest = ReadKeyValues
+  .<String, String>from("test-topic")
+  .useDefaults();
 
 List<KeyValue<String, String>> consumedRecords = cluster.read(readRequest);
 
@@ -244,7 +250,9 @@ assertThat(consumedRecords.size(), is(3));
 #### Observing a topic until N records have been consumed
 
 ```java
-ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.<String, String>on("test-topic", 3).useDefaults();
+ObserveKeyValues<String, String> observeRequest = ObserveKeyValues
+  .<String, String>on("test-topic", 3)
+  .useDefaults();
 
 cluster.observe(observeRequest);
 ```
@@ -255,7 +263,7 @@ cluster.observe(observeRequest);
 
 Class `EmbeddedKafkaClusterRule` as well as `EmbeddedKafkaCluster` expose convenience methods for managing Kafka topics. Have a look at the `TopicManager` interface.
 
-```class
+```java
 /**
  * Provides the means to manage Kafka topics. All of the operations a {@code TopicManager} provides
  * are synchronous in their nature.
