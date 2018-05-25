@@ -2,7 +2,6 @@ package net.mguenther.kafka;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.apache.kafka.streams.KeyValue;
 import org.junit.rules.ExternalResource;
 
 import java.util.List;

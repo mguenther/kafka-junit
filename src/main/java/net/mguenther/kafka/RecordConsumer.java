@@ -1,12 +1,10 @@
 package net.mguenther.kafka;
 
-import org.apache.kafka.streams.KeyValue;
-
 import java.util.List;
 
 /**
  * Provides the means to read key-value pairs or un-keyed values from a Kafka topic as well
- * as the possiblity to watch given topics until a certain amount of records have been consumed
+ * as the possibility to watch given topics until a certain amount of records have been consumed
  * from them. All of the operations a {@code RecordConsumer} provides are synchronous in their
  * nature.
  */

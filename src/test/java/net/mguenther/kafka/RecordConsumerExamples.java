@@ -1,6 +1,5 @@
 package net.mguenther.kafka;
 
-import org.apache.kafka.streams.KeyValue;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;

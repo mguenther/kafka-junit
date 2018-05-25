@@ -1,7 +1,6 @@
 package net.mguenther.kafka;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.streams.KeyValue;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;

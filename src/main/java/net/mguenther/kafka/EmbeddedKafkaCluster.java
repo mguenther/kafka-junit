@@ -20,7 +20,6 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.errors.InvalidTopicException;
 import org.apache.kafka.common.errors.TopicExistsException;
-import org.apache.kafka.streams.KeyValue;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -104,7 +103,8 @@ public class EmbeddedKafkaCluster implements EmbeddedLifecycle, RecordProducer, 
         final List<RecordMetadata> metadata = new ArrayList<>(sendRequest.getRecords().size());
         try {
             for (KeyValue<K, V> record : sendRequest.getRecords()) {
-                final Future<RecordMetadata> f = producer.send(new ProducerRecord<>(sendRequest.getTopic(), record.key, record.value));
+                final ProducerRecord<K, V> producerRecord = new ProducerRecord<>(sendRequest.getTopic(), null, record.getKey(), record.getValue(), record.getHeaders());
+                final Future<RecordMetadata> f = producer.send(producerRecord);
                 metadata.add(f.get());
             }
         } finally {
@@ -130,7 +130,7 @@ public class EmbeddedKafkaCluster implements EmbeddedLifecycle, RecordProducer, 
     @Override
     public <V> List<V> readValues(final ReadKeyValues<Object, V> readRequest) {
         final List<KeyValue<Object, V>> kvs = read(readRequest);
-        return Collections.unmodifiableList(kvs.stream().map(kv -> kv.value).collect(Collectors.toList()));
+        return Collections.unmodifiableList(kvs.stream().map(KeyValue::getValue).collect(Collectors.toList()));
     }
 
     @Override
@@ -144,7 +144,7 @@ public class EmbeddedKafkaCluster implements EmbeddedLifecycle, RecordProducer, 
         while (totalPollTimeMillis < readRequest.getMaxTotalPollTimeMillis() && continueConsuming(consumedRecords.size(), limit)) {
             final ConsumerRecords<K, V> records = consumer.poll(pollIntervalMillis);
             for (ConsumerRecord<K, V> record : records) {
-                consumedRecords.add(new KeyValue<>(record.key(), record.value()));
+                consumedRecords.add(new KeyValue<>(record.key(), record.value(), record.headers()));
             }
             totalPollTimeMillis += pollIntervalMillis;
         }
