@@ -1,20 +1,18 @@
 package net.mguenther.kafka;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static net.mguenther.kafka.EmbeddedKafkaClusterConfig.useDefaults;
 import static net.mguenther.kafka.EmbeddedKafkaClusterRule.provisionWith;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@Ignore
-public class RecordConsumerExamples {
+public class RecordConsumerTest {
 
     @Rule
     public EmbeddedKafkaClusterRule cluster = provisionWith(useDefaults());
@@ -25,7 +23,7 @@ public class RecordConsumerExamples {
         List<KeyValue<String, String>> records = new ArrayList<>();
 
         records.add(new KeyValue<>("aggregate", "a"));
-        records.add(new KeyValue<>("aggregate", "c"));
+        records.add(new KeyValue<>("aggregate", "b"));
         records.add(new KeyValue<>("aggregate", "c"));
 
         SendKeyValues<String, String> sendRequest = SendKeyValues.to("test-topic", records).useDefaults();
@@ -40,7 +38,7 @@ public class RecordConsumerExamples {
 
         List<String> values = cluster.readValues(readRequest);
 
-        assertThat(values.size(), is(3));
+        assertThat(values.size()).isEqualTo(3);
     }
 
     @Test
@@ -50,7 +48,7 @@ public class RecordConsumerExamples {
 
         List<KeyValue<String, String>> consumedRecords = cluster.read(readRequest);
 
-        assertThat(consumedRecords.size(), is(3));
+        assertThat(consumedRecords.size()).isEqualTo(3);
     }
 
     @Test
@@ -58,6 +56,18 @@ public class RecordConsumerExamples {
 
         ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.<String, String>on("test-topic", 3).useDefaults();
 
-        cluster.observe(observeRequest); // throws an AssertionError if timeout elapses before requested number of records have been read
+        int observedRecords = cluster.observe(observeRequest).size();
+
+        assertThat(observedRecords).isEqualTo(3);
+    }
+
+    @Test(expected = AssertionError.class)
+    public void observeThrowsAnAssertionErrorIfTimeoutElapses() throws Exception {
+
+        ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.<String, String>on("test-topic", 4)
+                .observeFor(5, TimeUnit.SECONDS)
+                .build();
+
+        cluster.observe(observeRequest);
     }
 }

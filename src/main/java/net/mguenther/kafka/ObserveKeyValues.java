@@ -40,12 +40,12 @@ public class ObserveKeyValues<K, V> {
         }
 
         public <T> ObserveKeyValuesBuilder<K, V> withAll(final Properties consumerProps) {
-            consumerProps.putAll(consumerProps);
+            this.consumerProps.putAll(consumerProps);
             return this;
         }
 
         private <T> void ifNonExisting(final String propertyName, final T value) {
-            if (consumerProps.contains(propertyName)) return;
+            if (consumerProps.get(propertyName) != null) return;
             consumerProps.put(propertyName, value);
         }
 

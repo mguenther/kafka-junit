@@ -26,7 +26,7 @@ public class KeyValue<K, V> {
     }
 
     public void withHeader(final String headerName, final String headerValue, final Charset charset) {
-        withHeader(headerName, headerValue, charset);
+        withHeader(headerName, headerValue.getBytes(charset));
     }
 
     public void withHeader(final String headerName, final byte[] headerValue) {

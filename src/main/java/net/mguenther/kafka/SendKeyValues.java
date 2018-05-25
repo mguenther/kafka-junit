@@ -30,13 +30,13 @@ public class SendKeyValues<K, V> {
             return this;
         }
 
-        public <T> SendKeyValuesBuilder<K, V> with(final Properties producerProps) {
+        public <T> SendKeyValuesBuilder<K, V> withAll(final Properties producerProps) {
             producerProps.putAll(producerProps);
             return this;
         }
 
         private <T> void ifNonExisting(final String propertyName, final T value) {
-            if (producerProps.contains(propertyName)) return;
+            if (producerProps.get(propertyName) != null) return;
             producerProps.put(propertyName, value);
         }
 

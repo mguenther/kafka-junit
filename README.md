@@ -26,7 +26,7 @@ The same applies for `@ClassRule`.
 
 ### What about JUnit 5?
 
-There is currently no support for JUnit 5.
+There is currently no support for JUnit 5. PRs are welcome, though!
 
 ### Alternative ways
 
@@ -100,7 +100,7 @@ Implementations of the `RecordProducer` inteface use the high-level producer API
 
 All `send` operations are executed synchronously.
 
-With these abstractions in place, sending content to your embedded Kafka cluster is easy. Have a look at the following examples (cf. examples taken from class `RecordProducerExamples`). One thing you should notice is that you do not have to specify `bootstrap.servers`. `kafka-junit` adjusts a given client configuration so that you can start off with meaningful defaults that work out-of-the-box. You'll only have to provide configuration overrides if it is absolutely necessary for your test.
+With these abstractions in place, sending content to your embedded Kafka cluster is easy. Have a look at the following examples (cf. examples taken from class `RecordProducerTest`). One thing you should notice is that you do not have to specify `bootstrap.servers`. `kafka-junit` adjusts a given client configuration so that you can start off with meaningful defaults that work out-of-the-box. You'll only have to provide configuration overrides if it is absolutely necessary for your test.
 
 #### Sending un-keyed values using defaults
 
@@ -207,7 +207,7 @@ Implementations of the `RecordConsumer` interface use the high-level consumer AP
 
 All operations are executed synchronously.
 
-With these abstractions in place, reading content from a Kafka topic is easy. As with a `RecordProducer`, there is no need to specify things like `bootstrap.servers` - `kafka-junit` will provide the necessary configuration. Have a look at the following examples (cf. examples taken from class `RecordConsumerExamples`).
+With these abstractions in place, reading content from a Kafka topic is easy. As with a `RecordProducer`, there is no need to specify things like `bootstrap.servers` - `kafka-junit` will provide the necessary configuration. Have a look at the following examples (cf. examples taken from class `RecordConsumerTest`).
 
 All of the examples shown underneath provision `test-topic` with three Kafka records, like so:
 

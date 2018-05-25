@@ -122,7 +122,7 @@ public class EmbeddedKafkaCluster implements EmbeddedLifecycle, RecordProducer, 
                 .collect(Collectors.toList());
         final SendKeyValues<Object, V> keyValueRequest = SendKeyValues
                 .to(sendRequest.getTopic(), records)
-                .with(sendRequest.getProducerProps())
+                .withAll(sendRequest.getProducerProps())
                 .build();
         return send(keyValueRequest);
     }
@@ -148,6 +148,7 @@ public class EmbeddedKafkaCluster implements EmbeddedLifecycle, RecordProducer, 
             }
             totalPollTimeMillis += pollIntervalMillis;
         }
+        consumer.commitSync();
         consumer.close();
         return Collections.unmodifiableList(consumedRecords);
     }
@@ -185,11 +186,11 @@ public class EmbeddedKafkaCluster implements EmbeddedLifecycle, RecordProducer, 
     public <K, V> List<KeyValue<K, V>> observe(final ObserveKeyValues<K, V> observeRequest) throws InterruptedException {
         final List<KeyValue<K, V>> totalConsumedRecords = new ArrayList<>(observeRequest.getExpected());
         final long startNanos = System.nanoTime();
+        final ReadKeyValues<K, V> readRequest = ReadKeyValues.<K, V>from(observeRequest.getTopic())
+                .withAll(observeRequest.getConsumerProps())
+                .withLimit(observeRequest.getExpected())
+                .build();
         while (true) {
-            final ReadKeyValues<K, V> readRequest = ReadKeyValues.<K, V>from(observeRequest.getTopic())
-                    .withAll(observeRequest.getConsumerProps())
-                    .withLimit(observeRequest.getExpected())
-                    .build();
             final List<KeyValue<K, V>> consumedRecords = read(readRequest);
             totalConsumedRecords.addAll(consumedRecords);
             if (totalConsumedRecords.size() >= observeRequest.getExpected()) break;

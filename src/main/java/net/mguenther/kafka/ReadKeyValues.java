@@ -55,7 +55,7 @@ public class ReadKeyValues<K, V> {
         }
 
         private <T> void ifNonExisting(final String propertyName, final T value) {
-            if (consumerProps.contains(propertyName)) return;
+            if (consumerProps.get(propertyName) != null) return;
             consumerProps.put(propertyName, value);
         }
 

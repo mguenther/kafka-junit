@@ -3,6 +3,7 @@ package net.mguenther.kafka;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.ArrayList;
@@ -31,8 +32,13 @@ public class SendValues<V> {
             return this;
         }
 
+        public <T> SendValuesBuilder<V> withAll(final Properties producerProps) {
+            this.producerProps.putAll(producerProps);
+            return this;
+        }
+
         private <T> void ifNonExisting(final String propertyName, final T value) {
-            if (producerProps.contains(propertyName)) return;
+            if (producerProps.get(propertyName) != null) return;
             producerProps.put(propertyName, value);
         }
 
@@ -42,8 +48,8 @@ public class SendValues<V> {
         }
 
         public SendValues<V> build() {
-            ifNonExisting("key.serializer", StringSerializer.class);
-            ifNonExisting("value.serializer", StringSerializer.class);
+            ifNonExisting(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+            ifNonExisting(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
             return new SendValues<>(topic, values, producerProps);
         }
     }

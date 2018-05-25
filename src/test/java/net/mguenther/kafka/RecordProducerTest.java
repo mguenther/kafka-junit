@@ -1,7 +1,6 @@
 package net.mguenther.kafka;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -10,9 +9,9 @@ import java.util.List;
 
 import static net.mguenther.kafka.EmbeddedKafkaClusterConfig.useDefaults;
 import static net.mguenther.kafka.EmbeddedKafkaClusterRule.provisionWith;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@Ignore
-public class RecordProducerExamples {
+public class RecordProducerTest {
 
     @Rule
     public EmbeddedKafkaClusterRule cluster = provisionWith(useDefaults());
@@ -23,6 +22,9 @@ public class RecordProducerExamples {
         SendValues<String> sendRequest = SendValues.to("test-topic", "a", "b", "c").useDefaults();
 
         cluster.send(sendRequest);
+
+        assertThat(cluster.observeValues(ObserveKeyValues.<Object, String>on("test-topic", 3).build()).size())
+            .isEqualTo(3);
     }
 
     @Test
@@ -37,6 +39,9 @@ public class RecordProducerExamples {
         SendKeyValues<String, String> sendRequest = SendKeyValues.to("test-topic", records).useDefaults();
 
         cluster.send(sendRequest);
+
+        assertThat(cluster.observeValues(ObserveKeyValues.<Object, String>on("test-topic", 3).build()).size())
+                .isEqualTo(3);
     }
 
     @Test
@@ -48,5 +53,8 @@ public class RecordProducerExamples {
                 .build();
 
         cluster.send(sendRequest);
+
+        assertThat(cluster.observeValues(ObserveKeyValues.<Object, String>on("test-topic", 3).build()).size())
+                .isEqualTo(3);
     }
 }

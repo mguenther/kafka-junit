@@ -23,8 +23,13 @@ public class EmbeddedKafkaConfig {
             return this;
         }
 
+        public EmbeddedKafkaConfigBuilder withAll(final Properties overrides) {
+            properties.putAll(overrides);
+            return this;
+        }
+
         private <T> void ifNonExisting(final String propertyName, final T value) {
-            if (properties.contains(propertyName)) return;
+            if (properties.get(propertyName) != null) return;
             properties.put(propertyName, value);
         }
 

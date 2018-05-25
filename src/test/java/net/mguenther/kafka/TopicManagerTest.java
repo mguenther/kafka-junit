@@ -1,14 +1,13 @@
 package net.mguenther.kafka;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import static net.mguenther.kafka.EmbeddedKafkaClusterConfig.useDefaults;
 import static net.mguenther.kafka.EmbeddedKafkaClusterRule.provisionWith;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@Ignore
-public class TopicManagerExamples {
+public class TopicManagerTest {
 
     @Rule
     public EmbeddedKafkaClusterRule cluster = provisionWith(useDefaults());
@@ -17,7 +16,12 @@ public class TopicManagerExamples {
     public void manageTopics() {
 
         cluster.createTopic(TopicConfig.forTopic("test-topic").useDefaults());
-        cluster.exists("test-topic");
+
+        assertThat(cluster.exists("test-topic")).isTrue();
+
+        // the topic will not be deleted immediately, but "marked for deletion"
+        // hence a check on exists would return "false" directly after deleting
+        // the topic
         cluster.deleteTopic("test-topic");
     }
 }
