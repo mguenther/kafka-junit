@@ -26,7 +26,7 @@ The same applies for `@ClassRule`.
 
 ### What about JUnit 5?
 
-There is currently no support for JUnit 5. PRs are welcome, though!
+There is currently no support for JUnit 5. PRs are welcome, though! See [ISSUE-004](https://github.com/mguenther/kafka-junit/issues/4) for further information.
 
 ### Alternative ways
 
@@ -330,3 +330,10 @@ cluster.exists("test-topic");
 ## License
 
 This work is released under the terms of the Apache 2.0 license.
+
+<p>
+    <div align="center">
+        <div><img src="made-in-darmstadt.jpg"></div>
+        <div><a href="https://mguenther.net">mguenther.net</a></div>
+    </div>
+</p>
