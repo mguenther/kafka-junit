@@ -1,0 +1,43 @@
+[[section:managing-topics]]
+
+== Managing topics
+
+Class `EmbeddedKafkaClusterRule` as well as `EmbeddedKafkaCluster` expose convenience methods for managing Kafka topics. Have a look at the `TopicManager` interface (Java omitted for brevity).
+
+```java
+/**
+public interface TopicManager {
+
+    void createTopic(TopicConfig config);
+    void deleteTopic(String topic);
+    boolean exists(String topic);
+}
+```
+
+Implementations of the `TopicCreator` interface currently use the `zkclient` library for topic management.
+
+All operations are executed *synchronously*.
+
+=== Creating a topic
+
+```java
+cluster.createTopic(TopicConfig.forTopic("test-topic").useDefaults());
+```
+
+NOTE: By default, Kafka for JUnit enables the automatic creation of topics at the broker with defaults that should be sensible for local testing. However, if you find yourself in the situation to create a topic with a specific replication factor or number of partitions that deviate from their default setting, you should create that topic with the respective settings before writing the first Kafka record to it.
+
+=== Deleting a topic
+
+```java
+cluster.deleteTopic("test-topic");
+```
+
+NOTE: Deleting a topic will only set a deletion marker for that topic. The topic may not be deleted immediately after `deleteTopic` completes.
+
+=== Determine whether a topic exists
+
+```java
+cluster.exists("test-topic");
+```
+
+NOTE: Returns `true` even if the topic is marked for deletion.

@@ -1,0 +1,149 @@
+[[section:consuming-records]]
+
+== Consuming records
+
+Class `EmbeddedKafkaClusterRule` as well as `EmbeddedKafkaCluster` expose convenience methods for consuming Kafka records. Have a look at the `RecordConsumer` interface (Javadoc omitted for brevity).
+
+```java
+public interface RecordConsumer {
+
+    <V> List<V> readValues(ReadKeyValues<String, V> readRequest);
+    <V> List<V> observeValues(ObserveKeyValues<String, V> observeRequest) throws InterruptedException;
+    <K, V> List<KeyValue<K, V>> read(ReadKeyValues<K, V> readRequest);
+    <K, V> List<KeyValue<K, V>> observe(ObserveKeyValues<K, V> observeRequest) throws InterruptedException;
+}
+```
+
+Implementations of the `RecordConsumer` interface use the high-level consumer API that comes with Apache Kafka. Hence, the underlying consumer is a `KafkaConsumer`. This `KafkaConsumer` is fully parameterizable via both `ReadKeyValues` and `ObserveKeyValues` by means of `kafka.consumer.ConsumerConfig`.
+
+All operations are executed *synchronously*.
+
+With these abstractions in place, reading content from a Kafka topic is easy. As with a `RecordProducer`, there is no need to specify things like `bootstrap.servers` - Kafka for JUnit will provide the necessary configuration. Have a look at the following examples.
+
+=== Consuming values using defaults
+
+```java
+ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic").useDefaults();
+
+List<String> values = cluster.readValues(readRequest);
+```
+
+By default, `ReadKeyValues.from` uses `StringDeserializer.class` for both the record key and value. Calling `readValues` just yields the values from the consumed Kafka records. Please have a look at the next example if you are interested in obtaining not only the values, but also the record key and possibly attached headers.
+
+=== Consuming key-value based records using defaults
+
+```java
+ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic").useDefaults();
+
+List<KeyValue<String, String>> consumedRecords = cluster.read(readRequest);
+```
+
+Notice the difference to the example before this one: Instead of calling `readValues` we call `read` using the same `ReadKeyValues` request. Instead of a `List<String>`, this yields a `List<KeyValue<String, String>>` where each `KeyValue` is comprised of the record key, the record value and the headers that have been attached to that record.
+
+=== Consuming key-value based records using overrides
+
+```java
+ReadKeyValues<String, Long> readRequest = ReadKeyValues.from("test-topic-value-types", Long.class)
+        .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class)
+        .build();
+
+List<KeyValue<String, Long>> consumedRecords = cluster.read(readRequest);
+```
+
+Since we are interested in consuming records that use `Long`-based values, we have to parameterize the `ReadKeyValues` request such that the proper type is bound and a compatible `Deserializer` is used. This is all done by calling `from(String, Class<V>)` and overriding the default deserializer using `with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class)`.
+
+=== Working with attached headers
+
+```java
+Headers headersOfFirstRecord = cluster.read(ReadKeyValues.from("test-topic").useDefaults())
+        .stream()
+        .findFirst()
+        .map(KeyValue::getHeaders)
+        .orElseThrow(() -> new RuntimeException("No records found."));
+```
+
+The example grabs the `Headers` of the first record that it reads. `Headers` is a class that comes from the Kafka Client API. See its link:https://kafka.apache.org/10/javadoc/org/apache/kafka/common/header/Headers.html[Javadoc] for a thorough explanation of its public interface.
+
+=== Consuming values or records transactionally
+
+```java
+ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic")
+    .with(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed")
+    .build();
+
+List<String> consumedValues = cluster.readValues(readRequest);
+```
+
+Consuming records that have been written transactionally is just a matter of the configuration of the underlying `KafkaConsumer`. As `ReadKeyValues` provides full access to the configuration of the `KafkaConsumer` a simple `with(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed")` suffices to enable transactional consume semantics.
+
+=== Observing a topic until `N` values have been consumed
+
+```java
+ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 3).useDefaults();
+
+List<String> observedValues = cluster.observeValues(observeRequest);
+```
+
+Sometimes you are not interested in reading all available values from a topic, but want to block test execution until a certain amount of values have been read from a topic. This enables you to synchronize your test logic with the system-under-test as the test blocks until the system-under-test has been able to write its records to the Kafka topic you are currently observing.
+
+Of course, observing a topic cannot run indefinitely and thus has to be parameterized with a timeout. There is a default timeout which should be sensible for most usage scenarios. However, if you need to observe a topic for a longer amount of time, you can easily parameterize the `ObserveKeyValues` request using `observeFor(int, TimeUnit)`.
+
+If the timeout elapses before the desired amount of values have been read from the given topic, the `observe` method will throw an `AssertionError`. Hence, if you are just interested in the fact that records have been written by the system-under-test to the topic you are observing, it fully suffices to use
+
+```java
+cluster.observeValues(observeRequest);
+```
+
+and let the timeout elapse to fail the test.
+
+If you are interested in the observed values, you can however simply grab all records - like shown above - and perform additional assertions on them.
+
+=== Observing a topic until `N` records have been consumed
+
+```java
+ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 3).useDefaults();
+
+List<KeyValue<String, String>> observedValues = cluster.observe(observeRequest);
+```
+
+This is just the same as the example above, but instead of observing and returning `List<String>` it returns a `List<KeyValue<String, String>>` in the example.
+
+=== Using key filters when consuming or observing a topic
+
+```java
+Predicate<String> keyFilter = k -> Integer.parseInt(k) % 2 == 0;
+
+ReadKeyValues<String, Integer> readRequest = ReadKeyValues.from("test-topic", Integer.class)
+        .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
+        .filterOnKeys(keyFilter)
+        .build();
+
+List<KeyValue<String, Integer>> consumedRecords = cluster.read(readRequest);
+```
+
+It is possible to parameterize both `ReadKeyValues` and `ObserveKeyValues` with a key filter. The key filter is modelled using `java.util.function.Predicate` and thus can be arbitrarily complex. The default key filter evaluates to `true` every time, so unless you do not explicitly provide a filter using `filterOnKeys` like in the example, all consumed records pass the filter.
+
+In this example, the filter is quite simply and parses the key of the record into an `Integer` and checks if it is evenly divisible by 2. So, if - for the sake of the example - the topic from which we read contains the keys `"1"`, `"2"`, `"3"` and `"4"`, only those records with keys `"2"` and `"4"` would pass the filter.
+
+NOTE: Applying a key filter is also possible when observing a topic.
+
+=== Using value filters when consuming or observing a topic
+
+```java
+Predicate<Integer> valueFilter = v -> v > 2;
+
+ReadKeyValues<String, Integer> readRequest = ReadKeyValues.from("test-topic", Integer.class)
+        .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
+        .filterOnValues(valueFilter)
+        .build();
+
+List<KeyValue<String, Integer>> consumedRecords = cluster.read(readRequest);
+```
+
+It is possible to parameterize both `ReadKeyValues` and `ObserveKeyValues` with a value filter. Like the key filter, the value filter is also modelled using `java.util.function.Predicate`. The default value filter evaluates to `true` every time, so unless you do not explicitly provide a filter using `filterOnValues` like in the example, all consumed records pass the filter.
+
+In this example, the filter only lets those records pass for which the associated `Integer`-based record value is larger than 2. So, if the topic holds records with values `1`, `2` and `3`, only the record with value `3` would pass the filter.
+
+NOTE: Applying a value filter is also possible when observing a topic.
+
+NOTE: Combining key and value filters is possible. Please note that in this case only such records that pass both the key and value filter are returned. Hence, conjoining key and value filters has `AND` semantics.

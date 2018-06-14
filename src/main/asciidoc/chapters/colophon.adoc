@@ -1,0 +1,5 @@
+[[section:colophon]]
+
+== License
+
+This work is released under the terms of the Apache 2.0 license.

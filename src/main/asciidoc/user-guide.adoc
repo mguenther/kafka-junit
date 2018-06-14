@@ -1,0 +1,31 @@
+:last-update-label:
+:chapter-label:
+:doctype: book
+:linkcss:
+:stylesdir: css/
+:source-highlighter: coderay
+:numbered:
+:imagesdir: chapters
+:icons: font
+:pdf-stylesdir: css/
+:pdf-style: article
+:pdf-page-size: [16.5cm, 23.8cm]
+:experimental:
+:toc-title: Table of Contents
+:figure-caption: Figure
+:table-caption: Table
+:status: Final
+:datum: 2018-06-08
+:author: Markus Günther
+
+= User Guide to *Kafka for JUnit*
+Markus Günther
+0.1.0, 2018-06-14
+
+:toc:
+
+include::chapters/introduction.adoc[]
+include::chapters/producing-records.adoc[]
+include::chapters/consuming-records.adoc[]
+include::chapters/managing-topics.adoc[]
+include::chapters/colophon.adoc[]

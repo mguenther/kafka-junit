@@ -1,0 +1,127 @@
+[[section:producing-records]]
+
+== Producing records
+
+Class `EmbeddedKafkaClusterRule` as well as `EmbeddedKafkaCluster` expose convenience methods for producing new Kafka records. Have a look at the `RecordProducer` interface (Javadoc omitted for brevity).
+
+```java
+public interface RecordProducer {
+
+    <V> List<RecordMetadata> send(SendValues<V> sendRequest) throws ExecutionException, InterruptedException;
+    <V> List<RecordMetadata> send(SendValuesTransactional<V> sendRequest) throws ExecutionException, InterruptedException;
+    <K, V> List<RecordMetadata> send(SendKeyValues<K, V> sendRequest) throws ExecutionException, InterruptedException;
+    <K, V> List<RecordMetadata> send(SendKeyValuesTransactional<K, V> sendRequest) throws ExecutionException, InterruptedException;
+}
+```
+
+Calling `send` using an instance of `SendValues` does just that: It produces un-keyed Kafka records that only feature a value. The key of a record that has been produced this way is simply `null`.  If you wish to associate a key, you can do so by passing an instance of `SendKeyValues` to the `send` method. Both `SendValues` and `SendKeyValues` use the link:https://en.wikipedia.org/wiki/Builder_pattern[Builder pattern] so that creating the resp. send parameterization is easy and does not pollute your test code with any kind of boilerplate.
+
+Implementations of the `RecordProducer` interface use the high-level producer API that comes with Apache Kafka. Hence, the underlying producer is a `KafkaProducer`. This `KafkaProducer` is fully parameterizable via the builders of both `SendValues` and `SendKeyValues`.
+
+All `send` operations are executed *synchronously*.
+
+With these abstractions in place, sending content to your embedded Kafka cluster is easy. Have a look at the following examples . One thing you should notice is that you do not have to specify `bootstrap.servers`. Kafka for JUnit adjusts a given client configuration so that you can start off with meaningful defaults that work out-of-the-box. You'll only have to provide configuration overrides if it is absolutely necessary for your test.
+
+=== Sending non-keyed values using defaults
+
+```java
+SendValues<String> sendRequest = SendValues.to("test-topic", "a", "b", "c").useDefaults();
+cluster.send(sendRequest);
+```
+
+=== Sending non-keyed values using overrides
+
+```java
+SendValues<String> sendRequest = SendValues.to("test-topic", "a", "b", "c")
+        .with(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
+        .with(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "1")
+        .build();
+
+cluster.send(sendRequest);
+```
+
+=== Sending non-keyed values transactionally
+
+```java
+
+SendValuesTransactional<String> sendRequest = SendValuesTransactional
+        .inTransaction("test-topic", Arrays.asList("a", "b", "c"))
+        .useDefaults()
+
+cluster.send(sendRequest);
+```
+
+NOTE: The API of Kafka for JUnit has been designed with great care and readability in mind. Using `static` imports for factory methods shows that we can interact with the embedded Kafka cluster in a lean and readable way.
+
+```java
+cluster.send(inTransaction("test-topic", Arrays.asList("a", "b", "c")).useDefaults());
+```
+
+=== Sending keyed records using defaults
+
+```java
+List<KeyValue<String, String>> records = new ArrayList<>();
+
+records.add(new KeyValue<>("aggregate", "a"));
+records.add(new KeyValue<>("aggregate", "b"));
+records.add(new KeyValue<>("aggregate", "c"));
+
+SendKeyValues<String, String> sendRequest = SendKeyValues.to("test-topic", records).useDefaults();
+
+cluster.send(sendRequest);
+```
+
+=== Sending keyed records using overrides
+
+```java
+List<KeyValue<String, String>> records = new ArrayList<>();
+
+records.add(new KeyValue<>("aggregate", "a"));
+records.add(new KeyValue<>("aggregate", "b"));
+records.add(new KeyValue<>("aggregate", "c"));
+
+SendKeyValues<String, String> sendRequest = SendKeyValues.to("test-topic", records)
+        .with(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
+        .with(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "1")
+        .build();
+
+cluster.send(sendRequest);
+```
+
+=== Sending keyed records transactionally
+
+```java
+List<KeyValue<String, String>> records = new ArrayList<>();
+
+records.add(new KeyValue<>("aggregate", "a"));
+records.add(new KeyValue<>("aggregate", "b"));
+records.add(new KeyValue<>("aggregate", "c"));
+
+cluster.send(inTransaction("test-topic", records).useDefaults());
+```
+
+=== Sending records or values transactionally to multiple topics
+
+```java
+SendValuesTransactional<String> sendRequest = SendValuesTransactional
+        .inTransaction("test-topic-1", Arrays.asList("a", "b"))
+        .inTransaction("test-topic-2", Arrays.asList("c", "d"))
+        .useDefaults();
+
+cluster.send(sendRequest);
+```
+
+=== Attaching record headers
+
+```java
+KeyValue<String, String> record = new KeyValue<>("a", "b");
+record.addHeader("client", "kafka-junit-test".getBytes("utf-8"));
+
+SendKeyValues<String, String> sendRequest = SendKeyValues
+        .to("test-topic", Collections.singletonList(record))
+        .useDefaults();
+
+cluster.send(sendRequest);
+```
+
+NOTE: You can also pre-construct an instance of `Headers` and pass it along via the constructor of a `KeyValue`.
