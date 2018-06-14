@@ -6,24 +6,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.4">
 <meta name="author" content="Markus Günther">
-<title>User Guide to kafka-junit</title>
+<title>User Guide to Kafka for JUnit</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <link rel="stylesheet" href="css//asciidoctor.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css">
 </head>
 <body class="book toc2 toc-left">
 <div id="header">
-<h1>User Guide to kafka-junit</h1>
+<h1>User Guide to <strong>Kafka for JUnit</strong></h1>
 <div class="details">
 <span id="author" class="author">Markus Günther</span><br>
 <span id="revnumber">version 0.1.0,</span>
-<span id="revdate">2018-06-08</span>
+<span id="revdate">2018-06-14</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#section:introduction">1. Introduction</a></li>
-<li><a href="#_using_code_kafka_junit_code_in_your_tests">2. Using <code>kafka-junit</code> in your tests</a>
+<li><a href="#_using_kafka_for_junit_in_your_tests">2. Using Kafka for JUnit in your tests</a>
 <ul class="sectlevel2">
 <li><a href="#_using_junit_4_rules">2.1. Using JUnit 4 rules</a></li>
 <li><a href="#_what_about_junit_5">2.2. What about JUnit 5?</a></li>
@@ -63,6 +63,7 @@
 <li><a href="#_determine_whether_a_topic_exists">6.3. Determine whether a topic exists</a></li>
 </ul>
 </li>
+<li><a href="#section:colophon">7. License</a></li>
 </ul>
 </div>
 </div>
@@ -71,15 +72,15 @@
 <h2 id="section:introduction">1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><code>kafka-junit</code> provides JUnit 4.x rule implementations that enables developers to start and stop a complete Kafka cluster comprised of Kafka brokers and distributed Kafka Connect workers from within a JUnit test. It also provides convenient accessors to interact with such an embedded Kafka cluster in a lean and non-obtrusive way.</p>
+<p><strong>Kafka for JUnit</strong> provides JUnit 4.x rule implementations that enables developers to start and stop a complete Kafka cluster comprised of Kafka brokers and distributed Kafka Connect workers from within a JUnit test. It also provides a rich set of convenient accessors to interact with such an embedded Kafka cluster in a lean and non-obtrusive way.</p>
 </div>
 <div class="paragraph">
-<p><code>kafka-junit</code> can be used to both whitebox-test individual Kafka-based components of your application or to blackbox-test applications that offer an incoming and/or outgoing Kafka-based interface.</p>
+<p>Kafka for JUnit can be used to both whitebox-test individual Kafka-based components of your application or to blackbox-test applications that offer an incoming and/or outgoing Kafka-based interface.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_using_code_kafka_junit_code_in_your_tests">2. Using <code>kafka-junit</code> in your tests</h2>
+<h2 id="_using_kafka_for_junit_in_your_tests">2. Using Kafka for JUnit in your tests</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_using_junit_4_rules">2.1. Using JUnit 4 rules</h3>
@@ -105,7 +106,7 @@
 <div class="sect2">
 <h3 id="_what_about_junit_5">2.2. What about JUnit 5?</h3>
 <div class="paragraph">
-<p>You can use <code>kafka-junit</code> with JUnit 5 of course. However, with its rule-based implementations, <code>kafka-junit</code> is currently tailored for ease of use with JUnit 4. It implements no JUnit Jupiter extension for JUnit 5. There is an issue for that (cf. <a href="https://github.com/mguenther/kafka-junit/issues/4">ISSUE-004</a>), so the development wrt. a JUnit Jupiter extension is planned for a future release. PRs are welcome, though!</p>
+<p>You can use Kafka for JUnit with JUnit 5 of course. However, with its rule-based implementations, Kafka for JUnit is currently tailored for ease of use with JUnit 4. It implements no JUnit Jupiter extension for JUnit 5. There is an issue for that (cf. <a href="https://github.com/mguenther/kafka-junit/issues/4">ISSUE-004</a>), so the development wrt. a JUnit Jupiter extension is planned for a future release. PRs are welcome, though!</p>
 </div>
 </div>
 <div class="sect2">
@@ -141,7 +142,7 @@
 </colgroup>
 <thead>
 <tr>
-<th class="tableblock halign-left valign-top">Version of kafka-junit</th>
+<th class="tableblock halign-left valign-top">Version of Kafka for JUnit</th>
 <th class="tableblock halign-left valign-top">Supports</th>
 </tr>
 </thead>
@@ -152,6 +153,9 @@
 </tr>
 </tbody>
 </table>
+<div class="paragraph">
+<p>Currently, the only supported version is Apache Kafka 1.0.x. Support for Apache Kafka 1.1.x and upcoming releases is planned.</p>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -172,7 +176,7 @@
 </div>
 </div>
 <div class="paragraph">
-<p>Calling <code>send</code> using an instance of <code>SendValues</code> does just that: It produces un-keyed Kafka records that only feature a value. The key of a record that has been produced this way is simply <code>null</code>.  If you wish to associate a key, you can do so by passing an instance of <code>SendKeyValues</code> to the <code>send</code> method. Both <code>SendValues</code> and <code>SendKeyValues</code> use the [Builder pattern](<a href="https://en.wikipedia.org/wiki/Builder_pattern" class="bare">https://en.wikipedia.org/wiki/Builder_pattern</a>) so that creating the resp. send parameterization is easy and does not pollute your test code with any kind of boilerplate.</p>
+<p>Calling <code>send</code> using an instance of <code>SendValues</code> does just that: It produces un-keyed Kafka records that only feature a value. The key of a record that has been produced this way is simply <code>null</code>.  If you wish to associate a key, you can do so by passing an instance of <code>SendKeyValues</code> to the <code>send</code> method. Both <code>SendValues</code> and <code>SendKeyValues</code> use the <a href="https://en.wikipedia.org/wiki/Builder_pattern">Builder pattern</a> so that creating the resp. send parameterization is easy and does not pollute your test code with any kind of boilerplate.</p>
 </div>
 <div class="paragraph">
 <p>Implementations of the <code>RecordProducer</code> interface use the high-level producer API that comes with Apache Kafka. Hence, the underlying producer is a <code>KafkaProducer</code>. This <code>KafkaProducer</code> is fully parameterizable via the builders of both <code>SendValues</code> and <code>SendKeyValues</code>.</p>
@@ -181,7 +185,7 @@
 <p>All <code>send</code> operations are executed <strong>synchronously</strong>.</p>
 </div>
 <div class="paragraph">
-<p>With these abstractions in place, sending content to your embedded Kafka cluster is easy. Have a look at the following examples . One thing you should notice is that you do not have to specify <code>bootstrap.servers</code>. <code>kafka-junit</code> adjusts a given client configuration so that you can start off with meaningful defaults that work out-of-the-box. You&#8217;ll only have to provide configuration overrides if it is absolutely necessary for your test.</p>
+<p>With these abstractions in place, sending content to your embedded Kafka cluster is easy. Have a look at the following examples . One thing you should notice is that you do not have to specify <code>bootstrap.servers</code>. Kafka for JUnit adjusts a given client configuration so that you can start off with meaningful defaults that work out-of-the-box. You&#8217;ll only have to provide configuration overrides if it is absolutely necessary for your test.</p>
 </div>
 <div class="sect2">
 <h3 id="_sending_non_keyed_values_using_defaults">4.1. Sending non-keyed values using defaults</h3>
@@ -223,7 +227,7 @@ cluster.send(sendRequest);</code></pre>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The API of <code>kafka-junit</code> has been designed with great care and readability in mind. Using <code>static</code> imports for factory methods shows that we can interact with the embedded Kafka cluster in a lean and readable way.
+The API of Kafka for JUnit has been designed with great care and readability in mind. Using <code>static</code> imports for factory methods shows that we can interact with the embedded Kafka cluster in a lean and readable way.
 </td>
 </tr>
 </table>
@@ -349,7 +353,7 @@ You can also pre-construct an instance of <code>Headers</code> and pass it along
 <p>All operations are executed <strong>synchronously</strong>.</p>
 </div>
 <div class="paragraph">
-<p>With these abstractions in place, reading content from a Kafka topic is easy. As with a <code>RecordProducer</code>, there is no need to specify things like <code>bootstrap.servers</code> - <code>kafka-junit</code> will provide the necessary configuration. Have a look at the following examples.</p>
+<p>With these abstractions in place, reading content from a Kafka topic is easy. As with a <code>RecordProducer</code>, there is no need to specify things like <code>bootstrap.servers</code> - Kafka for JUnit will provide the necessary configuration. Have a look at the following examples.</p>
 </div>
 <div class="sect2">
 <h3 id="_consuming_values_using_defaults">5.1. Consuming values using defaults</h3>
@@ -582,7 +586,7 @@ public interface TopicManager {
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-By default, <code>kafka-junit</code> enables the automatic creation of topics at the broker with defaults that should be sensible for local testing. However, if you find yourself in the situation to create a topic with a specific replication factor or number of partitions that deviate from their default setting, you should create that topic with the respective settings before writing the first Kafka record to it.
+By default, Kafka for JUnit enables the automatic creation of topics at the broker with defaults that should be sensible for local testing. However, if you find yourself in the situation to create a topic with a specific replication factor or number of partitions that deviate from their default setting, you should create that topic with the respective settings before writing the first Kafka record to it.
 </td>
 </tr>
 </table>
@@ -630,11 +634,19 @@ Returns <code>true</code> even if the topic is marked for deletion.
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="section:colophon">7. License</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This work is released under the terms of the Apache 2.0 license.</p>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 0.1.0<br>
- 2018-06-14 16:16:42 CEST
+ 2018-06-14 22:28:12 CEST
 </div>
 </div>
 </body>
