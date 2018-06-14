@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.4">
+<meta name="author" content="Markus Günther">
+<title>User Guide to kafka-junit</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="css//asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css">
+</head>
+<body class="book toc2 toc-left">
+<div id="header">
+<h1>User Guide to kafka-junit</h1>
+<div class="details">
+<span id="author" class="author">Markus Günther</span><br>
+<span id="revnumber">version 0.1.0,</span>
+<span id="revdate">2018-06-08</span>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#section:introduction">1. Introduction</a></li>
+<li><a href="#_using_code_kafka_junit_code_in_your_tests">2. Using <code>kafka-junit</code> in your tests</a>
+<ul class="sectlevel2">
+<li><a href="#_using_junit_4_rules">2.1. Using JUnit 4 rules</a></li>
+<li><a href="#_what_about_junit_5">2.2. What about JUnit 5?</a></li>
+<li><a href="#_alternative_ways">2.3. Alternative ways</a></li>
+</ul>
+</li>
+<li><a href="#_supported_versions_of_apache_kafka">3. Supported versions of Apache Kafka</a></li>
+<li><a href="#section:producing-records">4. Producing records</a>
+<ul class="sectlevel2">
+<li><a href="#_sending_non_keyed_values_using_defaults">4.1. Sending non-keyed values using defaults</a></li>
+<li><a href="#_sending_non_keyed_values_using_overrides">4.2. Sending non-keyed values using overrides</a></li>
+<li><a href="#_sending_non_keyed_values_transactionally">4.3. Sending non-keyed values transactionally</a></li>
+<li><a href="#_sending_keyed_records_using_defaults">4.4. Sending keyed records using defaults</a></li>
+<li><a href="#_sending_keyed_records_using_overrides">4.5. Sending keyed records using overrides</a></li>
+<li><a href="#_sending_keyed_records_transactionally">4.6. Sending keyed records transactionally</a></li>
+<li><a href="#_sending_records_or_values_transactionally_to_multiple_topics">4.7. Sending records or values transactionally to multiple topics</a></li>
+<li><a href="#_attaching_record_headers">4.8. Attaching record headers</a></li>
+</ul>
+</li>
+<li><a href="#section:consuming-records">5. Consuming records</a>
+<ul class="sectlevel2">
+<li><a href="#_consuming_values_using_defaults">5.1. Consuming values using defaults</a></li>
+<li><a href="#_consuming_key_value_based_records_using_defaults">5.2. Consuming key-value based records using defaults</a></li>
+<li><a href="#_consuming_key_value_based_records_using_overrides">5.3. Consuming key-value based records using overrides</a></li>
+<li><a href="#_working_with_attached_headers">5.4. Working with attached headers</a></li>
+<li><a href="#_consuming_values_or_records_transactionally">5.5. Consuming values or records transactionally</a></li>
+<li><a href="#_observing_a_topic_until_code_n_code_values_have_been_consumed">5.6. Observing a topic until <code>N</code> values have been consumed</a></li>
+<li><a href="#_observing_a_topic_until_code_n_code_records_have_been_consumed">5.7. Observing a topic until <code>N</code> records have been consumed</a></li>
+<li><a href="#_using_key_filters_when_consuming_or_observing_a_topic">5.8. Using key filters when consuming or observing a topic</a></li>
+<li><a href="#_using_value_filters_when_consuming_or_observing_a_topic">5.9. Using value filters when consuming or observing a topic</a></li>
+</ul>
+</li>
+<li><a href="#section:managing-topics">6. Managing topics</a>
+<ul class="sectlevel2">
+<li><a href="#_creating_a_topic">6.1. Creating a topic</a></li>
+<li><a href="#_deleting_a_topic">6.2. Deleting a topic</a></li>
+<li><a href="#_determine_whether_a_topic_exists">6.3. Determine whether a topic exists</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="section:introduction">1. Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>kafka-junit</code> provides JUnit 4.x rule implementations that enables developers to start and stop a complete Kafka cluster comprised of Kafka brokers and distributed Kafka Connect workers from within a JUnit test. It also provides convenient accessors to interact with such an embedded Kafka cluster in a lean and non-obtrusive way.</p>
+</div>
+<div class="paragraph">
+<p><code>kafka-junit</code> can be used to both whitebox-test individual Kafka-based components of your application or to blackbox-test applications that offer an incoming and/or outgoing Kafka-based interface.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_using_code_kafka_junit_code_in_your_tests">2. Using <code>kafka-junit</code> in your tests</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_using_junit_4_rules">2.1. Using JUnit 4 rules</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public class KafkaTest {
+
+  @Rule
+  public EmbeddedKafkaClusterRule cluster = provisionWith(useDefaults());
+
+  @Test
+  public void shouldWaitForRecordsToBePublished() throws Exception {
+    cluster.send(to("test-topic", "a", "b", "c").useDefaults());
+    cluster.observe(on("test-topic", 4).useDefaults());
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The same applies for <code>@ClassRule</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_what_about_junit_5">2.2. What about JUnit 5?</h3>
+<div class="paragraph">
+<p>You can use <code>kafka-junit</code> with JUnit 5 of course. However, with its rule-based implementations, <code>kafka-junit</code> is currently tailored for ease of use with JUnit 4. It implements no JUnit Jupiter extension for JUnit 5. There is an issue for that (cf. <a href="https://github.com/mguenther/kafka-junit/issues/4">ISSUE-004</a>), so the development wrt. a JUnit Jupiter extension is planned for a future release. PRs are welcome, though!</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_alternative_ways">2.3. Alternative ways</h3>
+<div class="paragraph">
+<p>You do not have to use the JUnit 4 rules if you are not comfortable with them or if you happen to use JUnit 5, which does not support rules any longer. <code>EmbeddedKafkaClusterRule</code> instantiates <code>EmbeddedKafkaCluster</code> and manages its component lifecycle. However, <code>EmbeddedKafkaCluster</code> implements the <code>AutoCloseable</code> interface, so it is easy to manage it inside your tests yourself.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public class KafkaTest {
+
+  @Test
+  public void shouldWaitForRecordsToBePublished() throws Exception {
+
+    try (EmbeddedKafkaCluster cluster = provisionWith(useDefaults())) {
+      cluster.send(to("test-topic", "a", "b", "c").useDefaults());
+      cluster.observe(on("test-topic", 3).useDefaults());
+    }
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_supported_versions_of_apache_kafka">3. Supported versions of Apache Kafka</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Version of kafka-junit</th>
+<th class="tableblock halign-left valign-top">Supports</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.1.x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 1.0.x</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="section:producing-records">4. Producing records</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Class <code>EmbeddedKafkaClusterRule</code> as well as <code>EmbeddedKafkaCluster</code> expose convenience methods for producing new Kafka records. Have a look at the <code>RecordProducer</code> interface (Javadoc omitted for brevity).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface RecordProducer {
+
+    &lt;V&gt; List&lt;RecordMetadata&gt; send(SendValues&lt;V&gt; sendRequest) throws ExecutionException, InterruptedException;
+    &lt;V&gt; List&lt;RecordMetadata&gt; send(SendValuesTransactional&lt;V&gt; sendRequest) throws ExecutionException, InterruptedException;
+    &lt;K, V&gt; List&lt;RecordMetadata&gt; send(SendKeyValues&lt;K, V&gt; sendRequest) throws ExecutionException, InterruptedException;
+    &lt;K, V&gt; List&lt;RecordMetadata&gt; send(SendKeyValuesTransactional&lt;K, V&gt; sendRequest) throws ExecutionException, InterruptedException;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Calling <code>send</code> using an instance of <code>SendValues</code> does just that: It produces un-keyed Kafka records that only feature a value. The key of a record that has been produced this way is simply <code>null</code>.  If you wish to associate a key, you can do so by passing an instance of <code>SendKeyValues</code> to the <code>send</code> method. Both <code>SendValues</code> and <code>SendKeyValues</code> use the [Builder pattern](<a href="https://en.wikipedia.org/wiki/Builder_pattern" class="bare">https://en.wikipedia.org/wiki/Builder_pattern</a>) so that creating the resp. send parameterization is easy and does not pollute your test code with any kind of boilerplate.</p>
+</div>
+<div class="paragraph">
+<p>Implementations of the <code>RecordProducer</code> interface use the high-level producer API that comes with Apache Kafka. Hence, the underlying producer is a <code>KafkaProducer</code>. This <code>KafkaProducer</code> is fully parameterizable via the builders of both <code>SendValues</code> and <code>SendKeyValues</code>.</p>
+</div>
+<div class="paragraph">
+<p>All <code>send</code> operations are executed <strong>synchronously</strong>.</p>
+</div>
+<div class="paragraph">
+<p>With these abstractions in place, sending content to your embedded Kafka cluster is easy. Have a look at the following examples . One thing you should notice is that you do not have to specify <code>bootstrap.servers</code>. <code>kafka-junit</code> adjusts a given client configuration so that you can start off with meaningful defaults that work out-of-the-box. You&#8217;ll only have to provide configuration overrides if it is absolutely necessary for your test.</p>
+</div>
+<div class="sect2">
+<h3 id="_sending_non_keyed_values_using_defaults">4.1. Sending non-keyed values using defaults</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">SendValues&lt;String&gt; sendRequest = SendValues.to("test-topic", "a", "b", "c").useDefaults();
+cluster.send(sendRequest);</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sending_non_keyed_values_using_overrides">4.2. Sending non-keyed values using overrides</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">SendValues&lt;String&gt; sendRequest = SendValues.to("test-topic", "a", "b", "c")
+        .with(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
+        .with(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "1")
+        .build();
+
+cluster.send(sendRequest);</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sending_non_keyed_values_transactionally">4.3. Sending non-keyed values transactionally</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">SendValuesTransactional&lt;String&gt; sendRequest = SendValuesTransactional
+        .inTransaction("test-topic", Arrays.asList("a", "b", "c"))
+        .useDefaults()
+
+cluster.send(sendRequest);</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The API of <code>kafka-junit</code> has been designed with great care and readability in mind. Using <code>static</code> imports for factory methods shows that we can interact with the embedded Kafka cluster in a lean and readable way.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">cluster.send(inTransaction("test-topic", Arrays.asList("a", "b", "c")).useDefaults());</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sending_keyed_records_using_defaults">4.4. Sending keyed records using defaults</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">List&lt;KeyValue&lt;String, String&gt;&gt; records = new ArrayList&lt;&gt;();
+
+records.add(new KeyValue&lt;&gt;("aggregate", "a"));
+records.add(new KeyValue&lt;&gt;("aggregate", "b"));
+records.add(new KeyValue&lt;&gt;("aggregate", "c"));
+
+SendKeyValues&lt;String, String&gt; sendRequest = SendKeyValues.to("test-topic", records).useDefaults();
+
+cluster.send(sendRequest);</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sending_keyed_records_using_overrides">4.5. Sending keyed records using overrides</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">List&lt;KeyValue&lt;String, String&gt;&gt; records = new ArrayList&lt;&gt;();
+
+records.add(new KeyValue&lt;&gt;("aggregate", "a"));
+records.add(new KeyValue&lt;&gt;("aggregate", "b"));
+records.add(new KeyValue&lt;&gt;("aggregate", "c"));
+
+SendKeyValues&lt;String, String&gt; sendRequest = SendKeyValues.to("test-topic", records)
+        .with(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
+        .with(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "1")
+        .build();
+
+cluster.send(sendRequest);</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sending_keyed_records_transactionally">4.6. Sending keyed records transactionally</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">List&lt;KeyValue&lt;String, String&gt;&gt; records = new ArrayList&lt;&gt;();
+
+records.add(new KeyValue&lt;&gt;("aggregate", "a"));
+records.add(new KeyValue&lt;&gt;("aggregate", "b"));
+records.add(new KeyValue&lt;&gt;("aggregate", "c"));
+
+cluster.send(inTransaction("test-topic", records).useDefaults());</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sending_records_or_values_transactionally_to_multiple_topics">4.7. Sending records or values transactionally to multiple topics</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">SendValuesTransactional&lt;String&gt; sendRequest = SendValuesTransactional
+        .inTransaction("test-topic-1", Arrays.asList("a", "b"))
+        .inTransaction("test-topic-2", Arrays.asList("c", "d"))
+        .useDefaults();
+
+cluster.send(sendRequest);</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_attaching_record_headers">4.8. Attaching record headers</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">KeyValue&lt;String, String&gt; record = new KeyValue&lt;&gt;("a", "b");
+record.addHeader("client", "kafka-junit-test".getBytes("utf-8"));
+
+SendKeyValues&lt;String, String&gt; sendRequest = SendKeyValues
+        .to("test-topic", Collections.singletonList(record))
+        .useDefaults();
+
+cluster.send(sendRequest);</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+You can also pre-construct an instance of <code>Headers</code> and pass it along via the constructor of a <code>KeyValue</code>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="section:consuming-records">5. Consuming records</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Class <code>EmbeddedKafkaClusterRule</code> as well as <code>EmbeddedKafkaCluster</code> expose convenience methods for consuming Kafka records. Have a look at the <code>RecordConsumer</code> interface (Javadoc omitted for brevity).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface RecordConsumer {
+
+    &lt;V&gt; List&lt;V&gt; readValues(ReadKeyValues&lt;String, V&gt; readRequest);
+    &lt;V&gt; List&lt;V&gt; observeValues(ObserveKeyValues&lt;String, V&gt; observeRequest) throws InterruptedException;
+    &lt;K, V&gt; List&lt;KeyValue&lt;K, V&gt;&gt; read(ReadKeyValues&lt;K, V&gt; readRequest);
+    &lt;K, V&gt; List&lt;KeyValue&lt;K, V&gt;&gt; observe(ObserveKeyValues&lt;K, V&gt; observeRequest) throws InterruptedException;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Implementations of the <code>RecordConsumer</code> interface use the high-level consumer API that comes with Apache Kafka. Hence, the underlying consumer is a <code>KafkaConsumer</code>. This <code>KafkaConsumer</code> is fully parameterizable via both <code>ReadKeyValues</code> and <code>ObserveKeyValues</code> by means of <code>kafka.consumer.ConsumerConfig</code>.</p>
+</div>
+<div class="paragraph">
+<p>All operations are executed <strong>synchronously</strong>.</p>
+</div>
+<div class="paragraph">
+<p>With these abstractions in place, reading content from a Kafka topic is easy. As with a <code>RecordProducer</code>, there is no need to specify things like <code>bootstrap.servers</code> - <code>kafka-junit</code> will provide the necessary configuration. Have a look at the following examples.</p>
+</div>
+<div class="sect2">
+<h3 id="_consuming_values_using_defaults">5.1. Consuming values using defaults</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">ReadKeyValues&lt;String, String&gt; readRequest = ReadKeyValues.from("test-topic").useDefaults();
+
+List&lt;String&gt; values = cluster.readValues(readRequest);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>By default, <code>ReadKeyValues.from</code> uses <code>StringDeserializer.class</code> for both the record key and value. Calling <code>readValues</code> just yields the values from the consumed Kafka records. Please have a look at the next example if you are interested in obtaining not only the values, but also the record key and possibly attached headers.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_consuming_key_value_based_records_using_defaults">5.2. Consuming key-value based records using defaults</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">ReadKeyValues&lt;String, String&gt; readRequest = ReadKeyValues.from("test-topic").useDefaults();
+
+List&lt;KeyValue&lt;String, String&gt;&gt; consumedRecords = cluster.read(readRequest);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Notice the difference to the example before this one: Instead of calling <code>readValues</code> we call <code>read</code> using the same <code>ReadKeyValues</code> request. Instead of a <code>List&lt;String&gt;</code>, this yields a <code>List&lt;KeyValue&lt;String, String&gt;&gt;</code> where each <code>KeyValue</code> is comprised of the record key, the record value and the headers that have been attached to that record.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_consuming_key_value_based_records_using_overrides">5.3. Consuming key-value based records using overrides</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">ReadKeyValues&lt;String, Long&gt; readRequest = ReadKeyValues.from("test-topic-value-types", Long.class)
+        .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class)
+        .build();
+
+List&lt;KeyValue&lt;String, Long&gt;&gt; consumedRecords = cluster.read(readRequest);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Since we are interested in consuming records that use <code>Long</code>-based values, we have to parameterize the <code>ReadKeyValues</code> request such that the proper type is bound and a compatible <code>Deserializer</code> is used. This is all done by calling <code>from(String, Class&lt;V&gt;)</code> and overriding the default deserializer using <code>with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class)</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_working_with_attached_headers">5.4. Working with attached headers</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">Headers headersOfFirstRecord = cluster.read(ReadKeyValues.from("test-topic").useDefaults())
+        .stream()
+        .findFirst()
+        .map(KeyValue::getHeaders)
+        .orElseThrow(() -&gt; new RuntimeException("No records found."));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The example grabs the <code>Headers</code> of the first record that it reads. <code>Headers</code> is a class that comes from the Kafka Client API. See its <a href="https://kafka.apache.org/10/javadoc/org/apache/kafka/common/header/Headers.html">Javadoc</a> for a thorough explanation of its public interface.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_consuming_values_or_records_transactionally">5.5. Consuming values or records transactionally</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">ReadKeyValues&lt;String, String&gt; readRequest = ReadKeyValues.from("test-topic")
+    .with(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed")
+    .build();
+
+List&lt;String&gt; consumedValues = cluster.readValues(readRequest);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Consuming records that have been written transactionally is just a matter of the configuration of the underlying <code>KafkaConsumer</code>. As <code>ReadKeyValues</code> provides full access to the configuration of the <code>KafkaConsumer</code> a simple <code>with(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed")</code> suffices to enable transactional consume semantics.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_observing_a_topic_until_code_n_code_values_have_been_consumed">5.6. Observing a topic until <code>N</code> values have been consumed</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">ObserveKeyValues&lt;String, String&gt; observeRequest = ObserveKeyValues.on("test-topic", 3).useDefaults();
+
+List&lt;String&gt; observedValues = cluster.observeValues(observeRequest);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Sometimes you are not interested in reading all available values from a topic, but want to block test execution until a certain amount of values have been read from a topic. This enables you to synchronize your test logic with the system-under-test as the test blocks until the system-under-test has been able to write its records to the Kafka topic you are currently observing.</p>
+</div>
+<div class="paragraph">
+<p>Of course, observing a topic cannot run indefinitely and thus has to be parameterized with a timeout. There is a default timeout which should be sensible for most usage scenarios. However, if you need to observe a topic for a longer amount of time, you can easily parameterize the <code>ObserveKeyValues</code> request using <code>observeFor(int, TimeUnit)</code>.</p>
+</div>
+<div class="paragraph">
+<p>If the timeout elapses before the desired amount of values have been read from the given topic, the <code>observe</code> method will throw an <code>AssertionError</code>. Hence, if you are just interested in the fact that records have been written by the system-under-test to the topic you are observing, it fully suffices to use</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">cluster.observeValues(observeRequest);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and let the timeout elapse to fail the test.</p>
+</div>
+<div class="paragraph">
+<p>If you are interested in the observed values, you can however simply grab all records - like shown above - and perform additional assertions on them.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_observing_a_topic_until_code_n_code_records_have_been_consumed">5.7. Observing a topic until <code>N</code> records have been consumed</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">ObserveKeyValues&lt;String, String&gt; observeRequest = ObserveKeyValues.on("test-topic", 3).useDefaults();
+
+List&lt;KeyValue&lt;String, String&gt;&gt; observedValues = cluster.observe(observeRequest);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This is just the same as the example above, but instead of observing and returning <code>List&lt;String&gt;</code> it returns a <code>List&lt;KeyValue&lt;String, String&gt;&gt;</code> in the example.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_using_key_filters_when_consuming_or_observing_a_topic">5.8. Using key filters when consuming or observing a topic</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">Predicate&lt;String&gt; keyFilter = k -&gt; Integer.parseInt(k) % 2 == 0;
+
+ReadKeyValues&lt;String, Integer&gt; readRequest = ReadKeyValues.from("test-topic", Integer.class)
+        .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
+        .filterOnKeys(keyFilter)
+        .build();
+
+List&lt;KeyValue&lt;String, Integer&gt;&gt; consumedRecords = cluster.read(readRequest);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>It is possible to parameterize both <code>ReadKeyValues</code> and <code>ObserveKeyValues</code> with a key filter. The key filter is modelled using <code>java.util.function.Predicate</code> and thus can be arbitrarily complex. The default key filter evaluates to <code>true</code> every time, so unless you do not explicitly provide a filter using <code>filterOnKeys</code> like in the example, all consumed records pass the filter.</p>
+</div>
+<div class="paragraph">
+<p>In this example, the filter is quite simply and parses the key of the record into an <code>Integer</code> and checks if it is evenly divisible by 2. So, if - for the sake of the example - the topic from which we read contains the keys <code>"1"</code>, <code>"2"</code>, <code>"3"</code> and <code>"4"</code>, only those records with keys <code>"2"</code> and <code>"4"</code> would pass the filter.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Applying a key filter is also possible when observing a topic.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_using_value_filters_when_consuming_or_observing_a_topic">5.9. Using value filters when consuming or observing a topic</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">Predicate&lt;Integer&gt; valueFilter = v -&gt; v &gt; 2;
+
+ReadKeyValues&lt;String, Integer&gt; readRequest = ReadKeyValues.from("test-topic", Integer.class)
+        .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
+        .filterOnValues(valueFilter)
+        .build();
+
+List&lt;KeyValue&lt;String, Integer&gt;&gt; consumedRecords = cluster.read(readRequest);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>It is possible to parameterize both <code>ReadKeyValues</code> and <code>ObserveKeyValues</code> with a value filter. Like the key filter, the value filter is also modelled using <code>java.util.function.Predicate</code>. The default value filter evaluates to <code>true</code> every time, so unless you do not explicitly provide a filter using <code>filterOnValues</code> like in the example, all consumed records pass the filter.</p>
+</div>
+<div class="paragraph">
+<p>In this example, the filter only lets those records pass for which the associated <code>Integer</code>-based record value is larger than 2. So, if the topic holds records with values <code>1</code>, <code>2</code> and <code>3</code>, only the record with value <code>3</code> would pass the filter.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Applying a value filter is also possible when observing a topic.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Combining key and value filters is possible. Please note that in this case only such records that pass both the key and value filter are returned. Hence, conjoining key and value filters has <code>AND</code> semantics.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="section:managing-topics">6. Managing topics</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Class <code>EmbeddedKafkaClusterRule</code> as well as <code>EmbeddedKafkaCluster</code> expose convenience methods for managing Kafka topics. Have a look at the <code>TopicManager</code> interface (Java omitted for brevity).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">/**
+public interface TopicManager {
+
+    void createTopic(TopicConfig config);
+    void deleteTopic(String topic);
+    boolean exists(String topic);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Implementations of the <code>TopicCreator</code> interface currently use the <code>zkclient</code> library for topic management.</p>
+</div>
+<div class="paragraph">
+<p>All operations are executed <strong>synchronously</strong>.</p>
+</div>
+<div class="sect2">
+<h3 id="_creating_a_topic">6.1. Creating a topic</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">cluster.createTopic(TopicConfig.forTopic("test-topic").useDefaults());</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+By default, <code>kafka-junit</code> enables the automatic creation of topics at the broker with defaults that should be sensible for local testing. However, if you find yourself in the situation to create a topic with a specific replication factor or number of partitions that deviate from their default setting, you should create that topic with the respective settings before writing the first Kafka record to it.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_deleting_a_topic">6.2. Deleting a topic</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">cluster.deleteTopic("test-topic");</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Deleting a topic will only set a deletion marker for that topic. The topic may not be deleted immediately after <code>deleteTopic</code> completes.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_determine_whether_a_topic_exists">6.3. Determine whether a topic exists</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">cluster.exists("test-topic");</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Returns <code>true</code> even if the topic is marked for deletion.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Version 0.1.0<br>
+ 2018-06-14 16:16:42 CEST
+</div>
+</div>
+</body>
+</html>
