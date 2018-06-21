@@ -1,0 +1,57 @@
+[[section:embedded-kafka-cluster]]
+
+== Working with an embedded Kafka cluster
+
+Kafka for JUnit is able to spin up a fully-fledged embedded Kafka cluster that is accessible via class `EmbeddedKafkaCluster`. `EmbeddedKafkaCluster` implements the interfaces `RecordProducer`, `RecordConsumer` and `TopicManager` and thus provides convenient accessors to interact with the cluster.
+
+Using `EmbeddedKafkaCluster` in a JUnit test is quite simple. The necessary code to set it up is minimal if you are comfortable with the default configuration.
+
+[source, java]
+----
+import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
+import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
+
+public class MyTest {
+
+    @Rule
+    public EmbeddedKafkaCluster cluster = provisionWith(useDefaults());
+}
+----
+
+`EmbeddedKafkaCluster` is a JUnit rule (it is derived from `ExternalResource` to be precise). The `@Rule` annotation ties the lifecycle to the execution of the test method. The `@ClassRule` annotation ties the lifecycle of `EmbeddedKafkaCluster` to the execution of the test class. In both cases, all acquired resources are released automatically once the resp. lifecycle terminates.
+
+The example underneath demonstrates how to use `@ClassRule` instead of `@Rule`.
+
+[source, java]
+----
+import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
+import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
+
+public class MyTest {
+
+    @ClassRule
+    public static EmbeddedKafkaCluster cluster = provisionWith(useDefaults());
+}
+----
+
+Kafka for JUnit uses the Builder pattern extensively to provide a fluent API when provisioning an embedded Kafka cluster. Let's take a closer look at method `EmbeddedKafkaCluster.provisionWith`. This method consumes a configuration of type `EmbeddedKafkaClusterConfig`. `EmbeddedKafkaClusterConfig` uses defaults for the Kafka broker and ZooKeeper. By default, Kafka Connect will not be provisioned at all. The builder of `EmbeddedKafkaClusterConfig` provides a `provisionWith` method as well and is overloaded to accept configurations of type `EmbeddedZooKeeperConfig`, `EmbeddedKafkaConfig` and `EmbeddedConnectConfig`. The following listing demonstrates how to adjust the configuration of the embedded Kafka broker wrt. the default number of partitions for newly created topics.
+
+[source, java]
+----
+import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
+
+public class MyTest {
+    @Rule
+    public EmbeddedKafkaCluster cluster = provisionWith(EmbeddedKafkaClusterConfig
+            .create()
+            .provisionWith(EmbeddedKafkaConfig
+                    .create()
+                    .with(KafkaConfig$.MODULE$.NumPartitionsProp(), "5")
+                    .build())
+            .build());
+}
+----
+
+The builders for those configurations provide a uniform interface for overriding defaults, comprising two methods `with(String propertyName, T value)` and `withAll(java.util.Properties overrides)`. To override a default value, you simply provide the name of the configuration parameter as defined by the resp. Kafka component along with the new value.
+
+See sections on <<section:producing-records, Producing records>>, <<section:consuming-records, Consuming records>> and <<section:managing-topics, Managing topics>> for further reference on how to interact with the cluster.

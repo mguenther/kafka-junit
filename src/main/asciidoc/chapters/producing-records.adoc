@@ -7,10 +7,10 @@ Class `EmbeddedKafkaClusterRule` as well as `EmbeddedKafkaCluster` expose conven
 ```java
 public interface RecordProducer {
 
-    <V> List<RecordMetadata> send(SendValues<V> sendRequest) throws ExecutionException, InterruptedException;
-    <V> List<RecordMetadata> send(SendValuesTransactional<V> sendRequest) throws ExecutionException, InterruptedException;
-    <K, V> List<RecordMetadata> send(SendKeyValues<K, V> sendRequest) throws ExecutionException, InterruptedException;
-    <K, V> List<RecordMetadata> send(SendKeyValuesTransactional<K, V> sendRequest) throws ExecutionException, InterruptedException;
+    <V> List<RecordMetadata> send(SendValues<V> sendRequest) throws InterruptedException;
+    <V> List<RecordMetadata> send(SendValuesTransactional<V> sendRequest) throws InterruptedException;
+    <K, V> List<RecordMetadata> send(SendKeyValues<K, V> sendRequest) throws InterruptedException;
+    <K, V> List<RecordMetadata> send(SendKeyValuesTransactional<K, V> sendRequest) throws InterruptedException;
 }
 ```
 

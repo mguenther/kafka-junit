@@ -1,0 +1,41 @@
+[[section:external-kafka-cluster]]
+
+== Working with an external Kafka cluster
+
+Kafka for JUnit can be used to work with an external Kafka cluster. This is useful if you want to execute your tests against a staging/testing environment or if you already use other testing libraries (e.g. Testcontainers) that spin up a Kafka cluster on your local machine, but want to use the convenient accessors provided by Kafka for JUnit.
+
+Class `ExternalKafkaCluster` integrates an external cluster. Just like `EmbeddableKafkaCluster`, an `ExternalKafkaCluster` also implements the interfaces `RecordProducer`, `RecordConsumer` and `TopicManager` and thus provides convenient accessors to interact with the cluster.
+
+Using `ExternalKafkaCluster` in a JUnit test is easy. The listing below shows the necessary code to use `ExternalKafkaCluster` in combination with Testcontainers.
+
+[source, java]
+----
+public class MyTest {
+
+    // This is not part of Kafka for JUnit, but a sub-module provided
+    // by Testcontainers (org.testcontainers:kafka)
+    @Rule
+    public KafkaContainer kafkaContainer = new KafkaContainer();
+
+    @Test
+    public void externalKafkaClusterDemo() throws Exception {
+
+        ExternalKafkaCluster cluster = ExternalKafkaCluster.at(kafkaContainer.getBootstrapServers());
+
+        // use the accessors that cluster provides to interact with the Kafka container
+    }
+}
+----
+
+Please note that if you want to additionally use the accessors as defined in `TopicManager`, you will have to provide the ZooKeeper connection string as well.
+
+[source, java]
+----
+String bootstrapServers = ...;;
+String zkConnectString = ...;
+ExternalKafkaCluster cluster = ExternalKafkaCluster.at(bootstrapServers, zkConnectString);
+----
+
+NOTE: If you do not provide the ZooKeeper connect string when creating an instance of `ExternalKafkaCluster`, all methods provided by its `TopicManager` implementation will result in no-ops.
+
+See sections on <<section:producing-records, Producing records>>, <<section:consuming-records, Consuming records>> and <<section:managing-topics, Managing topics>> for further reference on how to interact with the cluster.

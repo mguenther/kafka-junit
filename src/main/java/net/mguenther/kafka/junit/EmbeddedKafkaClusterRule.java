@@ -5,8 +5,11 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.junit.rules.ExternalResource;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
+/**
+ * @deprecated since 0.2.0 - use {@link EmbeddedKafkaCluster} instead
+ */
+@Deprecated
 @RequiredArgsConstructor
 public class EmbeddedKafkaClusterRule extends ExternalResource implements RecordProducer, RecordConsumer, TopicManager {
 
@@ -30,7 +33,7 @@ public class EmbeddedKafkaClusterRule extends ExternalResource implements Record
     }
 
     @Override
-    public <V> List<V> readValues(ReadKeyValues<String, V> readRequest) {
+    public <V> List<V> readValues(final ReadKeyValues<String, V> readRequest) {
         return cluster.readValues(readRequest);
     }
 
@@ -40,32 +43,32 @@ public class EmbeddedKafkaClusterRule extends ExternalResource implements Record
     }
 
     @Override
-    public <K, V> List<KeyValue<K, V>> observe(ObserveKeyValues<K, V> observeRequest) throws InterruptedException {
+    public <K, V> List<KeyValue<K, V>> observe(final  ObserveKeyValues<K, V> observeRequest) throws InterruptedException {
         return cluster.observe(observeRequest);
     }
 
     @Override
-    public <V> List<V> observeValues(ObserveKeyValues<String, V> observeRequest) throws InterruptedException {
+    public <V> List<V> observeValues(final ObserveKeyValues<String, V> observeRequest) throws InterruptedException {
         return cluster.observeValues(observeRequest);
     }
 
     @Override
-    public <K, V> List<RecordMetadata> send(final SendKeyValues<K, V> sendRequest) throws ExecutionException, InterruptedException {
+    public <K, V> List<RecordMetadata> send(final SendKeyValues<K, V> sendRequest) throws InterruptedException {
         return cluster.send(sendRequest);
     }
 
     @Override
-    public <K, V> List<RecordMetadata> send(final SendKeyValuesTransactional<K, V> sendRequest) throws ExecutionException, InterruptedException {
+    public <K, V> List<RecordMetadata> send(final SendKeyValuesTransactional<K, V> sendRequest) throws InterruptedException {
         return cluster.send(sendRequest);
     }
 
     @Override
-    public <V> List<RecordMetadata> send(final SendValues<V> sendRequest) throws ExecutionException, InterruptedException {
+    public <V> List<RecordMetadata> send(final SendValues<V> sendRequest) throws InterruptedException {
         return cluster.send(sendRequest);
     }
 
     @Override
-    public <V> List<RecordMetadata> send(final SendValuesTransactional<V> sendRequest) throws ExecutionException, InterruptedException {
+    public <V> List<RecordMetadata> send(final SendValuesTransactional<V> sendRequest) throws InterruptedException {
         return cluster.send(sendRequest);
     }
 

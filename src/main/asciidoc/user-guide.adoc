@@ -18,13 +18,15 @@
 :datum: 2018-06-08
 :author: Markus Günther
 
-= User Guide to *Kafka for JUnit*
+= User Guide to Kafka for JUnit
 Markus Günther
-0.1.0, 2018-06-14
+0.2.0, 2018-06-21
 
 :toc:
 
 include::chapters/introduction.adoc[]
+include::chapters/embedded-kafka-cluster.adoc[]
+include::chapters/external-kafka-cluster.adoc[]
 include::chapters/producing-records.adoc[]
 include::chapters/consuming-records.adoc[]
 include::chapters/managing-topics.adoc[]
