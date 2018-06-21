@@ -3,7 +3,6 @@ package net.mguenther.kafka.junit;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Provides the means to send key-value pairs or un-keyed values to a Kafka topic. The send
@@ -18,7 +17,7 @@ public interface RecordProducer {
      *      the configuration of the producer and the send operation it has to carry out
      * @param <V>
      *      refers to the type of values being send
-     * @throws ExecutionException
+     * @throws RuntimeException
      *      in case there is an error while sending an individual Kafka record to the
      *      designated Kafka broker
      * @throws InterruptedException
@@ -28,7 +27,7 @@ public interface RecordProducer {
      *      Kafka records
      * @see SendValues
      */
-    <V> List<RecordMetadata> send(SendValues<V> sendRequest) throws ExecutionException, InterruptedException;
+    <V> List<RecordMetadata> send(SendValues<V> sendRequest) throws InterruptedException;
 
     /**
      * Sends (un-keyed) values synchronously and transactionally to a Kafka topic.
@@ -37,7 +36,7 @@ public interface RecordProducer {
      *      the configuration of the producer and the send operation it has to carry out
      * @param <V>
      *      refers to the type of values being send
-     * @throws ExecutionException
+     * @throws RuntimeException
      *      in case there is an error while sending an individual Kafka record to the
      *      designated Kafka broker
      * @throws InterruptedException
@@ -47,7 +46,7 @@ public interface RecordProducer {
      *      Kafka records
      * @see SendValuesTransactional
      */
-    <V> List<RecordMetadata> send(SendValuesTransactional<V> sendRequest) throws ExecutionException, InterruptedException;
+    <V> List<RecordMetadata> send(SendValuesTransactional<V> sendRequest) throws InterruptedException;
 
     /**
      * Sends key-value pairs synchronously to a Kafka topic.
@@ -58,7 +57,7 @@ public interface RecordProducer {
      *      refers to the type of keys being send
      * @param <V>
      *      refers to the type of values being send
-     * @throws ExecutionException
+     * @throws RuntimeException
      *      in case there is an error while sending an individual Kafka record to the
      *      designated Kafka broker
      * @throws InterruptedException
@@ -68,7 +67,7 @@ public interface RecordProducer {
      *      Kafka records
      * @see SendKeyValues
      */
-    <K, V> List<RecordMetadata> send(SendKeyValues<K, V> sendRequest) throws ExecutionException, InterruptedException;
+    <K, V> List<RecordMetadata> send(SendKeyValues<K, V> sendRequest) throws InterruptedException;
 
     /**
      * Sends key-value pairs synchronously and transactionally to a Kafka topic.
@@ -79,7 +78,7 @@ public interface RecordProducer {
      *      refers to the type of keys being send
      * @param <V>
      *      refers to the type of values being send
-     * @throws ExecutionException
+     * @throws RuntimeException
      *      in case there is an error while sending an individual Kafka record to the
      *      designated Kafka broker
      * @throws InterruptedException
@@ -89,5 +88,5 @@ public interface RecordProducer {
      *      Kafka records
      * @see SendKeyValuesTransactional
      */
-    <K, V> List<RecordMetadata> send(SendKeyValuesTransactional<K, V> sendRequest) throws ExecutionException, InterruptedException;
+    <K, V> List<RecordMetadata> send(SendKeyValuesTransactional<K, V> sendRequest) throws InterruptedException;
 }

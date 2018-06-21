@@ -32,7 +32,7 @@ public class DefaultRecordProducer implements RecordProducer {
     private final String bootstrapServers;
 
     @Override
-    public <V> List<RecordMetadata> send(final SendValues<V> sendRequest) throws ExecutionException, InterruptedException {
+    public <V> List<RecordMetadata> send(final SendValues<V> sendRequest) throws InterruptedException {
         final Collection<KeyValue<String, V>> records = sendRequest.getValues()
                 .stream()
                 .map(value -> new KeyValue<>((String) null, value))
@@ -45,7 +45,7 @@ public class DefaultRecordProducer implements RecordProducer {
     }
 
     @Override
-    public <V> List<RecordMetadata> send(final SendValuesTransactional<V> sendRequest) throws ExecutionException, InterruptedException {
+    public <V> List<RecordMetadata> send(final SendValuesTransactional<V> sendRequest) throws InterruptedException {
         final Map<String, Collection<KeyValue<String, V>>> recordsPerTopic = new HashMap<>();
         for (String topic : sendRequest.getValuesPerTopic().keySet()) {
             final Collection<KeyValue<String, V>> records = sendRequest.getValuesPerTopic().get(topic)
@@ -61,14 +61,18 @@ public class DefaultRecordProducer implements RecordProducer {
     }
 
     @Override
-    public <K, V> List<RecordMetadata> send(final SendKeyValues<K, V> sendRequest) throws ExecutionException, InterruptedException {
+    public <K, V> List<RecordMetadata> send(final SendKeyValues<K, V> sendRequest) throws InterruptedException {
         final Producer<K, V> producer = new KafkaProducer<>(effectiveProducerProps(sendRequest.getProducerProps()));
         final List<RecordMetadata> metadata = new ArrayList<>(sendRequest.getRecords().size());
         try {
             for (KeyValue<K, V> record : sendRequest.getRecords()) {
                 final ProducerRecord<K, V> producerRecord = new ProducerRecord<>(sendRequest.getTopic(), null, record.getKey(), record.getValue(), record.getHeaders());
                 final Future<RecordMetadata> f = producer.send(producerRecord);
-                metadata.add(f.get());
+                try {
+                    metadata.add(f.get());
+                } catch (ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
             }
         } finally {
             producer.flush();
@@ -78,7 +82,7 @@ public class DefaultRecordProducer implements RecordProducer {
     }
 
     @Override
-    public <K, V> List<RecordMetadata> send(final SendKeyValuesTransactional<K, V> sendRequest) throws ExecutionException, InterruptedException {
+    public <K, V> List<RecordMetadata> send(final SendKeyValuesTransactional<K, V> sendRequest) throws InterruptedException {
         final Producer<K, V> producer = new KafkaProducer<>(effectiveProducerProps(sendRequest.getProducerProps()));
         final List<RecordMetadata> metadata = new ArrayList<>();
         try {
@@ -88,7 +92,11 @@ public class DefaultRecordProducer implements RecordProducer {
                 for (KeyValue<K, V> record : sendRequest.getRecordsPerTopic().get(topic)) {
                     final ProducerRecord<K, V> producerRecord = new ProducerRecord<K, V>(topic, null, record.getKey(), record.getValue(), record.getHeaders());
                     final Future<RecordMetadata> f = producer.send(producerRecord);
-                    metadata.add(f.get());
+                    try {
+                        metadata.add(f.get());
+                    } catch (ExecutionException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
             producer.commitTransaction();

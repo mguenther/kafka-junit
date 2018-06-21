@@ -9,7 +9,6 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.junit.rules.ExternalResource;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -84,22 +83,22 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
     }
 
     @Override
-    public <K, V> List<RecordMetadata> send(final SendKeyValues<K, V> sendRequest) throws ExecutionException, InterruptedException {
+    public <K, V> List<RecordMetadata> send(final SendKeyValues<K, V> sendRequest) throws InterruptedException {
         return producerDelegate.send(sendRequest);
     }
 
     @Override
-    public <K, V> List<RecordMetadata> send(final SendKeyValuesTransactional<K, V> sendRequest) throws ExecutionException, InterruptedException {
+    public <K, V> List<RecordMetadata> send(final SendKeyValuesTransactional<K, V> sendRequest) throws InterruptedException {
         return producerDelegate.send(sendRequest);
     }
 
     @Override
-    public <V> List<RecordMetadata> send(final SendValues<V> sendRequest) throws ExecutionException, InterruptedException {
+    public <V> List<RecordMetadata> send(final SendValues<V> sendRequest) throws InterruptedException {
         return producerDelegate.send(sendRequest);
     }
 
     @Override
-    public <V> List<RecordMetadata> send(final SendValuesTransactional<V> sendRequest) throws ExecutionException, InterruptedException {
+    public <V> List<RecordMetadata> send(final SendValuesTransactional<V> sendRequest) throws InterruptedException {
         return producerDelegate.send(sendRequest);
     }
 

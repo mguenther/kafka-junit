@@ -10,7 +10,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ExternalKafkaCluster implements RecordProducer, RecordConsumer, TopicManager {
@@ -53,22 +52,22 @@ public class ExternalKafkaCluster implements RecordProducer, RecordConsumer, Top
     }
 
     @Override
-    public <V> List<RecordMetadata> send(final SendValues<V> sendRequest) throws ExecutionException, InterruptedException {
+    public <V> List<RecordMetadata> send(final SendValues<V> sendRequest) throws InterruptedException {
         return producerDelegate.send(sendRequest);
     }
 
     @Override
-    public <V> List<RecordMetadata> send(final SendValuesTransactional<V> sendRequest) throws ExecutionException, InterruptedException {
+    public <V> List<RecordMetadata> send(final SendValuesTransactional<V> sendRequest) throws InterruptedException {
         return producerDelegate.send(sendRequest);
     }
 
     @Override
-    public <K, V> List<RecordMetadata> send(final SendKeyValues<K, V> sendRequest) throws ExecutionException, InterruptedException {
+    public <K, V> List<RecordMetadata> send(final SendKeyValues<K, V> sendRequest) throws InterruptedException {
         return producerDelegate.send(sendRequest);
     }
 
     @Override
-    public <K, V> List<RecordMetadata> send(final SendKeyValuesTransactional<K, V> sendRequest) throws ExecutionException, InterruptedException {
+    public <K, V> List<RecordMetadata> send(final SendKeyValuesTransactional<K, V> sendRequest) throws InterruptedException {
         return producerDelegate.send(sendRequest);
     }
 
