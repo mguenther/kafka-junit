@@ -7,6 +7,7 @@ import org.apache.kafka.connect.runtime.WorkerConfig;
 import org.apache.kafka.connect.runtime.distributed.DistributedConfig;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -48,9 +49,7 @@ public class EmbeddedConnectConfig {
         }
 
         public EmbeddedConnectConfigBuilder deployConnectors(final Properties... connectorProps) {
-            for (Properties props : connectorProps) {
-                this.connectorProps.add(props);
-            }
+            this.connectorProps.addAll(Arrays.asList(connectorProps));
             return this;
         }
 
