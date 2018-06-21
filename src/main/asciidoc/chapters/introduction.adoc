@@ -2,11 +2,13 @@
 
 == Introduction
 
-*Kafka for JUnit* provides JUnit 4.x rule implementations that enables developers to start and stop a complete Kafka cluster comprised of Kafka brokers and distributed Kafka Connect workers from within a JUnit test. It also provides a rich set of convenient accessors to interact with such an embedded Kafka cluster in a lean and non-obtrusive way.
+Kafka for JUnit provides JUnit 4.x rule implementations that enables developers to start and stop a complete Kafka cluster comprised of Kafka brokers and distributed Kafka Connect workers from within a JUnit test. It also provides a rich set of convenient accessors to interact with such an embedded Kafka cluster in a lean and non-obtrusive way.
 
 Kafka for JUnit can be used to both whitebox-test individual Kafka-based components of your application or to blackbox-test applications that offer an incoming and/or outgoing Kafka-based interface.
 
 == Using Kafka for JUnit in your tests
+
+Kafka for JUnit provides the necessary infrastructure to exercise your Kafka-based components against an embeddable Kafka cluster (cf. <<section:embedded-kafka-cluster, Working with an embedded Kafka cluster>>). However, Kafka for JUnit got you covered as well if you are simply interested in using the convenient accessors against Kafka clusters that are already present in your infrastructure (cf. section <<section:external-kafka-cluster, Working with an external Kafka cluster>>).
 
 === Using JUnit 4 rules
 
@@ -48,7 +50,9 @@ public class KafkaTest {
 }
 ```
 
-== Supported versions of Apache Kafka
+Of course, you can also test against existing clusters using `ExternalKafkaCluster` instead of `EmbeddableKafkaCluster`. See section <<section:external-kafka-cluster, Working with an external Kafka cluster>> for more information.
+
+=== Supported versions of Apache Kafka
 
 |===
 | Version of Kafka for JUnit | Supports

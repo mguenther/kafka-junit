@@ -1,5 +1,11 @@
 package net.mguenther.kafka.junit;
 
+import net.mguenther.kafka.junit.EmbeddedKafkaCluster;
+import net.mguenther.kafka.junit.KeyValue;
+import net.mguenther.kafka.junit.ReadKeyValues;
+import net.mguenther.kafka.junit.SendKeyValues;
+import net.mguenther.kafka.junit.SendValues;
+import net.mguenther.kafka.junit.SendValuesTransactional;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.junit.Rule;
 import org.junit.Test;
@@ -9,8 +15,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
 import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterRule.provisionWith;
 import static net.mguenther.kafka.junit.ObserveKeyValues.on;
 import static net.mguenther.kafka.junit.SendKeyValuesTransactional.inTransaction;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class RecordProducerTest {
 
     @Rule
-    public EmbeddedKafkaClusterRule cluster = provisionWith(useDefaults());
+    public EmbeddedKafkaCluster cluster = provisionWith(useDefaults());
 
     @Test
     public void sendingUnkeyedRecordsWithDefaults() throws Exception {

@@ -17,14 +17,14 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
 import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterRule.provisionWith;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class RecordConsumerTest {
 
     @Rule
-    public EmbeddedKafkaClusterRule cluster = provisionWith(useDefaults());
+    public EmbeddedKafkaCluster cluster = provisionWith(useDefaults());
 
     @Before
     public void prepareTestTopic() throws Exception {

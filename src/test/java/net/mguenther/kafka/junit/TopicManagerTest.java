@@ -1,16 +1,18 @@
 package net.mguenther.kafka.junit;
 
+import net.mguenther.kafka.junit.EmbeddedKafkaCluster;
+import net.mguenther.kafka.junit.TopicConfig;
 import org.junit.Rule;
 import org.junit.Test;
 
+import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
 import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterRule.provisionWith;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class TopicManagerTest {
 
     @Rule
-    public EmbeddedKafkaClusterRule cluster = provisionWith(useDefaults());
+    public EmbeddedKafkaCluster cluster = provisionWith(useDefaults());
 
     @Test
     public void manageTopics() {
