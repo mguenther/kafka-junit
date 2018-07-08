@@ -26,6 +26,7 @@ public class EmbeddedKafkaConfigTest {
         assertThat(props.get(KafkaConfig$.MODULE$.GroupInitialRebalanceDelayMsProp())).isEqualTo(0);
         assertThat(props.get(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp())).isEqualTo("1");
         assertThat(props.get(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp())).isEqualTo("1");
+        assertThat(props.get(KafkaConfig$.MODULE$.HostNameProp())).isEqualTo("localhost");
     }
 
     @Test

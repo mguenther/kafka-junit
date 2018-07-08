@@ -36,6 +36,7 @@ public class EmbeddedKafkaConfig {
         public EmbeddedKafkaConfig build() {
             ifNonExisting(KafkaConfig$.MODULE$.ZkSessionTimeoutMsProp(), "8000");
             ifNonExisting(KafkaConfig$.MODULE$.ZkConnectionTimeoutMsProp(), "10000");
+            ifNonExisting(KafkaConfig$.MODULE$.HostNameProp(), "localhost");
             ifNonExisting(KafkaConfig$.MODULE$.PortProp(), "0");
             ifNonExisting(KafkaConfig$.MODULE$.NumPartitionsProp(), "1");
             ifNonExisting(KafkaConfig$.MODULE$.AutoCreateTopicsEnableProp(), "true");
