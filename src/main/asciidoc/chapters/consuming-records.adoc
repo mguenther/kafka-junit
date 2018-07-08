@@ -147,3 +147,17 @@ In this example, the filter only lets those records pass for which the associate
 NOTE: Applying a value filter is also possible when observing a topic.
 
 NOTE: Combining key and value filters is possible. Please note that in this case only such records that pass both the key and value filter are returned. Hence, conjoining key and value filters has `AND` semantics.
+
+=== Obtaining metadata per-record
+
+An instance of `KeyValue` is associated with the optional type `KeyValueMetadata`. By default, this type is not set and thus `KeyValue::getMetadata` returns `Optional.empty`. Both `ReadKeyValues` and `ObserveKeyValues` provide a method called `includeMetadata` that explicitly enables metadata on a per-record basis. The listing underneath demonstrates this:
+
+```java
+ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 3)
+        .includeMetadata()
+        .build();
+
+List<KeyValue<String, String>> records = cluster.observe(observeRequest);
+```
+
+In this example, all instances of `KeyValue` feature an instance of `Optional<KeyValueMetadata>` which contains metadata for the resp. record. Metadata is currently limited to the coordinates of the record and thus closes over the 3-tuple `(topic, partition, offset)`.

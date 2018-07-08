@@ -2,6 +2,7 @@ package net.mguenther.kafka.junit.provider;
 
 import lombok.RequiredArgsConstructor;
 import net.mguenther.kafka.junit.KeyValue;
+import net.mguenther.kafka.junit.KeyValueMetadata;
 import net.mguenther.kafka.junit.ObserveKeyValues;
 import net.mguenther.kafka.junit.ReadKeyValues;
 import net.mguenther.kafka.junit.RecordConsumer;
@@ -43,7 +44,11 @@ public class DefaultRecordConsumer implements RecordConsumer {
             final ConsumerRecords<K, V> records = consumer.poll(pollIntervalMillis);
             for (ConsumerRecord<K, V> record : records) {
                 if (filterOnKeys.test(record.key()) && filterOnValues.test(record.value())) {
-                    consumedRecords.add(new KeyValue<>(record.key(), record.value(), record.headers()));
+                    final KeyValue<K, V> kv = readRequest.isIncludeMetadata() ?
+                            new KeyValue<>(record.key(), record.value(), record.headers(), new KeyValueMetadata(record.topic(), record.partition(), record.offset())) :
+                            new KeyValue<>(record.key(), record.value(), record.headers());
+
+                    consumedRecords.add(kv);
                 }
             }
             totalPollTimeMillis += pollIntervalMillis;
@@ -65,6 +70,7 @@ public class DefaultRecordConsumer implements RecordConsumer {
             final ReadKeyValues<String, V> readRequest = ReadKeyValues.from(observeRequest.getTopic(), observeRequest.getClazzOfV())
                     .withAll(observeRequest.getConsumerProps())
                     .withLimit(observeRequest.getExpected())
+                    .withMetadata(false)
                     .filterOnKeys(observeRequest.getFilterOnKeys())
                     .filterOnValues(observeRequest.getFilterOnValues())
                     .build();
@@ -91,6 +97,7 @@ public class DefaultRecordConsumer implements RecordConsumer {
         final ReadKeyValues<K, V> readRequest = ReadKeyValues.from(observeRequest.getTopic(), observeRequest.getClazzOfK(), observeRequest.getClazzOfV())
                 .withAll(observeRequest.getConsumerProps())
                 .withLimit(observeRequest.getExpected())
+                .withMetadata(observeRequest.isIncludeMetadata())
                 .filterOnKeys(observeRequest.getFilterOnKeys())
                 .filterOnValues(observeRequest.getFilterOnValues())
                 .build();

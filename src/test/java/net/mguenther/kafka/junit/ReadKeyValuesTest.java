@@ -33,6 +33,7 @@ public class ReadKeyValuesTest {
         assertThat(props.get(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG)).isEqualTo(StringDeserializer.class);
         assertThat(props.get(ConsumerConfig.MAX_POLL_RECORDS_CONFIG)).isEqualTo(100);
         assertThat(props.get(ConsumerConfig.ISOLATION_LEVEL_CONFIG)).isEqualTo("read_uncommitted");
+        assertThat(readRequest.isIncludeMetadata()).isFalse();
     }
 
     @Test
@@ -64,6 +65,16 @@ public class ReadKeyValuesTest {
                 .build();
 
         assertThat(readRequest.getMaxTotalPollTimeMillis()).isEqualTo((int) TimeUnit.SECONDS.toMillis(10));
+    }
+
+    @Test
+    public void includeMetadataShouldOverrideItsDefaultSetting() {
+
+        final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
+                .includeMetadata()
+                .build();
+
+        assertThat(readRequest.isIncludeMetadata()).isTrue();
     }
 
     @Test

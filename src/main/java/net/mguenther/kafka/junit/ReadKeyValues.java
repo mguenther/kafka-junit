@@ -29,6 +29,7 @@ public class ReadKeyValues<K, V> {
         private Predicate<V> filterOnValues = value -> true;
         private int limit = WITHOUT_LIMIT;
         private int maxTotalPollTimeMillis = DEFAULT_MAX_TOTAL_POLL_TIME_MILLIS;
+        private boolean includeMetadata = false;
 
         ReadKeyValuesBuilder(final String topic, final Class<K> clazzOfK, final Class<V> clazzOfV) {
             this.topic = topic;
@@ -58,6 +59,15 @@ public class ReadKeyValues<K, V> {
 
         public ReadKeyValuesBuilder<K, V> withMaxTotalPollTime(final int duration, final TimeUnit unit) {
             this.maxTotalPollTimeMillis = (int) unit.toMillis(duration);
+            return this;
+        }
+
+        public ReadKeyValuesBuilder<K, V> includeMetadata() {
+            return withMetadata(true);
+        }
+
+        public ReadKeyValuesBuilder<K, V> withMetadata(final boolean modifier) {
+            this.includeMetadata = modifier;
             return this;
         }
 
@@ -91,13 +101,14 @@ public class ReadKeyValues<K, V> {
             ifNonExisting(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
             ifNonExisting(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100);
             ifNonExisting(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_uncommitted");
-            return new ReadKeyValues<>(topic, limit, maxTotalPollTimeMillis, consumerProps, filterOnKeys, filterOnValues, clazzOfK, clazzOfV);
+            return new ReadKeyValues<>(topic, limit, maxTotalPollTimeMillis, includeMetadata, consumerProps, filterOnKeys, filterOnValues, clazzOfK, clazzOfV);
         }
     }
 
     private final String topic;
     private final int limit;
     private final int maxTotalPollTimeMillis;
+    private final boolean includeMetadata;
     private final Properties consumerProps;
     private final Predicate<K> filterOnKeys;
     private final Predicate<V> filterOnValues;

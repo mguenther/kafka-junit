@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -323,5 +324,105 @@ public class RecordConsumerTest {
                 .build();
 
         cluster.observe(observeRequest);
+    }
+
+    @Test
+    public void readShouldIncludeMetadataIfExplicitlyEnabled() throws Exception {
+
+        ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic")
+                .includeMetadata()
+                .build();
+
+        List<KeyValue<String, String>> records = cluster.read(readRequest);
+
+        assertThat(records.stream().allMatch(kv -> kv.getMetadata().isPresent()))
+                .withFailMessage("All records must include a reference to the topic-partition-offset if includeMetadata is set to true.")
+                .isTrue();
+        assertThat(records
+                .stream()
+                .map(KeyValue::getMetadata)
+                .map(Optional::get)
+                .map(KeyValueMetadata::getTopic)
+                .allMatch(topic -> topic.equalsIgnoreCase("test-topic")))
+                .withFailMessage("All records must include a reference to topic 'test-topic'.")
+                .isTrue();
+        assertThat(records
+                .stream()
+                .map(KeyValue::getMetadata)
+                .map(Optional::get)
+                .map(KeyValueMetadata::getPartition)
+                .allMatch(partition -> partition == 0))
+                .withFailMessage("All records must include the correct topic-partition.")
+                .isTrue();
+        assertThat(records
+                .stream()
+                .map(KeyValue::getMetadata)
+                .map(Optional::get)
+                .map(KeyValueMetadata::getOffset)
+                .allMatch(offset -> offset >= 0))
+                .withFailMessage("All records must include non-negative partition offsets.")
+                .isTrue();
+    }
+
+    @Test
+    public void readShouldNotIncludeMetadataIfNotExplicitlyEnabled() throws Exception {
+
+        ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic").useDefaults();
+
+        List<KeyValue<String, String>> records = cluster.read(readRequest);
+
+        assertThat(records.stream().noneMatch(kv -> kv.getMetadata().isPresent()))
+                .withFailMessage("None of the returned record must include a reference to topic-partition-offset.")
+                .isTrue();
+    }
+
+    @Test
+    public void observeShouldIncludeMetadataIfExplicitlyEnabled() throws Exception {
+
+        ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 3)
+                .includeMetadata()
+                .build();
+
+        List<KeyValue<String, String>> records = cluster.observe(observeRequest);
+
+        assertThat(records.stream().allMatch(kv -> kv.getMetadata().isPresent()))
+                .withFailMessage("All records must include a reference to the topic-partition-offset if includeMetadata is set to true.")
+                .isTrue();
+        assertThat(records
+                .stream()
+                .map(KeyValue::getMetadata)
+                .map(Optional::get)
+                .map(KeyValueMetadata::getTopic)
+                .allMatch(topic -> topic.equalsIgnoreCase("test-topic")))
+                .withFailMessage("All records must include a reference to topic 'test-topic'.")
+                .isTrue();
+        assertThat(records
+                .stream()
+                .map(KeyValue::getMetadata)
+                .map(Optional::get)
+                .map(KeyValueMetadata::getPartition)
+                .allMatch(partition -> partition == 0))
+                .withFailMessage("All records must include the correct topic-partition.")
+                .isTrue();
+        assertThat(records
+                .stream()
+                .map(KeyValue::getMetadata)
+                .map(Optional::get)
+                .map(KeyValueMetadata::getOffset)
+                .allMatch(offset -> offset >= 0))
+                .withFailMessage("All records must include non-negative partition offsets.")
+                .isTrue();
+    }
+
+    @Test
+    public void observeShouldNotIncludeMetadataIfNotExplicitlyEnabled() throws Exception {
+
+        ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 3).useDefaults();
+
+        List<KeyValue<String, String>> records = cluster.observe(observeRequest);
+
+        assertThat(records.stream().noneMatch(kv -> kv.getMetadata().isPresent()))
+                .withFailMessage("None of the returned record must include a reference to topic-partition-offset.")
+                .isTrue();
     }
 }
