@@ -147,3 +147,30 @@ In this example, the filter only lets those records pass for which the associate
 NOTE: Applying a value filter is also possible when observing a topic.
 
 NOTE: Combining key and value filters is possible. Please note that in this case only such records that pass both the key and value filter are returned. Hence, conjoining key and value filters has `AND` semantics.
+
+=== Obtaining metadata per-record
+
+An instance of `KeyValue` is associated with the optional type `KeyValueMetadata`. By default, this type is not set and thus `KeyValue::getMetadata` returns `Optional.empty`. Both `ReadKeyValues` and `ObserveKeyValues` provide a method called `includeMetadata` that explicitly enables metadata on a per-record basis. The listing underneath demonstrates this:
+
+```java
+ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 3)
+        .includeMetadata()
+        .build();
+
+List<KeyValue<String, String>> records = cluster.observe(observeRequest);
+```
+
+In this example, all instances of `KeyValue` feature an instance of `Optional<KeyValueMetadata>` which contains metadata for the resp. record. Metadata is currently limited to the coordinates of the record and thus closes over the 3-tuple `(topic, partition, offset)`.
+
+=== Seeking to a dedicated offset of a topic-partition
+
+Consuming data continuously from topics that contain a huge amountof data may take quite some time, if a new consumer instance always starts to read from the beginning of the topic. To speed things up, you can skip to a dedicated offset for topic-partitions and start reading from there. The example underneath demonstrates how this is done when reading key-values using `ReadKeyValues`.
+
+
+```java
+ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic").seekTo(0, 2).build();
+
+List<KeyValue<String, String>> records = cluster.read(readRequest);
+```
+
+NOTE: Seeking is also a feature of `ObserveKeyValues` which means, that seeking to a dedicated offset is possible for all operations that a `RecordConsumer` provides.

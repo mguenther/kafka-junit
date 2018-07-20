@@ -103,12 +103,12 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
     }
 
     @Override
-    public <V> List<V> readValues(final ReadKeyValues<String, V> readRequest) {
+    public <V> List<V> readValues(final ReadKeyValues<String, V> readRequest) throws InterruptedException {
         return consumerDelegate.readValues(readRequest);
     }
 
     @Override
-    public <K, V> List<KeyValue<K, V>> read(final ReadKeyValues<K, V> readRequest) {
+    public <K, V> List<KeyValue<K, V>> read(final ReadKeyValues<K, V> readRequest) throws InterruptedException {
         return consumerDelegate.read(readRequest);
     }
 

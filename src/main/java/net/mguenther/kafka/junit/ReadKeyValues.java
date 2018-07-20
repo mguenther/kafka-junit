@@ -6,6 +6,8 @@ import lombok.ToString;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +31,8 @@ public class ReadKeyValues<K, V> {
         private Predicate<V> filterOnValues = value -> true;
         private int limit = WITHOUT_LIMIT;
         private int maxTotalPollTimeMillis = DEFAULT_MAX_TOTAL_POLL_TIME_MILLIS;
+        private boolean includeMetadata = false;
+        private Map<Integer, Long> seekTo = new HashMap<>();
 
         ReadKeyValuesBuilder(final String topic, final Class<K> clazzOfK, final Class<V> clazzOfV) {
             this.topic = topic;
@@ -58,6 +62,25 @@ public class ReadKeyValues<K, V> {
 
         public ReadKeyValuesBuilder<K, V> withMaxTotalPollTime(final int duration, final TimeUnit unit) {
             this.maxTotalPollTimeMillis = (int) unit.toMillis(duration);
+            return this;
+        }
+
+        public ReadKeyValuesBuilder<K, V> includeMetadata() {
+            return withMetadata(true);
+        }
+
+        public ReadKeyValuesBuilder<K, V> withMetadata(final boolean modifier) {
+            this.includeMetadata = modifier;
+            return this;
+        }
+
+        public ReadKeyValuesBuilder<K, V> seekTo(final int partition, final long offset) {
+            seekTo.put(partition, offset);
+            return this;
+        }
+
+        public ReadKeyValuesBuilder<K, V> seekTo(final Map<Integer, Long> seekTo) {
+            this.seekTo.putAll(seekTo);
             return this;
         }
 
@@ -91,13 +114,15 @@ public class ReadKeyValues<K, V> {
             ifNonExisting(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
             ifNonExisting(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100);
             ifNonExisting(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_uncommitted");
-            return new ReadKeyValues<>(topic, limit, maxTotalPollTimeMillis, consumerProps, filterOnKeys, filterOnValues, clazzOfK, clazzOfV);
+            return new ReadKeyValues<>(topic, limit, maxTotalPollTimeMillis, includeMetadata, seekTo, consumerProps, filterOnKeys, filterOnValues, clazzOfK, clazzOfV);
         }
     }
 
     private final String topic;
     private final int limit;
     private final int maxTotalPollTimeMillis;
+    private final boolean includeMetadata;
+    private final Map<Integer, Long> seekTo;
     private final Properties consumerProps;
     private final Predicate<K> filterOnKeys;
     private final Predicate<V> filterOnValues;

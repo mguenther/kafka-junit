@@ -16,7 +16,7 @@ Kafka for JUnit provides the necessary infrastructure to exercise your Kafka-bas
 public class KafkaTest {
 
   @Rule
-  public EmbeddedKafkaClusterRule cluster = provisionWith(useDefaults());
+  public EmbeddedKafkaCluster cluster = provisionWith(useDefaults());
 
   @Test
   public void shouldWaitForRecordsToBePublished() throws Exception {
@@ -34,7 +34,7 @@ You can use Kafka for JUnit with JUnit 5 of course. However, with its rule-based
 
 ### Alternative ways
 
-You do not have to use the JUnit 4 rules if you are not comfortable with them or if you happen to use JUnit 5, which does not support rules any longer. `EmbeddedKafkaClusterRule` instantiates `EmbeddedKafkaCluster` and manages its component lifecycle. However, `EmbeddedKafkaCluster` implements the `AutoCloseable` interface, so it is easy to manage it inside your tests yourself.
+You do not have to use the JUnit 4 rules if you are not comfortable with them or if you happen to use JUnit 5, which does not support rules any longer. `EmbeddedKafkaCluster` implements the `AutoCloseable` interface, so it is easy to manage it inside your tests yourself.
 
 ```java
 public class KafkaTest {
@@ -56,6 +56,7 @@ public class KafkaTest {
 | ---------------------- | -------- |
 | 0.1.x                  | Apache Kafka 1.0.x |
 | 0.2.x                  | Apache Kafka 1.0.x |
+| 0.3.x                  | Apache Kafka 1.0.x |
 
 Currently, the only supported version is Apache Kafka 1.0.x. Support for Apache Kafka 1.1.x and upcoming releases is planned.
 

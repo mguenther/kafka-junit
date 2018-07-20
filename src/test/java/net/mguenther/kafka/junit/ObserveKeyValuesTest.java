@@ -33,6 +33,7 @@ public class ObserveKeyValuesTest {
         assertThat(props.get(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG)).isEqualTo(StringDeserializer.class);
         assertThat(props.get(ConsumerConfig.MAX_POLL_RECORDS_CONFIG)).isEqualTo(100);
         assertThat(props.get(ConsumerConfig.ISOLATION_LEVEL_CONFIG)).isEqualTo("read_uncommitted");
+        assertThat(observeRequest.isIncludeMetadata()).isFalse();
     }
 
     @Test
@@ -68,5 +69,15 @@ public class ObserveKeyValuesTest {
 
         assertThat(observeRequest.getConsumerProps().get(ConsumerConfig.ISOLATION_LEVEL_CONFIG)).isEqualTo("read_committed");
         assertThat(observeRequest.getConsumerProps().get(ConsumerConfig.MAX_POLL_RECORDS_CONFIG)).isEqualTo(1000L);
+    }
+
+    @Test
+    public void includeMetadataShouldOverrideItsDefaultSetting() {
+
+        final ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test", 10)
+                .includeMetadata()
+                .build();
+
+        assertThat(observeRequest.isIncludeMetadata()).isTrue();
     }
 }

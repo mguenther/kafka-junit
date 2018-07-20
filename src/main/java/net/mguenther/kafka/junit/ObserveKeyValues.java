@@ -6,6 +6,8 @@ import lombok.ToString;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +30,8 @@ public class ObserveKeyValues<K, V> {
         private Predicate<K> filterOnKeys = key -> true;
         private Predicate<V> filterOnValues = value -> true;
         private int observationTimeMillis = DEFAULT_OBSERVATION_TIME_MILLIS;
+        private boolean includeMetadata = false;
+        private Map<Integer, Long> seekTo = new HashMap<>();
 
         ObserveKeyValuesBuilder(final String topic, final int expected, final Class<K> clazzOfK, final Class<V> clazzOfV) {
             this.topic = topic;
@@ -48,6 +52,25 @@ public class ObserveKeyValues<K, V> {
 
         public ObserveKeyValuesBuilder<K, V> filterOnValues(final Predicate<V> filterOnValues) {
             this.filterOnValues = filterOnValues;
+            return this;
+        }
+
+        public ObserveKeyValuesBuilder<K, V> includeMetadata() {
+            return withMetadata(true);
+        }
+
+        public ObserveKeyValuesBuilder<K, V> withMetadata(final boolean modifier) {
+            this.includeMetadata = modifier;
+            return this;
+        }
+
+        public ObserveKeyValuesBuilder<K, V> seekTo(final int partition, final long offset) {
+            seekTo.put(partition, offset);
+            return this;
+        }
+
+        public ObserveKeyValuesBuilder<K, V> seekTo(final Map<Integer, Long> seekTo) {
+            this.seekTo.putAll(seekTo);
             return this;
         }
 
@@ -80,13 +103,15 @@ public class ObserveKeyValues<K, V> {
             ifNonExisting(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
             ifNonExisting(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100);
             ifNonExisting(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_uncommitted");
-            return new ObserveKeyValues<>(topic, expected, observationTimeMillis, consumerProps, filterOnKeys, filterOnValues, clazzOfK, clazzOfV);
+            return new ObserveKeyValues<>(topic, expected, observationTimeMillis, includeMetadata, seekTo, consumerProps, filterOnKeys, filterOnValues, clazzOfK, clazzOfV);
         }
     }
 
     private final String topic;
     private final int expected;
     private final int observationTimeMillis;
+    private final boolean includeMetadata;
+    private final Map<Integer, Long> seekTo;
     private final Properties consumerProps;
     private final Predicate<K> filterOnKeys;
     private final Predicate<V> filterOnValues;
