@@ -16,8 +16,8 @@
 <h1>User Guide to Kafka for JUnit</h1>
 <div class="details">
 <span id="author" class="author">Markus Günther</span><br>
-<span id="revnumber">version 0.2.0,</span>
-<span id="revdate">2018-06-21</span>
+<span id="revnumber">version 0.3.0,</span>
+<span id="revdate">2018-07-20</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -56,6 +56,8 @@
 <li><a href="#_observing_a_topic_until_code_n_code_records_have_been_consumed">6.7. Observing a topic until <code>N</code> records have been consumed</a></li>
 <li><a href="#_using_key_filters_when_consuming_or_observing_a_topic">6.8. Using key filters when consuming or observing a topic</a></li>
 <li><a href="#_using_value_filters_when_consuming_or_observing_a_topic">6.9. Using value filters when consuming or observing a topic</a></li>
+<li><a href="#_obtaining_metadata_per_record">6.10. Obtaining metadata per-record</a></li>
+<li><a href="#_seeking_to_a_dedicated_offset_of_a_topic_partition">6.11. Seeking to a dedicated offset of a topic-partition</a></li>
 </ul>
 </li>
 <li><a href="#section:managing-topics">7. Managing topics</a>
@@ -94,7 +96,7 @@
 <pre class="highlight"><code class="language-java" data-lang="java">public class KafkaTest {
 
   @Rule
-  public EmbeddedKafkaClusterRule cluster = provisionWith(useDefaults());
+  public EmbeddedKafkaCluster cluster = provisionWith(useDefaults());
 
   @Test
   public void shouldWaitForRecordsToBePublished() throws Exception {
@@ -117,7 +119,7 @@
 <div class="sect2">
 <h3 id="_alternative_ways">2.3. Alternative ways</h3>
 <div class="paragraph">
-<p>You do not have to use the JUnit 4 rules if you are not comfortable with them or if you happen to use JUnit 5, which does not support rules any longer. <code>EmbeddedKafkaClusterRule</code> instantiates <code>EmbeddedKafkaCluster</code> and manages its component lifecycle. However, <code>EmbeddedKafkaCluster</code> implements the <code>AutoCloseable</code> interface, so it is easy to manage it inside your tests yourself.</p>
+<p>You do not have to use the JUnit 4 rules if you are not comfortable with them or if you happen to use JUnit 5, which does not support rules any longer. <code>EmbeddedKafkaCluster</code> implements the <code>AutoCloseable</code> interface, so it is easy to manage it inside your tests yourself.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -154,6 +156,14 @@
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">0.1.x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 1.0.x</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.2.x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 1.0.x</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.3.x</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 1.0.x</p></td>
 </tr>
 </tbody>
@@ -677,6 +687,49 @@ Combining key and value filters is possible. Please note that in this case only 
 </table>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_obtaining_metadata_per_record">6.10. Obtaining metadata per-record</h3>
+<div class="paragraph">
+<p>An instance of <code>KeyValue</code> is associated with the optional type <code>KeyValueMetadata</code>. By default, this type is not set and thus <code>KeyValue::getMetadata</code> returns <code>Optional.empty</code>. Both <code>ReadKeyValues</code> and <code>ObserveKeyValues</code> provide a method called <code>includeMetadata</code> that explicitly enables metadata on a per-record basis. The listing underneath demonstrates this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">ObserveKeyValues&lt;String, String&gt; observeRequest = ObserveKeyValues.on("test-topic", 3)
+        .includeMetadata()
+        .build();
+
+List&lt;KeyValue&lt;String, String&gt;&gt; records = cluster.observe(observeRequest);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this example, all instances of <code>KeyValue</code> feature an instance of <code>Optional&lt;KeyValueMetadata&gt;</code> which contains metadata for the resp. record. Metadata is currently limited to the coordinates of the record and thus closes over the 3-tuple <code>(topic, partition, offset)</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_seeking_to_a_dedicated_offset_of_a_topic_partition">6.11. Seeking to a dedicated offset of a topic-partition</h3>
+<div class="paragraph">
+<p>Consuming data continuously from topics that contain a huge amountof data may take quite some time, if a new consumer instance always starts to read from the beginning of the topic. To speed things up, you can skip to a dedicated offset for topic-partitions and start reading from there. The example underneath demonstrates how this is done when reading key-values using <code>ReadKeyValues</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">ReadKeyValues&lt;String, String&gt; readRequest = ReadKeyValues.from("test-topic").seekTo(0, 2).build();
+
+List&lt;KeyValue&lt;String, String&gt;&gt; records = cluster.read(readRequest);</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Seeking is also a feature of <code>ObserveKeyValues</code> which means, that seeking to a dedicated offset is possible for all operations that a <code>RecordConsumer</code> provides.
+</td>
+</tr>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -775,8 +828,8 @@ Returns <code>true</code> even if the topic is marked for deletion.
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.2.0<br>
- 2018-06-21 21:06:18 CEST
+Version 0.3.0<br>
+ 2018-07-20 14:44:06 CEST
 </div>
 </div>
 </body>
