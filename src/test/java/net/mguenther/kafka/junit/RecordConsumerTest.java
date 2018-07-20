@@ -425,4 +425,76 @@ public class RecordConsumerTest {
                 .withFailMessage("None of the returned record must include a reference to topic-partition-offset.")
                 .isTrue();
     }
+
+    @Test
+    public void seekToShouldSkipAllMessagesBeforeGivenOffsetWhenReadingKeyValues() throws Exception {
+
+        ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic").seekTo(0, 2).build();
+
+        List<KeyValue<String, String>> records = cluster.read(readRequest);
+
+        assertThat(records.size()).isEqualTo(1);
+        assertThat(records.get(0).getValue()).isEqualTo("c");
+    }
+
+    @Test
+    public void seekToShouldSkipAllMessagesBeforeGivenOffsetWhenReadingValues() throws Exception {
+
+        ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic").seekTo(0, 2).build();
+
+        List<String> records = cluster.readValues(readRequest);
+
+        assertThat(records.size()).isEqualTo(1);
+        assertThat(records.get(0)).isEqualTo("c");
+    }
+
+    @Test
+    public void seekToShouldSkipAllMessagesBeforeGivenOffsetWhenObservingKeyValues() throws Exception {
+
+        ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 1).seekTo(0, 2).build();
+
+        List<KeyValue<String, String>> records = cluster.observe(observeRequest);
+
+        assertThat(records.size()).isEqualTo(1);
+        assertThat(records.get(0).getValue()).isEqualTo("c");
+    }
+
+    @Test
+    public void seekToShouldSkipAllMessagesBeforeGivenOffsetWhenObservingValues() throws Exception {
+
+        ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 1).seekTo(0, 2).build();
+
+        List<String> records = cluster.observeValues(observeRequest);
+
+        assertThat(records.size()).isEqualTo(1);
+        assertThat(records.get(0)).isEqualTo("c");
+    }
+
+    @Test(expected = AssertionError.class)
+    public void whenObservingKeyValuesSeekToShouldNotRestartObservationAtGivenOffsetForSubsequentReads() throws Exception {
+
+        ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 2)
+                .seekTo(0, 2)
+                .observeFor(5, TimeUnit.SECONDS)
+                .build();
+
+        // if the implementation of observe would start over at the given offset, then we would the record with value
+        // "c" multiple times until the expected number (in this case 2) is met. if this times out and throws an
+        // AssertionError, the implementation works as expected.
+        cluster.observe(observeRequest);
+    }
+
+    @Test(expected = AssertionError.class)
+    public void whenObservingValuesSeekToShouldNotRestartObservationAtGivenOffsetForSubsequentReads() throws Exception {
+
+        ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 2)
+                .seekTo(0, 2)
+                .observeFor(5, TimeUnit.SECONDS)
+                .build();
+
+        // if the implementation of observe would start over at the given offset, then we would the record with value
+        // "c" multiple times until the expected number (in this case 2) is met. if this times out and throws an
+        // AssertionError, the implementation works as expected.
+        cluster.observeValues(observeRequest);
+    }
 }

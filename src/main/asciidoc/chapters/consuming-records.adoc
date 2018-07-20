@@ -161,3 +161,16 @@ List<KeyValue<String, String>> records = cluster.observe(observeRequest);
 ```
 
 In this example, all instances of `KeyValue` feature an instance of `Optional<KeyValueMetadata>` which contains metadata for the resp. record. Metadata is currently limited to the coordinates of the record and thus closes over the 3-tuple `(topic, partition, offset)`.
+
+=== Seeking to a dedicated offset of a topic-partition
+
+Consuming data continuously from topics that contain a huge amountof data may take quite some time, if a new consumer instance always starts to read from the beginning of the topic. To speed things up, you can skip to a dedicated offset for topic-partitions and start reading from there. The example underneath demonstrates how this is done when reading key-values using `ReadKeyValues`.
+
+
+```java
+ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic").seekTo(0, 2).build();
+
+List<KeyValue<String, String>> records = cluster.read(readRequest);
+```
+
+NOTE: Seeking is also a feature of `ObserveKeyValues` which means, that seeking to a dedicated offset is possible for all operations that a `RecordConsumer` provides.

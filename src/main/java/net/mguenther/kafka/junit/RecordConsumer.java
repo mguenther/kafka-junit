@@ -17,11 +17,13 @@ public interface RecordConsumer {
      *      the configuration of the consumer and the read operation it has to carry out
      * @param <V>
      *      refers to the type of values being read
+     * @throws InterruptedException
+     *      in case an interrupt signal has been set
      * @return
      *      unmodifiable {@link java.util.List} of consumed values
      * @see ReadKeyValues
      */
-    <V> List<V> readValues(ReadKeyValues<String, V> readRequest);
+    <V> List<V> readValues(ReadKeyValues<String, V> readRequest) throws InterruptedException;
 
     /**
      * Reads key-value pairs from a Kafka topic.
@@ -32,11 +34,13 @@ public interface RecordConsumer {
      *      refers to the type of keys being read
      * @param <V>
      *      refers to the type of values being read
+     * @throws InterruptedException
+     *      in case an interrupt signal has been set
      * @return
      *      unmodifiable {@link java.util.List} of consumed key-value pairs
      * @see ReadKeyValues
      */
-    <K, V> List<KeyValue<K, V>> read(ReadKeyValues<K, V> readRequest);
+    <K, V> List<KeyValue<K, V>> read(ReadKeyValues<K, V> readRequest) throws InterruptedException;
 
     /**
      * Observes a Kafka topic until a certain amount of records have been consumed or a timeout

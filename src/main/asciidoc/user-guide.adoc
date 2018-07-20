@@ -9,7 +9,6 @@
 :icons: font
 :pdf-stylesdir: css/
 :pdf-style: article
-:pdf-page-size: [16.5cm, 23.8cm]
 :experimental:
 :toc-title: Table of Contents
 :figure-caption: Figure
@@ -20,7 +19,7 @@
 
 = User Guide to Kafka for JUnit
 Markus Günther
-0.2.0, 2018-06-21
+0.3.0, 2018-07-20
 
 :toc:
 

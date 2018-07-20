@@ -56,6 +56,7 @@ public class KafkaTest {
 | ---------------------- | -------- |
 | 0.1.x                  | Apache Kafka 1.0.x |
 | 0.2.x                  | Apache Kafka 1.0.x |
+| 0.3.x                  | Apache Kafka 1.0.x |
 
 Currently, the only supported version is Apache Kafka 1.0.x. Support for Apache Kafka 1.1.x and upcoming releases is planned.
 
