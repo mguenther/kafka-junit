@@ -4,6 +4,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +35,7 @@ public class ReadKeyValuesTest {
         assertThat(props.get(ConsumerConfig.MAX_POLL_RECORDS_CONFIG)).isEqualTo(100);
         assertThat(props.get(ConsumerConfig.ISOLATION_LEVEL_CONFIG)).isEqualTo("read_uncommitted");
         assertThat(readRequest.isIncludeMetadata()).isFalse();
+        assertThat(readRequest.getSeekTo().isEmpty()).isTrue();
     }
 
     @Test
@@ -75,6 +77,19 @@ public class ReadKeyValuesTest {
                 .build();
 
         assertThat(readRequest.isIncludeMetadata()).isTrue();
+    }
+
+    @Test
+    public void seekToShouldPreserveSeekSettings() {
+
+        final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
+                .seekTo(0, 1L)
+                .seekTo(Collections.singletonMap(1, 2L))
+                .build();
+
+        assertThat(readRequest.getSeekTo().size()).isEqualTo(2);
+        assertThat(readRequest.getSeekTo().get(0)).isEqualTo(1L);
+        assertThat(readRequest.getSeekTo().get(1)).isEqualTo(2L);
     }
 
     @Test
