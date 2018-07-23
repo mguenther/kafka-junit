@@ -47,7 +47,7 @@ public class EmbeddedConnect implements EmbeddedLifecycle {
 
     private final DistributedHerder herder;
 
-    public EmbeddedConnect(final EmbeddedConnectConfig connectConfig, final String brokerList) {
+    public EmbeddedConnect(final EmbeddedConnectConfig connectConfig, final String brokerList, final String clusterId) {
         final Properties effectiveWorkerConfig = connectConfig.getConnectProperties();
         effectiveWorkerConfig.put(WorkerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerList);
         this.connectorConfigs = connectConfig.getConnectors();
@@ -56,7 +56,7 @@ public class EmbeddedConnect implements EmbeddedLifecycle {
         this.worker = new Worker(connectConfig.getWorkerId(), Time.SYSTEM, new Plugins(new HashMap<>()), config, offsetBackingStore);
         this.statusBackingStore = new KafkaStatusBackingStore(Time.SYSTEM, worker.getInternalValueConverter());
         this.configBackingStore = new KafkaConfigBackingStore(worker.getInternalValueConverter(), config);
-        this.herder = new DistributedHerder(config, Time.SYSTEM, worker, statusBackingStore, configBackingStore, "");
+        this.herder = new DistributedHerder(config, Time.SYSTEM, worker, clusterId, statusBackingStore, configBackingStore, "");
     }
 
     @Override

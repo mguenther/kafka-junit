@@ -50,7 +50,7 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
             broker.start();
 
             if (config.usesConnect()) {
-                connect = new EmbeddedConnect(config.getConnectConfig(), getBrokerList());
+                connect = new EmbeddedConnect(config.getConnectConfig(), getBrokerList(), getClusterId());
                 connect.start();
             }
 
@@ -76,6 +76,10 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
 
     public String getBrokerList() {
         return broker.getBrokerList();
+    }
+
+    public String getClusterId() {
+        return broker.getClusterId();
     }
 
     public static EmbeddedKafkaCluster provisionWith(final EmbeddedKafkaClusterConfig config) {

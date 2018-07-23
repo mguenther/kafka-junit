@@ -75,4 +75,8 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
     public String getBrokerList() {
         return String.format("%s:%s", kafka.config().hostName(), Integer.toString(kafka.boundPort(forSecurityProtocol(SecurityProtocol.PLAINTEXT))));
     }
+
+    public String getClusterId() {
+        return kafka.clusterId();
+    }
 }
