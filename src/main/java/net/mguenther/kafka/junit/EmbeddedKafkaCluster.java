@@ -100,6 +100,28 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
                 .orElse(StringUtils.EMPTY);
     }
 
+    public void disconnect(final Integer brokerId) {
+
+        if (!brokers.containsKey(brokerId)) {
+            log.info("There is no broker with ID {}. Omitting the disconnect request.", brokerId);
+            return;
+        }
+
+        final EmbeddedKafka broker = brokers.get(brokerId);
+        broker.deactivate();
+    }
+
+    public void connect(final Integer brokerId) {
+
+        if (!brokers.containsKey(brokerId)) {
+            log.info("There is no broker with ID {}. Omitting the connection request.", brokerId);
+            return;
+        }
+
+        final EmbeddedKafka broker = brokers.get(brokerId);
+        broker.activate();
+    }
+
     public static EmbeddedKafkaCluster provisionWith(final EmbeddedKafkaClusterConfig config) {
         return new EmbeddedKafkaCluster(config);
     }

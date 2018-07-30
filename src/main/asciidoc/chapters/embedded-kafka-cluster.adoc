@@ -78,3 +78,64 @@ public class MultipleBrokersTest {
 Using this configuration, we end up with a total of three brokers that form an embedded Kafka cluster, while the defaults for topic partitions and replicas have been adjusted to be consistent with the size of the cluster.
 
 See sections on <<section:producing-records, Producing records>>, <<section:consuming-records, Consuming records>> and <<section:managing-topics, Managing topics>> for further reference on how to interact with the cluster.
+
+=== Failure Modes
+
+`EmbeddedKafkaCluster` provides the means to disconnect - and re-connect of course - specific embedded Kafka brokers. All brokers in the embedded cluster get broker ID assigned during cluster formation. This broker ID is an `Integer`-based value and starts at 1. The broker ID increases by 1 for every subsequent embedded Kafka broker that is started during cluster formation.
+
+Clusters stay fixed wrt. the maximum number of embedded brokers. But individual brokers can, given their broker ID, be disconnected from the rest of the cluster to test for failure scenarios. Such failure scenarios include:
+
+* How does may Kafka-based component behave in the presence of broker outages?
+* What happens if the In-Sync-Replica Set (ISR) of a topic that my application consumes from shrinks below its minimum size?
+* Is my application able to progress after brokers re-connect and form a working cluster?
+
+The following listing shows how to disconnect and re-connect a certain broker, while fetching the ISR of a dedicated topic in between these operations to determine whether the cluster behaves correctly.
+
+NOTE: If you do use this feature of Kafka for JUnit, then please give the embedded cluster some time to handle churn. Identifying that a leader for a topic-partition is not available and conducting the leader election takes some time. In the example underneath we introduce a delay of five seconds in between operations that affect cluster membership.
+
+```java
+cluster.createTopic(TopicConfig.forTopic("test-topic")
+    .withNumberOfPartitions(5)
+    .withNumberOfReplicas(3)
+    .build());
+
+delay(5);
+
+Set<Integer> leaders = cluster.getLeaderAndIsr("test-topic")
+    .values()
+    .stream()
+    .map(LeaderAndIsr::leader)
+    .collect(Collectors.toSet());
+
+assertThat(leaders.contains(1)).isTrue();
+assertThat(leaders.contains(2)).isTrue();
+assertThat(leaders.contains(3)).isTrue();
+
+cluster.disconnect(1);
+
+delay(5);
+
+Set<Integer> leadersAfterDisconnect = cluster.getLeaderAndIsr("test-topic")
+    .values()
+    .stream()
+    .map(LeaderAndIsr::leader)
+    .collect(Collectors.toSet());
+
+assertThat(leadersAfterDisconnect.contains(1)).isFalse();
+assertThat(leadersAfterDisconnect.contains(2)).isTrue();
+assertThat(leadersAfterDisconnect.contains(3)).isTrue();
+
+cluster.connect(1);
+
+delay(5);
+
+Set<Integer> leadersAfterReconnect = cluster.getLeaderAndIsr("test-topic")
+    .values()
+    .stream()
+    .map(LeaderAndIsr::leader)
+    .collect(Collectors.toSet());
+
+assertThat(leadersAfterReconnect.contains(1)).isTrue();
+assertThat(leadersAfterReconnect.contains(2)).isTrue();
+assertThat(leadersAfterReconnect.contains(3)).isTrue();
+```
