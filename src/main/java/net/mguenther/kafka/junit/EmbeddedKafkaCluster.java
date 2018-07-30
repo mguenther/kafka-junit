@@ -6,11 +6,14 @@ import lombok.extern.slf4j.Slf4j;
 import net.mguenther.kafka.junit.provider.DefaultRecordConsumer;
 import net.mguenther.kafka.junit.provider.DefaultRecordProducer;
 import net.mguenther.kafka.junit.provider.DefaultTopicManager;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.junit.rules.ExternalResource;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -20,7 +23,7 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
 
     private EmbeddedZooKeeper zooKeeper;
 
-    private EmbeddedKafka broker;
+    private Map<Integer, EmbeddedKafka> brokers;
 
     private EmbeddedConnect connect;
 
@@ -31,7 +34,7 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
     private TopicManager topicManagerDelegate;
 
     @Override
-    protected void before() throws Throwable {
+    protected void before() {
         start();
     }
 
@@ -48,8 +51,14 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
             zooKeeper = new EmbeddedZooKeeper(config.getZooKeeperConfig());
             zooKeeper.start();
 
-            broker = new EmbeddedKafka(config.getKafkaConfig(), zooKeeper.getConnectString());
-            broker.start();
+            brokers = new HashMap<>();
+
+            for (int i = 0; i < config.getKafkaConfig().getNumberOfBrokers(); i++) {
+                final int brokerId = i + 1;
+                final EmbeddedKafka broker = new EmbeddedKafka(brokerId, config.getKafkaConfig(), zooKeeper.getConnectString());
+                broker.start();
+                brokers.put(broker.getBrokerId(), broker);
+            }
 
             if (config.usesConnect()) {
                 connect = new EmbeddedConnect(config.getConnectConfig(), getBrokerList(), getClusterId());
@@ -72,16 +81,23 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
             connect.stop();
         }
 
-        broker.stop();
+        brokers.values().forEach(EmbeddedKafka::stop);
         zooKeeper.stop();
     }
 
     public String getBrokerList() {
-        return broker.getBrokerList();
+        final List<String> brokerAddresses = brokers.values().stream()
+                .filter(EmbeddedKafka::isActive)
+                .map(EmbeddedKafka::getBrokerList)
+                .collect(Collectors.toList());
+        return StringUtils.join(brokerAddresses, ",");
     }
 
     public String getClusterId() {
-        return broker.getClusterId();
+        return brokers.values().stream()
+                .map(EmbeddedKafka::getClusterId)
+                .findFirst()
+                .orElse(StringUtils.EMPTY);
     }
 
     public static EmbeddedKafkaCluster provisionWith(final EmbeddedKafkaClusterConfig config) {

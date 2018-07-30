@@ -45,6 +45,6 @@ public class TopicManagerTest {
         Map<Integer, LeaderAndIsr> isr = cluster.getLeaderAndIsr("test-topic");
 
         assertThat(isr.size()).isEqualTo(5);
-        assertThat(isr.values().stream().allMatch(lai -> lai.leader() == 1001)).isTrue();
+        assertThat(isr.values().stream().allMatch(lai -> lai.leader() == 1)).isTrue();
     }
 }

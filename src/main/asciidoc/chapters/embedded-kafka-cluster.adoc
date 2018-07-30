@@ -45,13 +45,36 @@ public class MyTest {
     public EmbeddedKafkaCluster cluster = provisionWith(EmbeddedKafkaClusterConfig
             .create()
             .provisionWith(EmbeddedKafkaConfig
-                    .create()
-                    .with(KafkaConfig$.MODULE$.NumPartitionsProp(), "5")
-                    .build())
+                .create()
+                .with(KafkaConfig$.MODULE$.NumPartitionsProp(), "5")
+                .build())
             .build());
 }
 ----
 
 The builders for those configurations provide a uniform interface for overriding defaults, comprising two methods `with(String propertyName, T value)` and `withAll(java.util.Properties overrides)`. To override a default value, you simply provide the name of the configuration parameter as defined by the resp. Kafka component along with the new value.
+
+Using the default setting will provide you with a single embedded Kafka broker. This ought to be sufficient for most cases. However, there are scenarios which require testing against multiple brokers that form a cluster. Forming an embedded cluster with multiple brokers is done by adjusting the default provisioning of your test case. See the listing underneath for an example.
+
+[source, java]
+----
+public class MultipleBrokersTest {
+
+    @Rule
+    public EmbeddedKafkaCluster cluster = provisionWith(EmbeddedKafkaClusterConfig.create()
+            .provisionWith(EmbeddedKafkaConfig.create()
+                .withNumberOfBrokers(3)
+                .with(KafkaConfig$.MODULE$.NumPartitionsProp(), "5")
+                .with(KafkaConfig$.MODULE$.DefaultReplicationFactorProp(), "3")
+                .with(KafkaConfig$.MODULE$.MinInSyncReplicasProp(), "2")
+                .with(KafkaConfig$.MODULE$.OffsetsTopicReplicationFactorProp(), "3")
+                .with(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp(), "3")
+                .with(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp(), "2")
+                .build())
+            .build());
+}
+----
+
+Using this configuration, we end up with a total of three brokers that form an embedded Kafka cluster, while the defaults for topic partitions and replicas have been adjusted to be consistent with the size of the cluster.
 
 See sections on <<section:producing-records, Producing records>>, <<section:consuming-records, Consuming records>> and <<section:managing-topics, Managing topics>> for further reference on how to interact with the cluster.
