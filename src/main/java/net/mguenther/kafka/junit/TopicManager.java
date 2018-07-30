@@ -1,5 +1,9 @@
 package net.mguenther.kafka.junit;
 
+import kafka.api.LeaderAndIsr;
+
+import java.util.Map;
+
 /**
  * Provides the means to manage Kafka topics. All of the operations a {@code TopicManager} provides
  * are synchronous in their nature.
@@ -36,4 +40,17 @@ public interface TopicManager {
      *      {@code true} if the topic exists, {@code false} otherwise
      */
     boolean exists(String topic);
+
+    /**
+     * Retrieves the leader as well as the In-Sync-Replica-Set (ISR) for all topic-partitions
+     * of the given topic.
+     *
+     * @param topic
+     *      name of the topic for which the ISR shall be fetched
+     * @return
+     *      unmodifiable {@link Map} of {@link LeaderAndIsr} by partition, which shows us
+     *      broker assignments and the role of the broker for a particular partition
+     *      (leader or follower)
+     */
+    Map<Integer, LeaderAndIsr> getLeaderAndIsr(String topic);
 }

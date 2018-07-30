@@ -1,5 +1,6 @@
 package net.mguenther.kafka.junit;
 
+import kafka.api.LeaderAndIsr;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.mguenther.kafka.junit.provider.DefaultRecordConsumer;
@@ -9,6 +10,7 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.junit.rules.ExternalResource;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -139,6 +141,11 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
     @Override
     public boolean exists(final String topic) {
         return topicManagerDelegate.exists(topic);
+    }
+
+    @Override
+    public Map<Integer, LeaderAndIsr> getLeaderAndIsr(final String topic) {
+        return topicManagerDelegate.getLeaderAndIsr(topic);
     }
 
     @Override
