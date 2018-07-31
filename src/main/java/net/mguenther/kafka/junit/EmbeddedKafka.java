@@ -80,6 +80,7 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
     }
 
     public void deactivate() {
+        if (kafka == null) return;
         log.info("The embedded Kafka broker with ID {} is stopping.", brokerId);
         kafka.shutdown();
         kafka.awaitShutdown();

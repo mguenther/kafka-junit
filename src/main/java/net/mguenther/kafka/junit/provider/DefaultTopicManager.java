@@ -19,6 +19,7 @@ import scala.Option;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -85,7 +86,8 @@ public class DefaultTopicManager implements TopicManager {
         }
     }
 
-    public Map<Integer, LeaderAndIsr> getLeaderAndIsr(final String topic) {
+    @Override
+    public Map<Integer, LeaderAndIsr> fetchLeaderAndIsr(final String topic) {
         ZkUtils zkUtils = null;
         try {
             zkUtils = get();
@@ -98,6 +100,21 @@ public class DefaultTopicManager implements TopicManager {
                 else leaderAndIsrForTopic.put(partition, leaderAndIsrOption.get());
             }
             return Collections.unmodifiableMap(leaderAndIsrForTopic);
+        } finally {
+            if (zkUtils != null) {
+                zkUtils.close();
+            }
+        }
+    }
+
+    @Override
+    public Properties fetchTopicConfig(final String topic) {
+        ZkUtils zkUtils = null;
+        try {
+            zkUtils = get();
+            final Option<Properties> topicConfigOpt = AdminUtils.fetchAllTopicConfigs(zkUtils).get(topic);
+            if (topicConfigOpt.isEmpty()) throw new RuntimeException(String.format("Unable to retrieve configuration for topic %s.", topic));
+            return topicConfigOpt.get();
         } finally {
             if (zkUtils != null) {
                 zkUtils.close();

@@ -47,6 +47,7 @@ public class EmbeddedKafkaConfig {
             ifNonExisting(KafkaConfig$.MODULE$.PortProp(), "0");
             ifNonExisting(KafkaConfig$.MODULE$.NumPartitionsProp(), "1");
             ifNonExisting(KafkaConfig$.MODULE$.DefaultReplicationFactorProp(), "1");
+            ifNonExisting(KafkaConfig$.MODULE$.MinInSyncReplicasProp(), "1");
             ifNonExisting(KafkaConfig$.MODULE$.AutoCreateTopicsEnableProp(), "true");
             ifNonExisting(KafkaConfig$.MODULE$.MessageMaxBytesProp(), "1000000");
             ifNonExisting(KafkaConfig$.MODULE$.ControlledShutdownEnableProp(), "true");
@@ -59,6 +60,7 @@ public class EmbeddedKafkaConfig {
             ifNonExisting(KafkaConfig$.MODULE$.ControlledShutdownEnableProp(), "true");
             ifNonExisting(KafkaConfig$.MODULE$.LeaderImbalanceCheckIntervalSecondsProp(), 5);
             ifNonExisting(KafkaConfig$.MODULE$.LeaderImbalancePerBrokerPercentageProp(), 1);
+            ifNonExisting(KafkaConfig$.MODULE$.UncleanLeaderElectionEnableProp(), "false");
             return new EmbeddedKafkaConfig(numberOfBrokers, properties);
         }
     }

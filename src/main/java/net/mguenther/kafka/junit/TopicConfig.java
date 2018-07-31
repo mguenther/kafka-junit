@@ -57,7 +57,7 @@ public class TopicConfig {
         public TopicConfig build() {
             ifNonExisting("cleanup.policy", "delete");
             ifNonExisting("delete.retention.ms", "86400000");
-            ifNonExisting("min.insync.replicas", "1");
+            ifNonExisting("min.insync.replicas", "2");
             return new TopicConfig(topic, numberOfPartitions, numberOfReplicas, properties);
         }
     }

@@ -66,6 +66,7 @@ public class SendKeyValuesTransactional<K, V> {
             ifNonExisting(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
             ifNonExisting(ProducerConfig.TRANSACTIONAL_ID_CONFIG, UUID.randomUUID().toString());
             ifNonExisting(ProducerConfig.TRANSACTION_TIMEOUT_CONFIG, 60_000);
+            ifNonExisting(ProducerConfig.ACKS_CONFIG, "all");
             return new SendKeyValuesTransactional<>(recordsPerTopic, producerProps);
         }
     }

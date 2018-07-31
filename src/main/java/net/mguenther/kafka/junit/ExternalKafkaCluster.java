@@ -12,6 +12,7 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ExternalKafkaCluster implements RecordProducer, RecordConsumer, TopicManager {
@@ -89,8 +90,13 @@ public class ExternalKafkaCluster implements RecordProducer, RecordConsumer, Top
     }
 
     @Override
-    public Map<Integer, LeaderAndIsr> getLeaderAndIsr(final String topic) {
-        return topicManagerDelegate.getLeaderAndIsr(topic);
+    public Map<Integer, LeaderAndIsr> fetchLeaderAndIsr(final String topic) {
+        return topicManagerDelegate.fetchLeaderAndIsr(topic);
+    }
+
+    @Override
+    public Properties fetchTopicConfig(final String topic) {
+        return topicManagerDelegate.fetchTopicConfig(topic);
     }
 
     public static ExternalKafkaCluster at(final String bootstrapServers) {

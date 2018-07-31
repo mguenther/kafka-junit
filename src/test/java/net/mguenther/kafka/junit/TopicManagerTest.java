@@ -6,6 +6,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
 
 import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
 import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
@@ -32,7 +34,7 @@ public class TopicManagerTest {
     }
 
     @Test
-    public void getLeaderAndIsrShouldRetrieveTheIsr() throws Exception {
+    public void fetchLeaderAndIsrShouldRetrieveTheIsr() throws Exception {
 
         cluster.createTopic(TopicConfig.forTopic("test-topic")
                 .withNumberOfPartitions(5)
@@ -42,9 +44,29 @@ public class TopicManagerTest {
         // it takes a couple of seconds until topic-partition assignments are there
         delay(5);
 
-        Map<Integer, LeaderAndIsr> isr = cluster.getLeaderAndIsr("test-topic");
+        Map<Integer, LeaderAndIsr> isr = cluster.fetchLeaderAndIsr("test-topic");
 
         assertThat(isr.size()).isEqualTo(5);
         assertThat(isr.values().stream().allMatch(lai -> lai.leader() == 1)).isTrue();
+    }
+
+    @Test
+    public void fetchTopicConfigShouldRetrieveTheProperConfig() throws Exception {
+
+        cluster.createTopic(TopicConfig.forTopic("test-topic")
+                .with("min.insync.replicas", "1")
+                .build());
+
+        delay(3);
+
+        Properties topicConfig = cluster.fetchTopicConfig("test-topic");
+
+        assertThat(topicConfig.getProperty("min.insync.replicas")).isEqualTo("1");
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void fetchTopicConfigShouldThrowRuntimeExceptionIfTopicDoesNotExist() throws Exception {
+
+        cluster.fetchTopicConfig(UUID.randomUUID().toString());
     }
 }

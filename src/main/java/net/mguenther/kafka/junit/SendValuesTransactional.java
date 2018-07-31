@@ -7,6 +7,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,6 +63,7 @@ public class SendValuesTransactional<V> {
             ifNonExisting(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
             ifNonExisting(ProducerConfig.TRANSACTIONAL_ID_CONFIG, UUID.randomUUID().toString());
             ifNonExisting(ProducerConfig.TRANSACTION_TIMEOUT_CONFIG, 60_000);
+            ifNonExisting(ProducerConfig.ACKS_CONFIG, "all");
             return new SendValuesTransactional<>(valuesPerTopic, producerPros);
         }
     }
@@ -71,5 +73,10 @@ public class SendValuesTransactional<V> {
 
     public static <V> SendValuesTransactionalBuilder<V> inTransaction(final String topic, final Collection<V> values) {
         return new SendValuesTransactionalBuilder<>(topic, values);
+    }
+
+    @SafeVarargs
+    public static <V> SendValuesTransactionalBuilder<V> inTransaction(final String topic, final V... values) {
+        return new SendValuesTransactionalBuilder<>(topic, Arrays.asList(values));
     }
 }

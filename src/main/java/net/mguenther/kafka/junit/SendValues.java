@@ -50,6 +50,7 @@ public class SendValues<V> {
         public SendValues<V> build() {
             ifNonExisting(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
             ifNonExisting(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+            ifNonExisting(ProducerConfig.ACKS_CONFIG, "all");
             return new SendValues<>(topic, values, producerProps);
         }
     }

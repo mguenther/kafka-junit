@@ -25,7 +25,7 @@ public class TopicConfigTest {
         assertThat(topicConfig.getNumberOfReplicas()).isEqualTo(1);
         assertThat(topicConfig.getProperties().getProperty("cleanup.policy")).isEqualTo("delete");
         assertThat(topicConfig.getProperties().getProperty("delete.retention.ms")).isEqualTo("86400000");
-        assertThat(topicConfig.getProperties().getProperty("min.insync.replicas")).isEqualTo("1");
+        assertThat(topicConfig.getProperties().getProperty("min.insync.replicas")).isEqualTo("2");
     }
 
     @Test

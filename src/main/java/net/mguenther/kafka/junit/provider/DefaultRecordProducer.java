@@ -71,7 +71,8 @@ public class DefaultRecordProducer implements RecordProducer {
                 try {
                     metadata.add(f.get());
                 } catch (ExecutionException e) {
-                    throw new RuntimeException(e);
+                    if (RuntimeException.class.isAssignableFrom(e.getCause().getClass())) throw (RuntimeException) e.getCause();
+                    else throw new RuntimeException(e.getCause());
                 }
             }
         } finally {
@@ -95,7 +96,8 @@ public class DefaultRecordProducer implements RecordProducer {
                     try {
                         metadata.add(f.get());
                     } catch (ExecutionException e) {
-                        throw new RuntimeException(e);
+                        if (RuntimeException.class.isAssignableFrom(e.getCause().getClass())) throw (RuntimeException) e.getCause();
+                        else throw new RuntimeException(e.getCause());
                     }
                 }
             }

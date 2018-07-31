@@ -89,9 +89,11 @@ Clusters stay fixed wrt. the maximum number of embedded brokers. But individual 
 * What happens if the In-Sync-Replica Set (ISR) of a topic that my application consumes from shrinks below its minimum size?
 * Is my application able to progress after brokers re-connect and form a working cluster?
 
+==== Disconnect and reconnect a single broker
+
 The following listing shows how to disconnect and re-connect a certain broker, while fetching the ISR of a dedicated topic in between these operations to determine whether the cluster behaves correctly.
 
-NOTE: If you do use this feature of Kafka for JUnit, then please give the embedded cluster some time to handle churn. Identifying that a leader for a topic-partition is not available and conducting the leader election takes some time. In the example underneath we introduce a delay of five seconds in between operations that affect cluster membership.
+NOTE: If you do use this feature of Kafka for JUnit, then please give the embedded cluster some time to handle broker churn. Identifying that a leader for a topic-partition is not available and conducting the leader election takes some time. In the example underneath we introduce a delay of five seconds in between operations that affect cluster membership.
 
 ```java
 cluster.createTopic(TopicConfig.forTopic("test-topic")
@@ -101,7 +103,7 @@ cluster.createTopic(TopicConfig.forTopic("test-topic")
 
 delay(5);
 
-Set<Integer> leaders = cluster.getLeaderAndIsr("test-topic")
+Set<Integer> leaders = cluster.fetchLeaderAndIsr("test-topic")
     .values()
     .stream()
     .map(LeaderAndIsr::leader)
@@ -115,7 +117,7 @@ cluster.disconnect(1);
 
 delay(5);
 
-Set<Integer> leadersAfterDisconnect = cluster.getLeaderAndIsr("test-topic")
+Set<Integer> leadersAfterDisconnect = cluster.fetchLeaderAndIsr("test-topic")
     .values()
     .stream()
     .map(LeaderAndIsr::leader)
@@ -129,7 +131,7 @@ cluster.connect(1);
 
 delay(5);
 
-Set<Integer> leadersAfterReconnect = cluster.getLeaderAndIsr("test-topic")
+Set<Integer> leadersAfterReconnect = cluster.fetchLeaderAndIsr("test-topic")
     .values()
     .stream()
     .map(LeaderAndIsr::leader)
@@ -138,4 +140,65 @@ Set<Integer> leadersAfterReconnect = cluster.getLeaderAndIsr("test-topic")
 assertThat(leadersAfterReconnect.contains(1)).isTrue();
 assertThat(leadersAfterReconnect.contains(2)).isTrue();
 assertThat(leadersAfterReconnect.contains(3)).isTrue();
+```
+
+==== Disconnect until In-Sync-Replica Set falls below minimum size
+
+The following listing shows how to disconnect the In-Sync-Replica Set (ISR) for a given topic until its ISR falls below its minimum size.
+
+NOTE: If you do use this feature of Kafka for JUnit, then please give the embedded cluster some time to handle broker churn. Identifying that a leader for a topic-partition is not available and conducting the leader election takes some time. In the example underneath we introduce a delay of five seconds in between operations that affect cluster membership.
+
+```java
+
+// Create a topic and configure the number of replicas as well as the size of the ISR
+
+cluster.createTopic(TopicConfig.forTopic("test-topic")
+    .withNumberOfPartitions(5)
+    .withNumberOfReplicas(3)
+    .with("min.insync.replicas", "2")
+    .build());
+
+// Wait a bit to give the cluster a chance to properly assign topic-partitions to leaders
+
+delay(5);
+
+// Disconnect until the remaining number of brokers fall below the minimum ISR size
+
+cluster.disconnectUntilIsrFallsBelowMinimumSize("test-topic");
+
+delay(5);
+
+// Submitting records to this topic will yield a NotEnoughReplicasException
+
+cluster.send(SendValues.to("test-topic", "A").useDefaults());
+```
+
+The last line of the listing shows the effect of an ISR that can no longer operate reliably. Your Kafka-based component or application would run concurrently to this test so that you are able to observe if it behaves correctly (e.g. by checking that the component progresses normally if the ISR is restored).
+
+==== Restoring the In-Sync-Replica Set
+
+Restoring the In-Sync-Replica Set is easy, as method `disconnectUntilIsrFallsBelowMinimumSize` returns a list of broker IDs for all brokers that have been deactivated during the shrinking. The following listing shows how to restore the ISR.
+
+```java
+cluster.createTopic(TopicConfig.forTopic("test-topic")
+    .withNumberOfPartitions(5)
+    .withNumberOfReplicas(3)
+    .with("min.insync.replicas", "2")
+    .build());
+
+delay(5);
+
+Set<Integer> disconnectedBrokers = cluster.disconnectUntilIsrFallsBelowMinimumSize("test-topic");
+
+delay(5);
+
+// Do some testing, trigger some operations, observe the behavior of your application
+
+cluster.connect(disconnectedBrokers);
+
+// Give the cluster some time to assign leaders and reestablish the ISR
+
+delay(5);
+
+// Do some more testing ...
 ```

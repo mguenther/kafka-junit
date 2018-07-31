@@ -54,10 +54,10 @@ public class KafkaTest {
 
 | Version of Kafka for JUnit | Supports           |
 | -------------------------- | ------------------ |
-| 0.1.0                      | Apache Kafka 1.0.0 |
-| 0.2.0                      | Apache Kafka 1.0.0 |
-| 0.3.0                      | Apache Kafka 1.0.0 |
-| 1.0.0                      | Apache Kafka 1.1.1 |
+| 0.1.x                      | Apache Kafka 1.0.0 |
+| 0.2.x                      | Apache Kafka 1.0.0 |
+| 0.3.x                      | Apache Kafka 1.0.0 |
+| 1.0.x                      | Apache Kafka 1.1.1 |
 
 ## Interacting with the Kafka cluster
 

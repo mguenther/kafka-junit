@@ -3,6 +3,7 @@ package net.mguenther.kafka.junit;
 import kafka.api.LeaderAndIsr;
 
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Provides the means to manage Kafka topics. All of the operations a {@code TopicManager} provides
@@ -52,5 +53,16 @@ public interface TopicManager {
      *      broker assignments and the role of the broker for a particular partition
      *      (leader or follower)
      */
-    Map<Integer, LeaderAndIsr> getLeaderAndIsr(String topic);
+    Map<Integer, LeaderAndIsr> fetchLeaderAndIsr(String topic);
+
+    /**
+     * Retrieves the topic configuration for the given topic.
+     *
+     * @param topic
+     *      name of the topic for which the configuration shall be fetched
+     * @return
+     *      instance of {@link java.util.Properties} which contains the configuration
+     *      of the given topic
+     */
+    Properties fetchTopicConfig(String topic);
 }
