@@ -56,6 +56,7 @@ public class DefaultRecordProducer implements RecordProducer {
         }
         final SendKeyValuesTransactional<String, V> keyValueRequest = SendKeyValuesTransactional.inTransaction(recordsPerTopic)
                 .withAll(sendRequest.getProducerProps())
+                .withFailTransaction(sendRequest.shouldFailTransaction())
                 .build();
         return send(keyValueRequest);
     }
@@ -101,7 +102,8 @@ public class DefaultRecordProducer implements RecordProducer {
                     }
                 }
             }
-            producer.commitTransaction();
+            if (sendRequest.shouldFailTransaction()) producer.abortTransaction();
+            else producer.commitTransaction();
         } catch (ProducerFencedException e) {
             producer.abortTransaction();
             final String message = String.format(

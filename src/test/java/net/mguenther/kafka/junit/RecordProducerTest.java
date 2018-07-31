@@ -1,11 +1,6 @@
 package net.mguenther.kafka.junit;
 
-import net.mguenther.kafka.junit.EmbeddedKafkaCluster;
-import net.mguenther.kafka.junit.KeyValue;
-import net.mguenther.kafka.junit.ReadKeyValues;
-import net.mguenther.kafka.junit.SendKeyValues;
-import net.mguenther.kafka.junit.SendValues;
-import net.mguenther.kafka.junit.SendValuesTransactional;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.junit.Rule;
 import org.junit.Test;
@@ -14,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
 import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
@@ -116,5 +112,35 @@ public class RecordProducerTest {
 
         assertThat(consumedRecords.size()).isEqualTo(1);
         assertThat(new String(consumedRecords.get(0).getHeaders().lastHeader("client").value())).isEqualTo("kafka-junit-test");
+    }
+
+    @Test(expected = AssertionError.class)
+    public void valuesOfAbortedTransactionsShouldNotBeVisibleByTransactionalConsumer() throws Exception {
+
+        SendValuesTransactional<String> sendRequest = SendValuesTransactional
+                .inTransaction("test-topic", Arrays.asList("a", "b"))
+                .failTransaction()
+                .build();
+
+        cluster.send(sendRequest);
+        cluster.observe(on("test-topic", 2)
+                .with(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed")
+                .observeFor(5, TimeUnit.SECONDS)
+                .build());
+    }
+
+    @Test(expected = AssertionError.class)
+    public void keyValuesOfAbortedTransactionsShouldNotBeVisibleByTransactionalConsumer() throws Exception {
+
+        SendKeyValuesTransactional<String, String> sendRequest = SendKeyValuesTransactional
+                .inTransaction("test-topic", Collections.singletonList(new KeyValue<>("a", "b")))
+                .failTransaction()
+                .build();
+
+        cluster.send(sendRequest);
+        cluster.observe(on("test-topic", 1)
+                .with(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed")
+                .observeFor(5, TimeUnit.SECONDS)
+                .build());
     }
 }
