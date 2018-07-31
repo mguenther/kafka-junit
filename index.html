@@ -16,8 +16,8 @@
 <h1>User Guide to Kafka for JUnit</h1>
 <div class="details">
 <span id="author" class="author">Markus Günther</span><br>
-<span id="revnumber">version 0.3.0,</span>
-<span id="revdate">2018-07-20</span>
+<span id="revnumber">version 1.0.0,</span>
+<span id="revdate">2018-07-31</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -31,7 +31,11 @@
 <li><a href="#_supported_versions_of_apache_kafka">2.4. Supported versions of Apache Kafka</a></li>
 </ul>
 </li>
-<li><a href="#section:embedded-kafka-cluster">3. Working with an embedded Kafka cluster</a></li>
+<li><a href="#section:embedded-kafka-cluster">3. Working with an embedded Kafka cluster</a>
+<ul class="sectlevel2">
+<li><a href="#_failure_modes">3.1. Failure Modes</a></li>
+</ul>
+</li>
 <li><a href="#section:external-kafka-cluster">4. Working with an external Kafka cluster</a></li>
 <li><a href="#section:producing-records">5. Producing records</a>
 <ul class="sectlevel2">
@@ -42,7 +46,8 @@
 <li><a href="#_sending_keyed_records_using_overrides">5.5. Sending keyed records using overrides</a></li>
 <li><a href="#_sending_keyed_records_transactionally">5.6. Sending keyed records transactionally</a></li>
 <li><a href="#_sending_records_or_values_transactionally_to_multiple_topics">5.7. Sending records or values transactionally to multiple topics</a></li>
-<li><a href="#_attaching_record_headers">5.8. Attaching record headers</a></li>
+<li><a href="#_failing_a_transaction_on_purpose">5.8. Failing a transaction on purpose</a></li>
+<li><a href="#_attaching_record_headers">5.9. Attaching record headers</a></li>
 </ul>
 </li>
 <li><a href="#section:consuming-records">6. Consuming records</a>
@@ -56,8 +61,9 @@
 <li><a href="#_observing_a_topic_until_code_n_code_records_have_been_consumed">6.7. Observing a topic until <code>N</code> records have been consumed</a></li>
 <li><a href="#_using_key_filters_when_consuming_or_observing_a_topic">6.8. Using key filters when consuming or observing a topic</a></li>
 <li><a href="#_using_value_filters_when_consuming_or_observing_a_topic">6.9. Using value filters when consuming or observing a topic</a></li>
-<li><a href="#_obtaining_metadata_per_record">6.10. Obtaining metadata per-record</a></li>
-<li><a href="#_seeking_to_a_dedicated_offset_of_a_topic_partition">6.11. Seeking to a dedicated offset of a topic-partition</a></li>
+<li><a href="#_using_header_filters_when_consuming_or_observing_a_topic">6.10. Using header filters when consuming or observing a topic</a></li>
+<li><a href="#_obtaining_metadata_per_record">6.11. Obtaining metadata per-record</a></li>
+<li><a href="#_seeking_to_a_dedicated_offset_of_a_topic_partition">6.12. Seeking to a dedicated offset of a topic-partition</a></li>
 </ul>
 </li>
 <li><a href="#section:managing-topics">7. Managing topics</a>
@@ -65,6 +71,8 @@
 <li><a href="#_creating_a_topic">7.1. Creating a topic</a></li>
 <li><a href="#_deleting_a_topic">7.2. Deleting a topic</a></li>
 <li><a href="#_determine_whether_a_topic_exists">7.3. Determine whether a topic exists</a></li>
+<li><a href="#_retrieving_the_leader_and_the_in_sync_replica_set_isr">7.4. Retrieving the leader and the In-Sync-Replica Set (ISR)</a></li>
+<li><a href="#_retrieving_the_topic_configuration_remotely">7.5. Retrieving the topic configuration remotely</a></li>
 </ul>
 </li>
 <li><a href="#section:colophon">8. License</a></li>
@@ -156,21 +164,22 @@
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">0.1.x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 1.0.x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 1.0.0</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">0.2.x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 1.0.x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 1.0.0</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">0.3.x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 1.0.x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 1.0.0</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.0.x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 1.1.1</p></td>
 </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p>Currently, the only supported version is Apache Kafka 1.0.x. Support for Apache Kafka 1.1.x and upcoming releases is planned.</p>
-</div>
 </div>
 </div>
 </div>
@@ -225,9 +234,9 @@ public class MyTest {
     public EmbeddedKafkaCluster cluster = provisionWith(EmbeddedKafkaClusterConfig
             .create()
             .provisionWith(EmbeddedKafkaConfig
-                    .create()
-                    .with(KafkaConfig$.MODULE$.NumPartitionsProp(), "5")
-                    .build())
+                .create()
+                .with(KafkaConfig$.MODULE$.NumPartitionsProp(), "5")
+                .build())
             .build());
 }</code></pre>
 </div>
@@ -236,7 +245,197 @@ public class MyTest {
 <p>The builders for those configurations provide a uniform interface for overriding defaults, comprising two methods <code>with(String propertyName, T value)</code> and <code>withAll(java.util.Properties overrides)</code>. To override a default value, you simply provide the name of the configuration parameter as defined by the resp. Kafka component along with the new value.</p>
 </div>
 <div class="paragraph">
+<p>Using the default setting will provide you with a single embedded Kafka broker. This ought to be sufficient for most cases. However, there are scenarios which require testing against multiple brokers that form a cluster. Forming an embedded cluster with multiple brokers is done by adjusting the default provisioning of your test case. See the listing underneath for an example.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public class MultipleBrokersTest {
+
+    @Rule
+    public EmbeddedKafkaCluster cluster = provisionWith(EmbeddedKafkaClusterConfig.create()
+            .provisionWith(EmbeddedKafkaConfig.create()
+                .withNumberOfBrokers(3)
+                .with(KafkaConfig$.MODULE$.NumPartitionsProp(), "5")
+                .with(KafkaConfig$.MODULE$.DefaultReplicationFactorProp(), "3")
+                .with(KafkaConfig$.MODULE$.MinInSyncReplicasProp(), "2")
+                .with(KafkaConfig$.MODULE$.OffsetsTopicReplicationFactorProp(), "3")
+                .with(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp(), "3")
+                .with(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp(), "2")
+                .build())
+            .build());
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Using this configuration, we end up with a total of three brokers that form an embedded Kafka cluster, while the defaults for topic partitions and replicas have been adjusted to be consistent with the size of the cluster.</p>
+</div>
+<div class="paragraph">
 <p>See sections on <a href="#section:producing-records">Producing records</a>, <a href="#section:consuming-records">Consuming records</a> and <a href="#section:managing-topics">Managing topics</a> for further reference on how to interact with the cluster.</p>
+</div>
+<div class="sect2">
+<h3 id="_failure_modes">3.1. Failure Modes</h3>
+<div class="paragraph">
+<p><code>EmbeddedKafkaCluster</code> provides the means to disconnect - and re-connect of course - specific embedded Kafka brokers. All brokers in the embedded cluster get broker ID assigned during cluster formation. This broker ID is an <code>Integer</code>-based value and starts at 1. The broker ID increases by 1 for every subsequent embedded Kafka broker that is started during cluster formation.</p>
+</div>
+<div class="paragraph">
+<p>Clusters stay fixed wrt. the maximum number of embedded brokers. But individual brokers can, given their broker ID, be disconnected from the rest of the cluster to test for failure scenarios. Such failure scenarios include:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>How does may Kafka-based component behave in the presence of broker outages?</p>
+</li>
+<li>
+<p>What happens if the In-Sync-Replica Set (ISR) of a topic that my application consumes from shrinks below its minimum size?</p>
+</li>
+<li>
+<p>Is my application able to progress after brokers re-connect and form a working cluster?</p>
+</li>
+</ul>
+</div>
+<div class="sect3">
+<h4 id="_disconnect_and_reconnect_a_single_broker">3.1.1. Disconnect and reconnect a single broker</h4>
+<div class="paragraph">
+<p>The following listing shows how to disconnect and re-connect a certain broker, while fetching the ISR of a dedicated topic in between these operations to determine whether the cluster behaves correctly.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you do use this feature of Kafka for JUnit, then please give the embedded cluster some time to handle broker churn. Identifying that a leader for a topic-partition is not available and conducting the leader election takes some time. In the example underneath we introduce a delay of five seconds in between operations that affect cluster membership.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">cluster.createTopic(TopicConfig.forTopic("test-topic")
+    .withNumberOfPartitions(5)
+    .withNumberOfReplicas(3)
+    .build());
+
+delay(5);
+
+Set&lt;Integer&gt; leaders = cluster.fetchLeaderAndIsr("test-topic")
+    .values()
+    .stream()
+    .map(LeaderAndIsr::leader)
+    .collect(Collectors.toSet());
+
+assertThat(leaders.contains(1)).isTrue();
+assertThat(leaders.contains(2)).isTrue();
+assertThat(leaders.contains(3)).isTrue();
+
+cluster.disconnect(1);
+
+delay(5);
+
+Set&lt;Integer&gt; leadersAfterDisconnect = cluster.fetchLeaderAndIsr("test-topic")
+    .values()
+    .stream()
+    .map(LeaderAndIsr::leader)
+    .collect(Collectors.toSet());
+
+assertThat(leadersAfterDisconnect.contains(1)).isFalse();
+assertThat(leadersAfterDisconnect.contains(2)).isTrue();
+assertThat(leadersAfterDisconnect.contains(3)).isTrue();
+
+cluster.connect(1);
+
+delay(5);
+
+Set&lt;Integer&gt; leadersAfterReconnect = cluster.fetchLeaderAndIsr("test-topic")
+    .values()
+    .stream()
+    .map(LeaderAndIsr::leader)
+    .collect(Collectors.toSet());
+
+assertThat(leadersAfterReconnect.contains(1)).isTrue();
+assertThat(leadersAfterReconnect.contains(2)).isTrue();
+assertThat(leadersAfterReconnect.contains(3)).isTrue();</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_disconnect_until_in_sync_replica_set_falls_below_minimum_size">3.1.2. Disconnect until In-Sync-Replica Set falls below minimum size</h4>
+<div class="paragraph">
+<p>The following listing shows how to disconnect the In-Sync-Replica Set (ISR) for a given topic until its ISR falls below its minimum size.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you do use this feature of Kafka for JUnit, then please give the embedded cluster some time to handle broker churn. Identifying that a leader for a topic-partition is not available and conducting the leader election takes some time. In the example underneath we introduce a delay of five seconds in between operations that affect cluster membership.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">// Create a topic and configure the number of replicas as well as the size of the ISR
+
+cluster.createTopic(TopicConfig.forTopic("test-topic")
+    .withNumberOfPartitions(5)
+    .withNumberOfReplicas(3)
+    .with("min.insync.replicas", "2")
+    .build());
+
+// Wait a bit to give the cluster a chance to properly assign topic-partitions to leaders
+
+delay(5);
+
+// Disconnect until the remaining number of brokers fall below the minimum ISR size
+
+cluster.disconnectUntilIsrFallsBelowMinimumSize("test-topic");
+
+delay(5);
+
+// Submitting records to this topic will yield a NotEnoughReplicasException
+
+cluster.send(SendValues.to("test-topic", "A").useDefaults());</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The last line of the listing shows the effect of an ISR that can no longer operate reliably. Your Kafka-based component or application would run concurrently to this test so that you are able to observe if it behaves correctly (e.g. by checking that the component progresses normally if the ISR is restored).</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_restoring_the_in_sync_replica_set">3.1.3. Restoring the In-Sync-Replica Set</h4>
+<div class="paragraph">
+<p>Restoring the In-Sync-Replica Set is easy, as method <code>disconnectUntilIsrFallsBelowMinimumSize</code> returns a list of broker IDs for all brokers that have been deactivated during the shrinking. The following listing shows how to restore the ISR.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">cluster.createTopic(TopicConfig.forTopic("test-topic")
+    .withNumberOfPartitions(5)
+    .withNumberOfReplicas(3)
+    .with("min.insync.replicas", "2")
+    .build());
+
+delay(5);
+
+Set&lt;Integer&gt; disconnectedBrokers = cluster.disconnectUntilIsrFallsBelowMinimumSize("test-topic");
+
+delay(5);
+
+// Do some testing, trigger some operations, observe the behavior of your application
+
+cluster.connect(disconnectedBrokers);
+
+// Give the cluster some time to assign leaders and reestablish the ISR
+
+delay(5);
+
+// Do some more testing ...</code></pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -441,7 +640,35 @@ cluster.send(sendRequest);</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_attaching_record_headers">5.8. Attaching record headers</h3>
+<h3 id="_failing_a_transaction_on_purpose">5.8. Failing a transaction on purpose</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">SendValuesTransactional&lt;String&gt; sendRequest = SendValuesTransactional
+        .inTransaction("test-topic", Arrays.asList("a", "b"))
+        .failTransaction()
+        .build();
+
+cluster.send(sendRequest);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Defining a <code>SendValuesTransactional</code> request with <code>failTransaction</code> will write records to the Kafka log, but abort the transaction they belong to. This allows you to test if your application-specific Kafka consumers adhere to the transactional guarantees they claim to satisfy, since only a correct implementation of a consumer with <code>isolation.level</code> set to <code>read_committed</code> must see - and process - those records.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This works for <code>SendKeyValuesTransactional</code> as well.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_attaching_record_headers">5.9. Attaching record headers</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">KeyValue&lt;String, String&gt; record = new KeyValue&lt;&gt;("a", "b");
@@ -641,6 +868,18 @@ Applying a key filter is also possible when observing a topic.
 </tr>
 </table>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Combining key, value and header filters is possible. Please note that in this case only such records that pass all filters are returned. Hence, conjoining key, value and header filters has <code>AND</code> semantics.
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_using_value_filters_when_consuming_or_observing_a_topic">6.9. Using value filters when consuming or observing a topic</h3>
@@ -681,14 +920,59 @@ Applying a value filter is also possible when observing a topic.
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Combining key and value filters is possible. Please note that in this case only such records that pass both the key and value filter are returned. Hence, conjoining key and value filters has <code>AND</code> semantics.
+Combining key, value and header filters is possible. Please note that in this case only such records that pass all filters are returned. Hence, conjoining key, value and header filters has <code>AND</code> semantics.
 </td>
 </tr>
 </table>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_obtaining_metadata_per_record">6.10. Obtaining metadata per-record</h3>
+<h3 id="_using_header_filters_when_consuming_or_observing_a_topic">6.10. Using header filters when consuming or observing a topic</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">Predicate&lt;Headers&gt; headersFilter = headers -&gt; new String(headers.lastHeader("aggregate").value()).equals("a");
+
+ReadKeyValues&lt;String, Integer&gt; readRequest = ReadKeyValues.from("test-topic-header-filter", Integer.class)
+        .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
+        .filterOnHeaders(headersFilter)
+        .build();
+
+List&lt;KeyValue&lt;String, Integer&gt;&gt; consumedRecords = cluster.read(readRequest);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>It is possible to parameterize both <code>ReadKeyValues</code> and <code>ObserveKeyValues</code> with a headers filter. Like key and value filters, it is modelled using a <code>java.util.function.Predicate</code> on the target type <code>org.apache.kafka.common.header.Headers</code>. The default headers filter evaluates to <code>true</code> every time, so unless you do not explicitly provide a filter using <code>filterOnHeaders</code> like in the example, all consumed records pass the filter.</p>
+</div>
+<div class="paragraph">
+<p>In this example, the filter only lets those records pass for which the header <code>aggregate</code> is set to the <code>String</code> <code>a</code>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Applying a header filter is also possible when observing a topic.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Combining key, value and header filters is possible. Please note that in this case only such records that pass all filters are returned. Hence, conjoining key, value and header filters has <code>AND</code> semantics.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_obtaining_metadata_per_record">6.11. Obtaining metadata per-record</h3>
 <div class="paragraph">
 <p>An instance of <code>KeyValue</code> is associated with the optional type <code>KeyValueMetadata</code>. By default, this type is not set and thus <code>KeyValue::getMetadata</code> returns <code>Optional.empty</code>. Both <code>ReadKeyValues</code> and <code>ObserveKeyValues</code> provide a method called <code>includeMetadata</code> that explicitly enables metadata on a per-record basis. The listing underneath demonstrates this:</p>
 </div>
@@ -706,7 +990,7 @@ List&lt;KeyValue&lt;String, String&gt;&gt; records = cluster.observe(observeRequ
 </div>
 </div>
 <div class="sect2">
-<h3 id="_seeking_to_a_dedicated_offset_of_a_topic_partition">6.11. Seeking to a dedicated offset of a topic-partition</h3>
+<h3 id="_seeking_to_a_dedicated_offset_of_a_topic_partition">6.12. Seeking to a dedicated offset of a topic-partition</h3>
 <div class="paragraph">
 <p>Consuming data continuously from topics that contain a huge amountof data may take quite some time, if a new consumer instance always starts to read from the beginning of the topic. To speed things up, you can skip to a dedicated offset for topic-partitions and start reading from there. The example underneath demonstrates how this is done when reading key-values using <code>ReadKeyValues</code>.</p>
 </div>
@@ -740,12 +1024,12 @@ Seeking is also a feature of <code>ObserveKeyValues</code> which means, that see
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">/**
-public interface TopicManager {
-
+<pre class="highlight"><code class="language-java" data-lang="java">public interface TopicManager {
     void createTopic(TopicConfig config);
     void deleteTopic(String topic);
     boolean exists(String topic);
+    Map&lt;Integer, LeaderAndIsr&gt; fetchLeaderAndIsr(String topic);
+    Properties fetchTopicConfig(String topic);
 }</code></pre>
 </div>
 </div>
@@ -815,6 +1099,31 @@ Returns <code>true</code> even if the topic is marked for deletion.
 </table>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_retrieving_the_leader_and_the_in_sync_replica_set_isr">7.4. Retrieving the leader and the In-Sync-Replica Set (ISR)</h3>
+<div class="paragraph">
+<p>In case you have multiple brokers running and want to query their assignments and roles for a specific topic, you can use <code>TopicManager#fetchLeaderAndIsr</code> to retrieve that kind of information. The method returns an unmodifiable <code>java.util.Map</code> of <code>LeaderAndIsr</code> instances by their designated partition. The listing underneath shows how to retrieve this information for the topic named <code>test-topic</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">Map&lt;Integer, LeaderAndIsr&gt; leaderAndIsr = cluster.fetchLeaderAndIsr("test-topic");</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>LeaderAndIsr</code> is a type from the Kafka API. Please consult its documentation for further details.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_retrieving_the_topic_configuration_remotely">7.5. Retrieving the topic configuration remotely</h3>
+<div class="paragraph">
+<p>Looking up the topic configuration by accessing the cluster is easily done using the <code>TopicManager</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">Properties topicConfig = cluster.fetchTopicConfig("test-topic");</code></pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -828,8 +1137,8 @@ Returns <code>true</code> even if the topic is marked for deletion.
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.3.0<br>
- 2018-07-20 14:44:06 CEST
+Version 1.0.0<br>
+ 2018-07-31 21:13:30 CEST
 </div>
 </div>
 </body>
