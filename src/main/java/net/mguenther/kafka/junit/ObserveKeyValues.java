@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
 import java.util.HashMap;
@@ -29,6 +30,7 @@ public class ObserveKeyValues<K, V> {
         private final Properties consumerProps = new Properties();
         private Predicate<K> filterOnKeys = key -> true;
         private Predicate<V> filterOnValues = value -> true;
+        private Predicate<Headers> filterOnHeaders = value -> true;
         private int observationTimeMillis = DEFAULT_OBSERVATION_TIME_MILLIS;
         private boolean includeMetadata = false;
         private Map<Integer, Long> seekTo = new HashMap<>();
@@ -52,6 +54,11 @@ public class ObserveKeyValues<K, V> {
 
         public ObserveKeyValuesBuilder<K, V> filterOnValues(final Predicate<V> filterOnValues) {
             this.filterOnValues = filterOnValues;
+            return this;
+        }
+
+        public ObserveKeyValuesBuilder<K, V> filterOnHeaders(final Predicate<Headers> filterOnHeaders) {
+            this.filterOnHeaders = filterOnHeaders;
             return this;
         }
 
@@ -103,7 +110,7 @@ public class ObserveKeyValues<K, V> {
             ifNonExisting(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
             ifNonExisting(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100);
             ifNonExisting(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_uncommitted");
-            return new ObserveKeyValues<>(topic, expected, observationTimeMillis, includeMetadata, seekTo, consumerProps, filterOnKeys, filterOnValues, clazzOfK, clazzOfV);
+            return new ObserveKeyValues<>(topic, expected, observationTimeMillis, includeMetadata, seekTo, consumerProps, filterOnKeys, filterOnValues, filterOnHeaders, clazzOfK, clazzOfV);
         }
     }
 
@@ -115,6 +122,7 @@ public class ObserveKeyValues<K, V> {
     private final Properties consumerProps;
     private final Predicate<K> filterOnKeys;
     private final Predicate<V> filterOnValues;
+    private final Predicate<Headers> filterOnHeaders;
     private final Class<K> clazzOfK;
     private final Class<V> clazzOfV;
 

@@ -127,6 +127,8 @@ In this example, the filter is quite simply and parses the key of the record int
 
 NOTE: Applying a key filter is also possible when observing a topic.
 
+NOTE: Combining key, value and header filters is possible. Please note that in this case only such records that pass all filters are returned. Hence, conjoining key, value and header filters has `AND` semantics.
+
 === Using value filters when consuming or observing a topic
 
 ```java
@@ -146,7 +148,28 @@ In this example, the filter only lets those records pass for which the associate
 
 NOTE: Applying a value filter is also possible when observing a topic.
 
-NOTE: Combining key and value filters is possible. Please note that in this case only such records that pass both the key and value filter are returned. Hence, conjoining key and value filters has `AND` semantics.
+NOTE: Combining key, value and header filters is possible. Please note that in this case only such records that pass all filters are returned. Hence, conjoining key, value and header filters has `AND` semantics.
+
+=== Using header filters when consuming or observing a topic
+
+```java
+Predicate<Headers> headersFilter = headers -> new String(headers.lastHeader("aggregate").value()).equals("a");
+
+ReadKeyValues<String, Integer> readRequest = ReadKeyValues.from("test-topic-header-filter", Integer.class)
+        .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
+        .filterOnHeaders(headersFilter)
+        .build();
+
+List<KeyValue<String, Integer>> consumedRecords = cluster.read(readRequest);
+```
+
+It is possible to parameterize both `ReadKeyValues` and `ObserveKeyValues` with a headers filter. Like key and value filters, it is modelled using a `java.util.function.Predicate` on the target type `org.apache.kafka.common.header.Headers`. The default headers filter evaluates to `true` every time, so unless you do not explicitly provide a filter using `filterOnHeaders` like in the example, all consumed records pass the filter.
+
+In this example, the filter only lets those records pass for which the header `aggregate` is set to the `String` `a`.
+
+NOTE: Applying a header filter is also possible when observing a topic.
+
+NOTE: Combining key, value and header filters is possible. Please note that in this case only such records that pass all filters are returned. Hence, conjoining key, value and header filters has `AND` semantics.
 
 === Obtaining metadata per-record
 

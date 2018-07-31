@@ -12,6 +12,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.Headers;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,6 +42,7 @@ public class DefaultRecordConsumer implements RecordConsumer {
         final int limit = readRequest.getLimit();
         final Predicate<K> filterOnKeys = readRequest.getFilterOnKeys();
         final Predicate<V> filterOnValues = readRequest.getFilterOnValues();
+        final Predicate<Headers> filterOnHeaders = readRequest.getFilterOnHeaders();
         consumer.subscribe(Collections.singletonList(readRequest.getTopic()));
         int totalPollTimeMillis = 0;
         boolean assignmentsReady = false;
@@ -58,7 +60,7 @@ public class DefaultRecordConsumer implements RecordConsumer {
                 if (seekIfNecessary(readRequest, consumer)) continue;
             }
             for (ConsumerRecord<K, V> record : records) {
-                if (filterOnKeys.test(record.key()) && filterOnValues.test(record.value())) {
+                if (filterOnKeys.test(record.key()) && filterOnValues.test(record.value()) && filterOnHeaders.test(record.headers())) {
                     final KeyValue<K, V> kv = readRequest.isIncludeMetadata() ?
                             new KeyValue<>(record.key(), record.value(), record.headers(), new KeyValueMetadata(record.topic(), record.partition(), record.offset())) :
                             new KeyValue<>(record.key(), record.value(), record.headers());
@@ -133,6 +135,7 @@ public class DefaultRecordConsumer implements RecordConsumer {
                 .withMetadata(false)
                 .filterOnKeys(observeRequest.getFilterOnKeys())
                 .filterOnValues(observeRequest.getFilterOnValues())
+                .filterOnHeaders(observeRequest.getFilterOnHeaders())
                 .with(ConsumerConfig.GROUP_ID_CONFIG, observeRequest.getConsumerProps().getProperty(ConsumerConfig.GROUP_ID_CONFIG));
     }
 
@@ -178,6 +181,7 @@ public class DefaultRecordConsumer implements RecordConsumer {
                 .withMetadata(observeRequest.isIncludeMetadata())
                 .filterOnKeys(observeRequest.getFilterOnKeys())
                 .filterOnValues(observeRequest.getFilterOnValues())
+                .filterOnHeaders(observeRequest.getFilterOnHeaders())
                 .with(ConsumerConfig.GROUP_ID_CONFIG, observeRequest.getConsumerProps().getProperty(ConsumerConfig.GROUP_ID_CONFIG));
     }
 
