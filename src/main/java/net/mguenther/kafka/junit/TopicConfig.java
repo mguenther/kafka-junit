@@ -37,8 +37,13 @@ public class TopicConfig {
             return this;
         }
 
+        public TopicConfigBuilder withAll(final Properties properties) {
+            this.properties.putAll(properties);
+            return this;
+        }
+
         private <T> void ifNonExisting(final String propertyName, final T value) {
-            if (properties.contains(propertyName)) return;
+            if (properties.get(propertyName) != null) return;
             properties.put(propertyName, value);
         }
 
