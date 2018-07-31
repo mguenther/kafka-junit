@@ -46,6 +46,18 @@ public class SendKeyValuesTransactionalTest {
 
         assertThat(props.get(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG)).isEqualTo(StringSerializer.class);
         assertThat(props.get(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG)).isEqualTo(StringSerializer.class);
+        assertThat(sendRequest.shouldFailTransaction()).isFalse();
+    }
+
+    @Test
+    public void shouldPreserveFailTransactionSettingIfOverridden() {
+
+        final SendKeyValuesTransactional<String, String> sendRequest = SendKeyValuesTransactional
+                .inTransaction("test-topic", Collections.singletonList(new KeyValue<>("k", "v")))
+                .failTransaction()
+                .build();
+
+        assertThat(sendRequest.shouldFailTransaction()).isTrue();
     }
 
     @Test

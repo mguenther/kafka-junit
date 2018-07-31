@@ -5,12 +5,12 @@
 Class `EmbeddedKafkaClusterRule` as well as `EmbeddedKafkaCluster` expose convenience methods for managing Kafka topics. Have a look at the `TopicManager` interface (Java omitted for brevity).
 
 ```java
-/**
 public interface TopicManager {
-
     void createTopic(TopicConfig config);
     void deleteTopic(String topic);
     boolean exists(String topic);
+    Map<Integer, LeaderAndIsr> fetchLeaderAndIsr(String topic);
+    Properties fetchTopicConfig(String topic);
 }
 ```
 
@@ -41,3 +41,21 @@ cluster.exists("test-topic");
 ```
 
 NOTE: Returns `true` even if the topic is marked for deletion.
+
+=== Retrieving the leader and the In-Sync-Replica Set (ISR)
+
+In case you have multiple brokers running and want to query their assignments and roles for a specific topic, you can use `TopicManager#fetchLeaderAndIsr` to retrieve that kind of information. The method returns an unmodifiable `java.util.Map` of `LeaderAndIsr` instances by their designated partition. The listing underneath shows how to retrieve this information for the topic named `test-topic`.
+
+```java
+Map<Integer, LeaderAndIsr> leaderAndIsr = cluster.fetchLeaderAndIsr("test-topic");
+```
+
+`LeaderAndIsr` is a type from the Kafka API. Please consult its documentation for further details.
+
+=== Retrieving the topic configuration remotely
+
+Looking up the topic configuration by accessing the cluster is easily done using the `TopicManager`.
+
+```java
+Properties topicConfig = cluster.fetchTopicConfig("test-topic");
+```

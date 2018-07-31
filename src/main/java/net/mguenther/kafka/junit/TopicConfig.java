@@ -37,8 +37,13 @@ public class TopicConfig {
             return this;
         }
 
+        public TopicConfigBuilder withAll(final Properties properties) {
+            this.properties.putAll(properties);
+            return this;
+        }
+
         private <T> void ifNonExisting(final String propertyName, final T value) {
-            if (properties.contains(propertyName)) return;
+            if (properties.get(propertyName) != null) return;
             properties.put(propertyName, value);
         }
 
@@ -52,7 +57,7 @@ public class TopicConfig {
         public TopicConfig build() {
             ifNonExisting("cleanup.policy", "delete");
             ifNonExisting("delete.retention.ms", "86400000");
-            ifNonExisting("min.insync.replicas", "1");
+            ifNonExisting("min.insync.replicas", "2");
             return new TopicConfig(topic, numberOfPartitions, numberOfReplicas, properties);
         }
     }

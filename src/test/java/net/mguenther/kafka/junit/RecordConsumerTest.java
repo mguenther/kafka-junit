@@ -2,6 +2,8 @@ package net.mguenther.kafka.junit;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.header.Headers;
+import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
@@ -168,6 +170,36 @@ public class RecordConsumerTest {
     }
 
     @Test
+    public void readConsumesOnlyRecordsThatPassHeaderFilter() throws Exception {
+
+        Headers headersA = new RecordHeaders().add("aggregate", "a".getBytes());
+        Headers headersB = new RecordHeaders().add("aggregate", "b".getBytes());
+
+        List<KeyValue<String, Integer>> records = new ArrayList<>();
+
+        records.add(new KeyValue<>("1", 1, headersA));
+        records.add(new KeyValue<>("2", 2, headersB));
+
+        SendKeyValues<String, Integer> sendRequest = SendKeyValues.to("test-topic-header-filter", records)
+                .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class)
+                .build();
+
+        cluster.send(sendRequest);
+
+        Predicate<Headers> headerFilter = headers -> new String(headers.lastHeader("aggregate").value()).equals("a");
+
+        ReadKeyValues<String, Integer> readRequest = ReadKeyValues.from("test-topic-header-filter", Integer.class)
+                .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
+                .filterOnHeaders(headerFilter)
+                .build();
+
+        List<KeyValue<String, Integer>> consumedRecords = cluster.read(readRequest);
+
+        assertThat(consumedRecords.size()).isEqualTo(1);
+        assertThat(new String(consumedRecords.get(0).getHeaders().lastHeader("aggregate").value())).isEqualTo("a");
+    }
+
+    @Test
     public void readConsumesOnlyRecordsThatPassBothKeyAndValueFilter() throws Exception {
 
         List<KeyValue<String, Integer>> records = Stream.iterate(1, k -> k + 1)
@@ -196,6 +228,36 @@ public class RecordConsumerTest {
 
         assertThat(consumedRecords.size()).isEqualTo(2);
         assertThat(consumedRecords.stream().allMatch(combinedFilter)).isTrue();
+    }
+
+    @Test
+    public void readValuesConsumesOnlyRecordsThatPassHeaderFilter() throws Exception {
+
+        Headers headersA = new RecordHeaders().add("aggregate", "a".getBytes());
+        Headers headersB = new RecordHeaders().add("aggregate", "b".getBytes());
+
+        List<KeyValue<String, Integer>> records = new ArrayList<>();
+
+        records.add(new KeyValue<>("1", 1, headersA));
+        records.add(new KeyValue<>("2", 2, headersB));
+
+        SendKeyValues<String, Integer> sendRequest = SendKeyValues.to("test-topic-header-filter", records)
+                .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class)
+                .build();
+
+        cluster.send(sendRequest);
+
+        Predicate<Headers> headerFilter = headers -> new String(headers.lastHeader("aggregate").value()).equals("a");
+
+        ReadKeyValues<String, Integer> readRequest = ReadKeyValues.from("test-topic-header-filter", Integer.class)
+                .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
+                .filterOnHeaders(headerFilter)
+                .build();
+
+        List<Integer> values = cluster.readValues(readRequest);
+
+        assertThat(values.size()).isEqualTo(1);
+        assertThat(values.get(0)).isEqualTo(1);
     }
 
     @Test
@@ -297,8 +359,39 @@ public class RecordConsumerTest {
         assertThat(observedRecords.stream().allMatch(combinedFilter)).isTrue();
     }
 
+    @Test
+    public void observeShouldRetainHeaderFilters() throws Exception {
+
+        Headers headersA = new RecordHeaders().add("aggregate", "a".getBytes());
+        Headers headersB = new RecordHeaders().add("aggregate", "b".getBytes());
+
+        List<KeyValue<String, Integer>> records = new ArrayList<>();
+
+        records.add(new KeyValue<>("1", 1, headersA));
+        records.add(new KeyValue<>("2", 2, headersB));
+
+        SendKeyValues<String, Integer> sendRequest = SendKeyValues.to("test-topic-header-filter", records)
+                .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class)
+                .build();
+
+        cluster.send(sendRequest);
+
+        Predicate<Headers> headerFilter = headers -> new String(headers.lastHeader("aggregate").value()).equals("b");
+
+        ObserveKeyValues<String, Integer> observeRequest = ObserveKeyValues.on("test-topic-header-filter", 1, Integer.class)
+                .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
+                .observeFor(5, TimeUnit.SECONDS)
+                .filterOnHeaders(headerFilter)
+                .build();
+
+        List<KeyValue<String, Integer>> observedRecords = cluster.observe(observeRequest);
+
+        assertThat(observedRecords.size()).isEqualTo(1);
+        assertThat(observedRecords.get(0).getValue()).isEqualTo(2);
+    }
+
     @Test(expected = AssertionError.class)
-    public void observeThrowsAnAssertionErrorIfNoRecordPassesTheFilterAndTimeoutElapses() throws Exception {
+    public void observeShouldThrowAnAssertionErrorIfNoRecordPassesTheFilterAndTimeoutElapses() throws Exception {
 
         List<KeyValue<String, Integer>> records = new ArrayList<>();
 
@@ -321,6 +414,34 @@ public class RecordConsumerTest {
                 .observeFor(5, TimeUnit.SECONDS)
                 .filterOnKeys(keyFilter)
                 .filterOnValues(valueFilter)
+                .build();
+
+        cluster.observe(observeRequest);
+    }
+
+    @Test(expected = AssertionError.class)
+    public void observeShouldThrowAnAssertionErrorIfNoRecordPassesTheHeaderFilterAndTimeoutElapses() throws Exception {
+
+        Headers headersA = new RecordHeaders().add("aggregate", "a".getBytes());
+        Headers headersB = new RecordHeaders().add("aggregate", "b".getBytes());
+
+        List<KeyValue<String, Integer>> records = new ArrayList<>();
+
+        records.add(new KeyValue<>("1", 1, headersA));
+        records.add(new KeyValue<>("2", 2, headersB));
+
+        SendKeyValues<String, Integer> sendRequest = SendKeyValues.to("test-topic-header-filter", records)
+                .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class)
+                .build();
+
+        cluster.send(sendRequest);
+
+        Predicate<Headers> headerFilter = headers -> new String(headers.lastHeader("aggregate").value()).equals("c"); // not existing
+
+        ObserveKeyValues<String, Integer> observeRequest = ObserveKeyValues.on("test-topic-header-filter", 1, Integer.class)
+                .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
+                .observeFor(5, TimeUnit.SECONDS)
+                .filterOnHeaders(headerFilter)
                 .build();
 
         cluster.observe(observeRequest);

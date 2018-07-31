@@ -111,6 +111,21 @@ SendValuesTransactional<String> sendRequest = SendValuesTransactional
 cluster.send(sendRequest);
 ```
 
+=== Failing a transaction on purpose
+
+```java
+SendValuesTransactional<String> sendRequest = SendValuesTransactional
+        .inTransaction("test-topic", Arrays.asList("a", "b"))
+        .failTransaction()
+        .build();
+
+cluster.send(sendRequest);
+```
+
+Defining a `SendValuesTransactional` request with `failTransaction` will write records to the Kafka log, but abort the transaction they belong to. This allows you to test if your application-specific Kafka consumers adhere to the transactional guarantees they claim to satisfy, since only a correct implementation of a consumer with `isolation.level` set to `read_committed` must see - and process - those records.
+
+NOTE: This works for `SendKeyValuesTransactional` as well.
+
 === Attaching record headers
 
 ```java

@@ -56,6 +56,7 @@ public class DefaultRecordProducer implements RecordProducer {
         }
         final SendKeyValuesTransactional<String, V> keyValueRequest = SendKeyValuesTransactional.inTransaction(recordsPerTopic)
                 .withAll(sendRequest.getProducerProps())
+                .withFailTransaction(sendRequest.shouldFailTransaction())
                 .build();
         return send(keyValueRequest);
     }
@@ -71,7 +72,8 @@ public class DefaultRecordProducer implements RecordProducer {
                 try {
                     metadata.add(f.get());
                 } catch (ExecutionException e) {
-                    throw new RuntimeException(e);
+                    if (RuntimeException.class.isAssignableFrom(e.getCause().getClass())) throw (RuntimeException) e.getCause();
+                    else throw new RuntimeException(e.getCause());
                 }
             }
         } finally {
@@ -95,11 +97,13 @@ public class DefaultRecordProducer implements RecordProducer {
                     try {
                         metadata.add(f.get());
                     } catch (ExecutionException e) {
-                        throw new RuntimeException(e);
+                        if (RuntimeException.class.isAssignableFrom(e.getCause().getClass())) throw (RuntimeException) e.getCause();
+                        else throw new RuntimeException(e.getCause());
                     }
                 }
             }
-            producer.commitTransaction();
+            if (sendRequest.shouldFailTransaction()) producer.abortTransaction();
+            else producer.commitTransaction();
         } catch (ProducerFencedException e) {
             producer.abortTransaction();
             final String message = String.format(

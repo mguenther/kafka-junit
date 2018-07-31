@@ -1,5 +1,6 @@
 package net.mguenther.kafka.junit;
 
+import kafka.api.LeaderAndIsr;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import net.mguenther.kafka.junit.provider.DefaultRecordConsumer;
@@ -10,6 +11,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ExternalKafkaCluster implements RecordProducer, RecordConsumer, TopicManager {
@@ -84,6 +87,16 @@ public class ExternalKafkaCluster implements RecordProducer, RecordConsumer, Top
     @Override
     public boolean exists(final String topic) {
         return topicManagerDelegate.exists(topic);
+    }
+
+    @Override
+    public Map<Integer, LeaderAndIsr> fetchLeaderAndIsr(final String topic) {
+        return topicManagerDelegate.fetchLeaderAndIsr(topic);
+    }
+
+    @Override
+    public Properties fetchTopicConfig(final String topic) {
+        return topicManagerDelegate.fetchTopicConfig(topic);
     }
 
     public static ExternalKafkaCluster at(final String bootstrapServers) {

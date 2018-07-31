@@ -7,13 +7,13 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
-@Getter
 @ToString
 @RequiredArgsConstructor
 public class SendValuesTransactional<V> {
@@ -22,6 +22,7 @@ public class SendValuesTransactional<V> {
 
         private final Map<String, Collection<V>> valuesPerTopic = new HashMap<>();
         private final Properties producerPros = new Properties();
+        private boolean failTransaction = false;
 
         SendValuesTransactionalBuilder(final String topic, final Collection<V> values) {
             valuesPerTopic.put(topic, values);
@@ -31,6 +32,15 @@ public class SendValuesTransactional<V> {
             final Collection<V> existingValuesPerTopic = valuesPerTopic.getOrDefault(topic, new ArrayList<>());
             existingValuesPerTopic.addAll(values);
             valuesPerTopic.put(topic, existingValuesPerTopic);
+            return this;
+        }
+
+        public SendValuesTransactionalBuilder<V> failTransaction() {
+            return withFailTransaction(true);
+        }
+
+        public SendValuesTransactionalBuilder<V> withFailTransaction(final boolean modifier) {
+            failTransaction = modifier;
             return this;
         }
 
@@ -51,6 +61,7 @@ public class SendValuesTransactional<V> {
 
         public SendValuesTransactional<V> useDefaults() {
             producerPros.clear();
+            failTransaction = false;
             return build();
         }
 
@@ -62,14 +73,29 @@ public class SendValuesTransactional<V> {
             ifNonExisting(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
             ifNonExisting(ProducerConfig.TRANSACTIONAL_ID_CONFIG, UUID.randomUUID().toString());
             ifNonExisting(ProducerConfig.TRANSACTION_TIMEOUT_CONFIG, 60_000);
-            return new SendValuesTransactional<>(valuesPerTopic, producerPros);
+            ifNonExisting(ProducerConfig.ACKS_CONFIG, "all");
+            return new SendValuesTransactional<>(valuesPerTopic, failTransaction, producerPros);
         }
     }
 
+    @Getter
     private final Map<String, Collection<V>> valuesPerTopic;
+
+    private final boolean failTransaction;
+
+    @Getter
     private final Properties producerProps;
+
+    public boolean shouldFailTransaction() {
+        return failTransaction;
+    }
 
     public static <V> SendValuesTransactionalBuilder<V> inTransaction(final String topic, final Collection<V> values) {
         return new SendValuesTransactionalBuilder<>(topic, values);
+    }
+
+    @SafeVarargs
+    public static <V> SendValuesTransactionalBuilder<V> inTransaction(final String topic, final V... values) {
+        return new SendValuesTransactionalBuilder<>(topic, Arrays.asList(values));
     }
 }

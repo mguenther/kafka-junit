@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
-@Getter
 @ToString
 @RequiredArgsConstructor
 public class SendKeyValuesTransactional<K, V> {
@@ -22,6 +21,7 @@ public class SendKeyValuesTransactional<K, V> {
 
         private final Map<String, Collection<KeyValue<K, V>>> recordsPerTopic = new HashMap<>();
         private final Properties producerProps = new Properties();
+        private boolean failTransaction = false;
 
         SendKeyValuesTransactionalBuilder(final String topic, final Collection<KeyValue<K, V>> records) {
             recordsPerTopic.put(topic, records);
@@ -35,6 +35,15 @@ public class SendKeyValuesTransactional<K, V> {
             final Collection<KeyValue<K, V>> existingRecordsForTopic = recordsPerTopic.getOrDefault(topic, new ArrayList<>());
             existingRecordsForTopic.addAll(records);
             recordsPerTopic.put(topic, existingRecordsForTopic);
+            return this;
+        }
+
+        public SendKeyValuesTransactionalBuilder<K, V> failTransaction() {
+            return withFailTransaction(true);
+        }
+
+        public SendKeyValuesTransactionalBuilder<K, V> withFailTransaction(final boolean modifier) {
+            failTransaction = modifier;
             return this;
         }
 
@@ -55,6 +64,7 @@ public class SendKeyValuesTransactional<K, V> {
 
         public SendKeyValuesTransactional<K, V> useDefaults() {
             producerProps.clear();
+            failTransaction = false;
             return build();
         }
 
@@ -66,12 +76,22 @@ public class SendKeyValuesTransactional<K, V> {
             ifNonExisting(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
             ifNonExisting(ProducerConfig.TRANSACTIONAL_ID_CONFIG, UUID.randomUUID().toString());
             ifNonExisting(ProducerConfig.TRANSACTION_TIMEOUT_CONFIG, 60_000);
-            return new SendKeyValuesTransactional<>(recordsPerTopic, producerProps);
+            ifNonExisting(ProducerConfig.ACKS_CONFIG, "all");
+            return new SendKeyValuesTransactional<>(recordsPerTopic, failTransaction, producerProps);
         }
     }
 
+    @Getter
     private final Map<String, Collection<KeyValue<K, V>>> recordsPerTopic;
+
+    private final boolean failTransaction;
+
+    @Getter
     private final Properties producerProps;
+
+    public boolean shouldFailTransaction() {
+        return failTransaction;
+    }
 
     public static <K, V> SendKeyValuesTransactionalBuilder<K, V> inTransaction(final String topic, final Collection<KeyValue<K, V>> records) {
         return new SendKeyValuesTransactionalBuilder<>(topic, records);

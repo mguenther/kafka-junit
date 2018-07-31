@@ -14,12 +14,12 @@
 :figure-caption: Figure
 :table-caption: Table
 :status: Final
-:datum: 2018-06-08
+:datum: 2018-07-31
 :author: Markus Günther
 
 = User Guide to Kafka for JUnit
 Markus Günther
-0.3.0, 2018-07-20
+1.0.0, 2018-07-31
 
 :toc:
 

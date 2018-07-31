@@ -2,6 +2,7 @@ package net.mguenther.kafka.junit.provider;
 
 import kafka.admin.AdminUtils;
 import kafka.admin.RackAwareMode;
+import kafka.api.LeaderAndIsr;
 import kafka.common.TopicAlreadyMarkedForDeletionException;
 import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
@@ -13,6 +14,12 @@ import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
 import org.apache.kafka.common.errors.InvalidTopicException;
 import org.apache.kafka.common.errors.TopicExistsException;
+import scala.Option;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -72,6 +79,42 @@ public class DefaultTopicManager implements TopicManager {
             return AdminUtils.topicExists(zkUtils, topic);
         } catch (Exception e) {
             throw new RuntimeException(String.format("Unable to query the state of topic '%s'.", topic), e);
+        } finally {
+            if (zkUtils != null) {
+                zkUtils.close();
+            }
+        }
+    }
+
+    @Override
+    public Map<Integer, LeaderAndIsr> fetchLeaderAndIsr(final String topic) {
+        ZkUtils zkUtils = null;
+        try {
+            zkUtils = get();
+            final Map<Integer, LeaderAndIsr> leaderAndIsrForTopic = new HashMap<>();
+            final Option<Object> partitionsOpt = zkUtils.getTopicPartitionCount(topic);
+            final int partitions = partitionsOpt.isEmpty() ? 0 : (Integer) partitionsOpt.get();
+            for (int partition = 0; partition < partitions; partition++) {
+                final Option<LeaderAndIsr> leaderAndIsrOption = zkUtils.getLeaderAndIsrForPartition(topic, partition);
+                if (leaderAndIsrOption.isEmpty()) log.info("Unable to retrieve leader and ISR for topic-partition {}-{}.", topic, partition);
+                else leaderAndIsrForTopic.put(partition, leaderAndIsrOption.get());
+            }
+            return Collections.unmodifiableMap(leaderAndIsrForTopic);
+        } finally {
+            if (zkUtils != null) {
+                zkUtils.close();
+            }
+        }
+    }
+
+    @Override
+    public Properties fetchTopicConfig(final String topic) {
+        ZkUtils zkUtils = null;
+        try {
+            zkUtils = get();
+            final Option<Properties> topicConfigOpt = AdminUtils.fetchAllTopicConfigs(zkUtils).get(topic);
+            if (topicConfigOpt.isEmpty()) throw new RuntimeException(String.format("Unable to retrieve configuration for topic %s.", topic));
+            return topicConfigOpt.get();
         } finally {
             if (zkUtils != null) {
                 zkUtils.close();
