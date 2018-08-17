@@ -58,6 +58,7 @@ public class KafkaTest {
 | 0.2.x                      | Apache Kafka 1.0.0 |
 | 0.3.x                      | Apache Kafka 1.0.0 |
 | 1.0.x                      | Apache Kafka 1.1.1 |
+| 2.0.x                      | Apache Kafka 2.0.0 |
 
 ## Interacting with the Kafka cluster
 
