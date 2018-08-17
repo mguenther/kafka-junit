@@ -68,4 +68,7 @@ Of course, you can also test against existing clusters using `ExternalKafkaClust
 
 | 1.0.x
 | Apache Kafka 1.1.1
+
+| 2.0.x
+| Apache Kafka 2.0.0
 |===

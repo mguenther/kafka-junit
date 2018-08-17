@@ -7,6 +7,7 @@ import org.apache.kafka.connect.runtime.ConnectorConfig;
 import org.apache.kafka.connect.runtime.Herder;
 import org.apache.kafka.connect.runtime.Worker;
 import org.apache.kafka.connect.runtime.WorkerConfig;
+import org.apache.kafka.connect.runtime.WorkerConfigTransformer;
 import org.apache.kafka.connect.runtime.distributed.DistributedConfig;
 import org.apache.kafka.connect.runtime.distributed.DistributedHerder;
 import org.apache.kafka.connect.runtime.isolation.Plugins;
@@ -18,6 +19,7 @@ import org.apache.kafka.connect.storage.KafkaStatusBackingStore;
 import org.apache.kafka.connect.storage.StatusBackingStore;
 import org.apache.kafka.connect.util.FutureCallback;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -55,7 +57,7 @@ public class EmbeddedConnect implements EmbeddedLifecycle {
         this.offsetBackingStore = new KafkaOffsetBackingStore();
         this.worker = new Worker(connectConfig.getWorkerId(), Time.SYSTEM, new Plugins(new HashMap<>()), config, offsetBackingStore);
         this.statusBackingStore = new KafkaStatusBackingStore(Time.SYSTEM, worker.getInternalValueConverter());
-        this.configBackingStore = new KafkaConfigBackingStore(worker.getInternalValueConverter(), config);
+        this.configBackingStore = new KafkaConfigBackingStore(worker.getInternalValueConverter(), config, new WorkerConfigTransformer(worker, Collections.emptyMap()));
         this.herder = new DistributedHerder(config, Time.SYSTEM, worker, clusterId, statusBackingStore, configBackingStore, "");
     }
 
