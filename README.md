@@ -43,6 +43,7 @@ public class KafkaTest {
   public void shouldWaitForRecordsToBePublished() throws Exception {
 
     try (EmbeddedKafkaCluster cluster = provisionWith(useDefaults())) {
+      cluster.start();
       cluster.send(to("test-topic", "a", "b", "c").useDefaults());
       cluster.observe(on("test-topic", 3).useDefaults());
     }
@@ -59,6 +60,7 @@ public class KafkaTest {
 | 0.3.x                      | Apache Kafka 1.0.0 |
 | 1.0.x                      | Apache Kafka 1.1.1 |
 | 2.0.x                      | Apache Kafka 2.0.0 |
+| 2.1.x                      | Apache Kafka 2.1.1 |
 
 ## Interacting with the Kafka cluster
 
