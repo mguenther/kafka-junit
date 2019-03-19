@@ -70,7 +70,7 @@ public class EmbeddedConnectConfigTest {
                 .build();
 
         assertThat(config.getConnectors().size()).isEqualTo(1);
-        assertThat(config.getConnectors().contains(connectorConfig));
+        assertThat(config.getConnectors().contains(connectorConfig)).isTrue();
     }
 
     @Test
