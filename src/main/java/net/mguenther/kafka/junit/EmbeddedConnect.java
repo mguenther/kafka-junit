@@ -3,6 +3,7 @@ package net.mguenther.kafka.junit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.utils.Time;
 import org.apache.kafka.common.utils.Utils;
+import org.apache.kafka.connect.connector.policy.AllConnectorClientConfigOverridePolicy;
 import org.apache.kafka.connect.runtime.ConnectorConfig;
 import org.apache.kafka.connect.runtime.Herder;
 import org.apache.kafka.connect.runtime.Worker;
@@ -50,15 +51,16 @@ public class EmbeddedConnect implements EmbeddedLifecycle {
     private final DistributedHerder herder;
 
     public EmbeddedConnect(final EmbeddedConnectConfig connectConfig, final String brokerList, final String clusterId) {
+        final AllConnectorClientConfigOverridePolicy policy = new AllConnectorClientConfigOverridePolicy();
         final Properties effectiveWorkerConfig = connectConfig.getConnectProperties();
         effectiveWorkerConfig.put(WorkerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerList);
         this.connectorConfigs = connectConfig.getConnectors();
         this.config = new DistributedConfig(Utils.propsToStringMap(effectiveWorkerConfig));
         this.offsetBackingStore = new KafkaOffsetBackingStore();
-        this.worker = new Worker(connectConfig.getWorkerId(), Time.SYSTEM, new Plugins(new HashMap<>()), config, offsetBackingStore);
+        this.worker = new Worker(connectConfig.getWorkerId(), Time.SYSTEM, new Plugins(new HashMap<>()), config, offsetBackingStore, policy);
         this.statusBackingStore = new KafkaStatusBackingStore(Time.SYSTEM, worker.getInternalValueConverter());
         this.configBackingStore = new KafkaConfigBackingStore(worker.getInternalValueConverter(), config, new WorkerConfigTransformer(worker, Collections.emptyMap()));
-        this.herder = new DistributedHerder(config, Time.SYSTEM, worker, clusterId, statusBackingStore, configBackingStore, "");
+        this.herder = new DistributedHerder(config, Time.SYSTEM, worker, clusterId, statusBackingStore, configBackingStore, "", policy);
     }
 
     @Override

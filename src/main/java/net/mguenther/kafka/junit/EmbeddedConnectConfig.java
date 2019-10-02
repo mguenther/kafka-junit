@@ -59,6 +59,7 @@ public class EmbeddedConnectConfig {
             ifNonExisting(WorkerConfig.VALUE_CONVERTER_CLASS_CONFIG, "org.apache.kafka.connect.storage.StringConverter");
             ifNonExisting(WorkerConfig.INTERNAL_KEY_CONVERTER_CLASS_CONFIG, "org.apache.kafka.connect.json.JsonConverter");
             ifNonExisting(WorkerConfig.INTERNAL_VALUE_CONVERTER_CLASS_CONFIG, "org.apache.kafka.connect.json.JsonConverter");
+            ifNonExisting(WorkerConfig.CONNECTOR_CLIENT_POLICY_CLASS_CONFIG, "All");
             ifNonExisting("internal.key.converter.schemas.enable", "false");
             ifNonExisting("internal.value.converter.schemas.enable", "false");
             ifNonExisting(DistributedConfig.CONFIG_STORAGE_REPLICATION_FACTOR_CONFIG, "1");
@@ -68,7 +69,6 @@ public class EmbeddedConnectConfig {
             ifNonExisting(DistributedConfig.STATUS_STORAGE_REPLICATION_FACTOR_CONFIG, "1");
             ifNonExisting(DistributedConfig.STATUS_STORAGE_TOPIC_CONFIG, "embedded-connect-status");
             ifNonExisting(DistributedConfig.GROUP_ID_CONFIG, UUID.randomUUID().toString().substring(0, 7));
-
             return new EmbeddedConnectConfig(workerId, properties, connectorProps);
         }
     }

@@ -11,6 +11,8 @@ public class InstrumentingConfigBuilder {
 
     private String key = String.format("key-%s", UUID.randomUUID().toString());
 
+    private final Properties connectorProps = new Properties();
+
     public InstrumentingConfigBuilder withTopic(final String topic) {
         this.topic = topic;
         return this;
@@ -21,14 +23,33 @@ public class InstrumentingConfigBuilder {
         return this;
     }
 
+    public <T> InstrumentingConfigBuilder with(final String propertyName, final T value) {
+        connectorProps.put(propertyName, value);
+        return this;
+    }
+
+    public <T> InstrumentingConfigBuilder withAll(final Properties connectorProps) {
+        this.connectorProps.putAll(connectorProps);
+        return this;
+    }
+
+    private <T> void ifNonExisting(final String propertyName, final T value) {
+        if (connectorProps.get(propertyName) != null) return;
+        connectorProps.put(propertyName, value);
+    }
+
     public Properties build() {
-        final Properties props = new Properties();
-        props.put(ConnectorConfig.NAME_CONFIG, "instrumenting-source-connector");
-        props.put(ConnectorConfig.CONNECTOR_CLASS_CONFIG, "InstrumentingSourceConnector");
-        props.put(ConnectorConfig.TASKS_MAX_CONFIG, "1");
-        props.put("topic", topic);
-        props.put("key", key);
-        return props;
+
+        ifNonExisting(ConnectorConfig.NAME_CONFIG, "instrumenting-source-connector");
+        ifNonExisting(ConnectorConfig.CONNECTOR_CLASS_CONFIG, "InstrumentingSourceConnector");
+        ifNonExisting(ConnectorConfig.TASKS_MAX_CONFIG, "1");
+        ifNonExisting("topic", topic);
+        ifNonExisting("key", key);
+
+        final Properties copyOfConnectorProps = new Properties();
+        copyOfConnectorProps.putAll(connectorProps);
+
+        return copyOfConnectorProps;
     }
 
     public static InstrumentingConfigBuilder create() {

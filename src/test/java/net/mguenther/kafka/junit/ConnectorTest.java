@@ -34,6 +34,7 @@ public class ConnectorTest {
         return InstrumentingConfigBuilder.create()
                 .withTopic(topic)
                 .withKey(key)
+                .with("consumer.override.auto.offset.reset", "latest")
                 .build();
     }
 }

@@ -18,8 +18,6 @@ public class InstrumentingSourceTask extends SourceTask {
 
     private final AtomicInteger currentSourceOffset = new AtomicInteger(0);
 
-    private final String key = UUID.randomUUID().toString();
-
     private InstrumentingConfig config;
 
     @Override
