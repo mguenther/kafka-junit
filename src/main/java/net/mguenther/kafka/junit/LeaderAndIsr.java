@@ -15,8 +15,7 @@ public class LeaderAndIsr {
     private final Set<Integer> isr;
 
     /**
-     * @deprecated Eases the migration from <= 2.3.x to 2.4.0. This method will be removed in a future
-     * release. Please use {@link LeaderAndIsr#getLeader()} instead.
+     * @deprecated This method will be removed in a future release. Please use {@code LeaderAndIsr#getLeader()} instead.
      */
     @Deprecated
     public Integer leader() {
