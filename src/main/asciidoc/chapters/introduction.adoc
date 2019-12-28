@@ -80,4 +80,7 @@ Of course, you can also test against existing clusters using `ExternalKafkaClust
 
 | 2.3.x
 | Apache Kafka 2.3.0
+
+| 2.4.x
+| Apache Kafka 2.4.0
 |===

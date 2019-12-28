@@ -1,13 +1,10 @@
 package net.mguenther.kafka.junit;
 
-import kafka.api.LeaderAndIsr;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import net.mguenther.kafka.junit.provider.DefaultRecordConsumer;
 import net.mguenther.kafka.junit.provider.DefaultRecordProducer;
 import net.mguenther.kafka.junit.provider.DefaultTopicManager;
-import net.mguenther.kafka.junit.provider.NoOpTopicManager;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 import java.util.List;
@@ -24,14 +21,9 @@ public class ExternalKafkaCluster implements RecordProducer, RecordConsumer, Top
     private final TopicManager topicManagerDelegate;
 
     private ExternalKafkaCluster(final String bootstrapServers) {
-        this(bootstrapServers, StringUtils.EMPTY);
-    }
-
-    private ExternalKafkaCluster(final String bootstrapServers, final String zkConnectString) {
         producerDelegate = new DefaultRecordProducer(bootstrapServers);
         consumerDelegate = new DefaultRecordConsumer(bootstrapServers);
-        topicManagerDelegate = StringUtils.isEmpty(zkConnectString) ?
-                new NoOpTopicManager() : new DefaultTopicManager(zkConnectString);
+        topicManagerDelegate = new DefaultTopicManager(bootstrapServers);
     }
 
     @Override
@@ -101,9 +93,5 @@ public class ExternalKafkaCluster implements RecordProducer, RecordConsumer, Top
 
     public static ExternalKafkaCluster at(final String bootstrapServers) {
         return new ExternalKafkaCluster(bootstrapServers);
-    }
-
-    public static ExternalKafkaCluster at(final String bootstrapServers, final String zkConnectString) {
-        return new ExternalKafkaCluster(bootstrapServers, zkConnectString);
     }
 }

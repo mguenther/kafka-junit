@@ -50,7 +50,7 @@ In case you have multiple brokers running and want to query their assignments an
 Map<Integer, LeaderAndIsr> leaderAndIsr = cluster.fetchLeaderAndIsr("test-topic");
 ```
 
-`LeaderAndIsr` is a type from the Kafka API. Please consult its documentation for further details.
+The type `LeaderAndIsr` is not to be confused with the same type in package `kafka.api`. The `LeaderAndIsr` implementation Kafka for JUnit is a simple transfer object that only contains the ID of the leader node and the IDs of all nodes that comprise the ISR.
 
 === Retrieving the topic configuration remotely
 

@@ -1,6 +1,5 @@
 package net.mguenther.kafka.junit;
 
-import kafka.api.LeaderAndIsr;
 import kafka.server.KafkaConfig$;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -195,7 +194,7 @@ public class MultipleBrokersTest {
                 .values()
                 .stream()
                 .peek(leaderAndIsr -> log.info("Assignment: {}", leaderAndIsr.toString()))
-                .map(LeaderAndIsr::leader)
+                .map(LeaderAndIsr::getLeader)
                 .collect(Collectors.toSet());
     }
 }

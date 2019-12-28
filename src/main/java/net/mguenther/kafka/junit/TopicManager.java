@@ -1,7 +1,5 @@
 package net.mguenther.kafka.junit;
 
-import kafka.api.LeaderAndIsr;
-
 import java.util.Map;
 import java.util.Properties;
 

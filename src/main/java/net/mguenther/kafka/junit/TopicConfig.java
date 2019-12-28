@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 @Getter
@@ -66,6 +68,14 @@ public class TopicConfig {
     private final int numberOfPartitions;
     private final int numberOfReplicas;
     private final Properties properties;
+
+    public Map<String, Object> getPropertiesMap() {
+        final Map<String, Object> map = new HashMap<>();
+        for (String propertyName : properties.stringPropertyNames()) {
+            map.put(propertyName, properties.get(propertyName));
+        }
+        return map;
+    }
 
     public static TopicConfigBuilder forTopic(final String topic) {
         return new TopicConfigBuilder(topic);

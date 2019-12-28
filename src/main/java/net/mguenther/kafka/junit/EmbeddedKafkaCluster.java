@@ -1,6 +1,5 @@
 package net.mguenther.kafka.junit;
 
-import kafka.api.LeaderAndIsr;
 import kafka.server.KafkaConfig$;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +71,7 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
 
             producerDelegate = new DefaultRecordProducer(getBrokerList());
             consumerDelegate = new DefaultRecordConsumer(getBrokerList());
-            topicManagerDelegate = new DefaultTopicManager(zooKeeper.getConnectString());
+            topicManagerDelegate = new DefaultTopicManager(getBrokerList());
 
         } catch (Exception e) {
             throw new RuntimeException("Unable to start the embedded Kafka cluster.", e);
@@ -91,28 +90,26 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
     }
 
     /**
-     * @return
-     *      Collects the addresses of all active brokers in the cluster and joins them together
-     *      by using ',' as a delimiter. The resulting {@code String} can be used to configure
-     *      the bootstrap servers parameter of Kafka producers and consumers.
+     * @return Collects the addresses of all active brokers in the cluster and joins them together
+     * by using ',' as a delimiter. The resulting {@code String} can be used to configure
+     * the bootstrap servers parameter of Kafka producers and consumers.
      */
     public String getBrokerList() {
         final List<String> brokerAddresses = brokers.values().stream()
-                .filter(EmbeddedKafka::isActive)
-                .map(EmbeddedKafka::getBrokerList)
-                .collect(Collectors.toList());
+            .filter(EmbeddedKafka::isActive)
+            .map(EmbeddedKafka::getBrokerList)
+            .collect(Collectors.toList());
         return StringUtils.join(brokerAddresses, ",");
     }
 
     /**
-     * @return
-     *      the ID of the embedded cluster
+     * @return the ID of the embedded cluster
      */
     public String getClusterId() {
         return brokers.values().stream()
-                .map(EmbeddedKafka::getClusterId)
-                .findFirst()
-                .orElse(StringUtils.EMPTY);
+            .map(EmbeddedKafka::getClusterId)
+            .findFirst()
+            .orElse(StringUtils.EMPTY);
     }
 
     /**
@@ -120,8 +117,7 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
      * etc. will be kept so that the disconnected broker can be reactivated (cf. {@code connect} method).
      * Returns immediately without changing cluster membership if there is no broker with that ID.
      *
-     * @param brokerId
-     *      identifies the embedded Kafka broker that ought to be disconnected
+     * @param brokerId identifies the embedded Kafka broker that ought to be disconnected
      */
     public void disconnect(final Integer brokerId) {
 
@@ -138,8 +134,7 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
      * (Re-)Connects the broker identified by the given broker ID by activating it again. Returns
      * immediately without changing cluster membership if there is no broker with that ID.
      *
-     * @param brokerId
-     *      identifies the embedded Kafka broker that ought to be connected
+     * @param brokerId identifies the embedded Kafka broker that ought to be connected
      */
     public void connect(final Integer brokerId) {
 
@@ -155,8 +150,7 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
     /**
      * (Re-)Connects all embedded Kafka brokers for the given broker IDs.
      *
-     * @param brokerIds
-     *      {@link java.util.Set} of broker IDs
+     * @param brokerIds {@link java.util.Set} of broker IDs
      */
     public void connect(final Set<Integer> brokerIds) {
         brokerIds.forEach(this::connect);
@@ -170,13 +164,10 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
      * This is fine, since in this case all leaders will be disconnected, blocking all reads and writes
      * to the topic in any case.
      *
-     * @param topic
-     *      the name of the topic for which the ISR should fall below its minimum size
-     * @throws RuntimeException
-     *      in case fetching the topic configuration fails
-     * @return
-     *      unmodifiable {@link java.util.Set} of broker IDs that have been disconnected during the operation,
-     *      so that they can be re-connected afterwards to restore the ISR
+     * @param topic the name of the topic for which the ISR should fall below its minimum size
+     * @return unmodifiable {@link java.util.Set} of broker IDs that have been disconnected during the operation,
+     * so that they can be re-connected afterwards to restore the ISR
+     * @throws RuntimeException in case fetching the topic configuration fails
      */
     public Set<Integer> disconnectUntilIsrFallsBelowMinimumSize(final String topic) {
         final Properties topicConfig = topicManagerDelegate.fetchTopicConfig(topic);
@@ -184,10 +175,10 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
         log.info("Attempting to drop the number of brokers in the ISR for topic {} below {}.", topic, minimumIsrSize);
         final Set<Integer> disconnectedBrokers = new HashSet<>();
         final Set<Integer> leaders = topicManagerDelegate.fetchLeaderAndIsr(topic)
-                .values()
-                .stream()
-                .map(LeaderAndIsr::leader)
-                .collect(Collectors.toSet());
+            .values()
+            .stream()
+            .map(LeaderAndIsr::getLeader)
+            .collect(Collectors.toSet());
         log.info("Active brokers ({}) in the ISR for topic {} are: {}", leaders.size(), topic, StringUtils.join(leaders, ", "));
         int currentSizeOfIsr = leaders.size();
         while (currentSizeOfIsr >= minimumIsrSize) {

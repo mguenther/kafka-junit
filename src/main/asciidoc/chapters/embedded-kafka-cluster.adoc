@@ -106,7 +106,7 @@ delay(5);
 Set<Integer> leaders = cluster.fetchLeaderAndIsr("test-topic")
     .values()
     .stream()
-    .map(LeaderAndIsr::leader)
+    .map(LeaderAndIsr::getLeader)
     .collect(Collectors.toSet());
 
 assertThat(leaders.contains(1)).isTrue();
@@ -120,7 +120,7 @@ delay(5);
 Set<Integer> leadersAfterDisconnect = cluster.fetchLeaderAndIsr("test-topic")
     .values()
     .stream()
-    .map(LeaderAndIsr::leader)
+    .map(LeaderAndIsr::getLeader)
     .collect(Collectors.toSet());
 
 assertThat(leadersAfterDisconnect.contains(1)).isFalse();
@@ -134,7 +134,7 @@ delay(5);
 Set<Integer> leadersAfterReconnect = cluster.fetchLeaderAndIsr("test-topic")
     .values()
     .stream()
-    .map(LeaderAndIsr::leader)
+    .map(LeaderAndIsr::getLeader)
     .collect(Collectors.toSet());
 
 assertThat(leadersAfterReconnect.contains(1)).isTrue();

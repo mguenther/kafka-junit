@@ -27,15 +27,4 @@ public class MyTest {
 }
 ----
 
-Please note that if you want to additionally use the accessors as defined in `TopicManager`, you will have to provide the ZooKeeper connection string as well.
-
-[source, java]
-----
-String bootstrapServers = ...;;
-String zkConnectString = ...;
-ExternalKafkaCluster cluster = ExternalKafkaCluster.at(bootstrapServers, zkConnectString);
-----
-
-NOTE: If you do not provide the ZooKeeper connect string when creating an instance of `ExternalKafkaCluster`, all methods provided by its `TopicManager` implementation will result in no-ops.
-
 See sections on <<section:producing-records, Producing records>>, <<section:consuming-records, Consuming records>> and <<section:managing-topics, Managing topics>> for further reference on how to interact with the cluster.

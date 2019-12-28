@@ -1,6 +1,5 @@
 package net.mguenther.kafka.junit;
 
-import kafka.api.LeaderAndIsr;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,9 +36,9 @@ public class TopicManagerTest {
     public void fetchLeaderAndIsrShouldRetrieveTheIsr() throws Exception {
 
         cluster.createTopic(TopicConfig.forTopic("test-topic")
-                .withNumberOfPartitions(5)
-                .withNumberOfReplicas(1)
-                .build());
+            .withNumberOfPartitions(5)
+            .withNumberOfReplicas(1)
+            .build());
 
         // it takes a couple of seconds until topic-partition assignments are there
         delay(5);
@@ -47,15 +46,15 @@ public class TopicManagerTest {
         Map<Integer, LeaderAndIsr> isr = cluster.fetchLeaderAndIsr("test-topic");
 
         assertThat(isr.size()).isEqualTo(5);
-        assertThat(isr.values().stream().allMatch(lai -> lai.leader() == 1)).isTrue();
+        assertThat(isr.values().stream().allMatch(lai -> lai.getLeader() == 1)).isTrue();
     }
 
     @Test
     public void fetchTopicConfigShouldRetrieveTheProperConfig() throws Exception {
 
         cluster.createTopic(TopicConfig.forTopic("test-topic")
-                .with("min.insync.replicas", "1")
-                .build());
+            .with("min.insync.replicas", "1")
+            .build());
 
         delay(3);
 
