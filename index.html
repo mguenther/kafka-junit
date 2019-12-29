@@ -16,8 +16,8 @@
 <h1>User Guide to Kafka for JUnit</h1>
 <div class="details">
 <span id="author" class="author">Markus Günther</span><br>
-<span id="revnumber">version 2.1.0,</span>
-<span id="revdate">2019-03-19</span>
+<span id="revnumber">version 2.4.0,</span>
+<span id="revdate">2019-12-29</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -186,6 +186,18 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock">2.1.x</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 2.1.1</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.2.x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 2.2.1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.3.x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 2.3.0</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.4.x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 2.4.0</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -330,7 +342,7 @@ delay(5);
 Set&lt;Integer&gt; leaders = cluster.fetchLeaderAndIsr("test-topic")
     .values()
     .stream()
-    .map(LeaderAndIsr::leader)
+    .map(LeaderAndIsr::getLeader)
     .collect(Collectors.toSet());
 
 assertThat(leaders.contains(1)).isTrue();
@@ -344,7 +356,7 @@ delay(5);
 Set&lt;Integer&gt; leadersAfterDisconnect = cluster.fetchLeaderAndIsr("test-topic")
     .values()
     .stream()
-    .map(LeaderAndIsr::leader)
+    .map(LeaderAndIsr::getLeader)
     .collect(Collectors.toSet());
 
 assertThat(leadersAfterDisconnect.contains(1)).isFalse();
@@ -358,7 +370,7 @@ delay(5);
 Set&lt;Integer&gt; leadersAfterReconnect = cluster.fetchLeaderAndIsr("test-topic")
     .values()
     .stream()
-    .map(LeaderAndIsr::leader)
+    .map(LeaderAndIsr::getLeader)
     .collect(Collectors.toSet());
 
 assertThat(leadersAfterReconnect.contains(1)).isTrue();
@@ -477,28 +489,6 @@ delay(5);
     }
 }</code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>Please note that if you want to additionally use the accessors as defined in <code>TopicManager</code>, you will have to provide the ZooKeeper connection string as well.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">String bootstrapServers = ...;;
-String zkConnectString = ...;
-ExternalKafkaCluster cluster = ExternalKafkaCluster.at(bootstrapServers, zkConnectString);</code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-If you do not provide the ZooKeeper connect string when creating an instance of <code>ExternalKafkaCluster</code>, all methods provided by its <code>TopicManager</code> implementation will result in no-ops.
-</td>
-</tr>
-</table>
 </div>
 <div class="paragraph">
 <p>See sections on <a href="#section:producing-records">Producing records</a>, <a href="#section:consuming-records">Consuming records</a> and <a href="#section:managing-topics">Managing topics</a> for further reference on how to interact with the cluster.</p>
@@ -1118,7 +1108,7 @@ Returns <code>true</code> even if the topic is marked for deletion.
 </div>
 </div>
 <div class="paragraph">
-<p><code>LeaderAndIsr</code> is a type from the Kafka API. Please consult its documentation for further details.</p>
+<p>The type <code>LeaderAndIsr</code> is not to be confused with the same type in package <code>kafka.api</code>. The <code>LeaderAndIsr</code> implementation Kafka for JUnit is a simple transfer object that only contains the ID of the leader node and the IDs of all nodes that comprise the ISR.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1145,8 +1135,8 @@ Returns <code>true</code> even if the topic is marked for deletion.
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 2.1.0<br>
- 2019-03-19 19:55:48 CEST
+Version 2.4.0<br>
+ 2019-12-29 06:33:54 CET
 </div>
 </div>
 </body>
