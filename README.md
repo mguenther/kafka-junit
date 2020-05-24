@@ -64,6 +64,7 @@ public class KafkaTest {
 | 2.2.x                      | Apache Kafka 2.2.1 |
 | 2.3.x                      | Apache Kafka 2.3.0 |
 | 2.4.x                      | Apache Kafka 2.4.0 |
+| 2.5.x                      | Apache Kafka 2.5.0 |
 
 ## Interacting with the Kafka cluster
 
