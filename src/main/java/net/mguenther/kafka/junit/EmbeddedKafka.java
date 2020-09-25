@@ -18,6 +18,8 @@ import static org.apache.kafka.common.network.ListenerName.forSecurityProtocol;
 @Slf4j
 public class EmbeddedKafka implements EmbeddedLifecycle {
 
+    private static final int UNDEFINED_BOUND_PORT = -1;
+
     private final int brokerId;
 
     private final Properties brokerConfig;
@@ -27,6 +29,8 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
     private final File logDirectory;
 
     private KafkaServer kafka;
+
+    private int boundPort = UNDEFINED_BOUND_PORT;
 
     public EmbeddedKafka(final int brokerId, final EmbeddedKafkaConfig config, final String zooKeeperConnectUrl) throws IOException {
         this.brokerId = brokerId;
@@ -55,8 +59,13 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
         try {
             log.info("Embedded Kafka broker with ID {} is starting.", brokerId);
 
+            if (boundPort != UNDEFINED_BOUND_PORT) {
+                this.brokerConfig.put(KafkaConfig$.MODULE$.PortProp(), String.valueOf(boundPort));
+            }
+
             final KafkaConfig config = new KafkaConfig(brokerConfig, true);
             kafka = TestUtils.createServer(config, Time.SYSTEM);
+            boundPort = kafka.boundPort(config.interBrokerListenerName());
 
             log.info("The embedded Kafka broker with ID {} has been started. Its logs can be found at {}.", brokerId, logDirectory);
         } catch (Exception e) {
