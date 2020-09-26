@@ -57,4 +57,17 @@ public class EmbeddedKafkaConfigTest {
         assertThat(props.get(KafkaConfig$.MODULE$.PortProp())).isEqualTo("9092");
         assertThat(props.get(KafkaConfig$.MODULE$.NumPartitionsProp())).isEqualTo("2");
     }
+
+    @Test
+    public void shouldAdjustConfiguredDedicatedPortToAnyEphemeralPortIfUsingMultipleBrokers() {
+
+        final EmbeddedKafkaConfig config = EmbeddedKafkaConfig
+                .create()
+                .with(KafkaConfig$.MODULE$.PortProp(), "9092")
+                .withNumberOfBrokers(3)
+                .build();
+        final Properties props = config.getBrokerProperties();
+
+        assertThat(props.get(KafkaConfig$.MODULE$.PortProp())).isEqualTo("0");
+    }
 }
