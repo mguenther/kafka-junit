@@ -4,9 +4,11 @@ import kafka.server.KafkaConfig$;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Properties;
 
+@Slf4j
 @Getter
 @ToString
 @RequiredArgsConstructor
@@ -19,6 +21,10 @@ public class EmbeddedKafkaConfig {
 
         private int numberOfBrokers = DEFAULT_NUMBER_OF_BROKERS;
         private Properties properties = new Properties();
+
+        private EmbeddedKafkaConfigBuilder() {
+            properties.put(KafkaConfig$.MODULE$.PortProp(), "0");
+        }
 
         public EmbeddedKafkaConfigBuilder withNumberOfBrokers(final int numberOfBrokers) {
             this.numberOfBrokers = numberOfBrokers;
@@ -41,10 +47,19 @@ public class EmbeddedKafkaConfig {
         }
 
         public EmbeddedKafkaConfig build() {
+
+            if (numberOfBrokers > 1 && defaultPortHasBeenOverridden()) {
+                final int desiredPort = Integer.parseInt(properties.getProperty(KafkaConfig$.MODULE$.PortProp()));
+                final String message = "You configured %s broker instances and try to bind them to the dedicated " +
+                        "port %s. This will not work. The broker configuration has been adjusted to use ephemeral " +
+                        "ports instead.";
+                log.warn(String.format(message, numberOfBrokers, desiredPort));
+                properties.put(KafkaConfig$.MODULE$.PortProp(), "0");
+            }
+
             ifNonExisting(KafkaConfig$.MODULE$.ZkSessionTimeoutMsProp(), "8000");
             ifNonExisting(KafkaConfig$.MODULE$.ZkConnectionTimeoutMsProp(), "10000");
             ifNonExisting(KafkaConfig$.MODULE$.HostNameProp(), "localhost");
-            ifNonExisting(KafkaConfig$.MODULE$.PortProp(), "0");
             ifNonExisting(KafkaConfig$.MODULE$.NumPartitionsProp(), "1");
             ifNonExisting(KafkaConfig$.MODULE$.DefaultReplicationFactorProp(), "1");
             ifNonExisting(KafkaConfig$.MODULE$.MinInSyncReplicasProp(), "1");
@@ -62,6 +77,10 @@ public class EmbeddedKafkaConfig {
             ifNonExisting(KafkaConfig$.MODULE$.LeaderImbalancePerBrokerPercentageProp(), 1);
             ifNonExisting(KafkaConfig$.MODULE$.UncleanLeaderElectionEnableProp(), "false");
             return new EmbeddedKafkaConfig(numberOfBrokers, properties);
+        }
+
+        private boolean defaultPortHasBeenOverridden() {
+            return !properties.getProperty(KafkaConfig$.MODULE$.PortProp()).equals("0");
         }
     }
 

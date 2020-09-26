@@ -7,6 +7,8 @@ import org.apache.kafka.common.errors.NotEnoughReplicasException;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -187,6 +189,31 @@ public class MultipleBrokersTest {
 
         cluster.send(SendValues.to("test-topic", "A").useDefaults());
         cluster.observeValues(ObserveKeyValues.on("test-topic", 1).useDefaults());
+    }
+
+    @Test
+    public void reActivatedBrokersShouldBindToTheSamePortAsTheyWereBoundToBefore() throws Exception {
+
+        cluster.createTopic(TopicConfig.forTopic("test-topic")
+                .withNumberOfPartitions(5)
+                .withNumberOfReplicas(3)
+                .with("min.insync.replicas", "2")
+                .build());
+
+        final List<String> brokersBeforeDisconnect = Arrays.asList(cluster.getBrokerList().split(","));
+
+        final Set<Integer> disconnectedBrokers = cluster.disconnectUntilIsrFallsBelowMinimumSize("test-topic");
+
+        delay(5);
+
+        cluster.connect(disconnectedBrokers);
+
+        delay(5);
+
+        final List<String> brokersAfterReconnect = Arrays.asList(cluster.getBrokerList().split(","));
+
+        assertThat(brokersAfterReconnect).containsAll(brokersBeforeDisconnect);
+        assertThat(brokersBeforeDisconnect).containsAll(brokersAfterReconnect);
     }
 
     private Set<Integer> leaders(final String topic) {
