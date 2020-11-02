@@ -76,7 +76,7 @@ public class MultipleBrokersTest {
 
         cluster.connect(1);
 
-        delay(5);
+        delay(10);
 
         Set<Integer> leadersAfterReconnect = leaders("test-topic");
 
@@ -203,6 +203,8 @@ public class MultipleBrokersTest {
         final List<String> brokersBeforeDisconnect = Arrays.asList(cluster.getBrokerList().split(","));
 
         final Set<Integer> disconnectedBrokers = cluster.disconnectUntilIsrFallsBelowMinimumSize("test-topic");
+
+        assertThat(disconnectedBrokers.size()).isEqualTo(2);
 
         delay(5);
 
