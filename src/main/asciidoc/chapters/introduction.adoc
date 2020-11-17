@@ -16,12 +16,12 @@ Kafka for JUnit provides the necessary infrastructure to exercise your Kafka-bas
 public class KafkaTest {
 
   @Rule
-  public EmbeddedKafkaCluster cluster = provisionWith(useDefaults());
+  public EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig());
 
   @Test
   public void shouldWaitForRecordsToBePublished() throws Exception {
-    cluster.send(to("test-topic", "a", "b", "c").useDefaults());
-    cluster.observe(on("test-topic", 4).useDefaults());
+    kafka.send(to("test-topic", "a", "b", "c"));
+    kafka.observe(on("test-topic", 4));
   }
 }
 ```
@@ -36,23 +36,23 @@ As Junit 5 does not support rules, one approach is to start your cluster in a `@
 ```java
 public class JUnit5KafkaTest {
 
-    private EmbeddedKafkaCluster cluster;
+    private EmbeddedKafkaCluster kafka;
 
     @BeforeEach
     public void setupKafka() {
-        cluster = provisionWith(useDefaults());
-        cluster.start();
+        kafka = provisionWith(defaultClusterConfig());
+        kafka.start();
     }
 
     @AfterEach
     public void tearDownKafka() {
-        cluster.stop();
+        kafka.stop();
     }
 
     @Test
     public void shouldWaitForRecordsToBePublished() throws Exception {
-        cluster.send(to("test-topic", "a", "b", "c").useDefaults());
-        cluster.observe(on("test-topic", 4).useDefaults());
+        kafka.send(to("test-topic", "a", "b", "c"));
+        kafka.observe(on("test-topic", 4));
     }
 
 }
@@ -68,10 +68,10 @@ public class KafkaTest {
   @Test
   public void shouldWaitForRecordsToBePublished() throws Exception {
 
-    try (EmbeddedKafkaCluster cluster = provisionWith(useDefaults())) {
-      cluster.start();
-      cluster.send(to("test-topic", "a", "b", "c").useDefaults());
-      cluster.observe(on("test-topic", 3).useDefaults());
+    try (EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig())) {
+      kafka.start();
+      kafka.send(to("test-topic", "a", "b", "c"));
+      kafka.observe(on("test-topic", 3));
     }
   }
 }
@@ -110,4 +110,11 @@ Of course, you can also test against existing clusters using `ExternalKafkaClust
 
 | 2.4.x
 | Apache Kafka 2.4.0
+
+| 2.5.x
+| Apache Kafka 2.5.1
+
+| 2.6.x
+| Apache Kafka 2.6.0
+
 |===

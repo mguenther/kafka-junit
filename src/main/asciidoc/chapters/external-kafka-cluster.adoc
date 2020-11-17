@@ -20,7 +20,7 @@ public class MyTest {
     @Test
     public void externalKafkaClusterDemo() throws Exception {
 
-        ExternalKafkaCluster cluster = ExternalKafkaCluster.at(kafkaContainer.getBootstrapServers());
+        ExternalKafkaCluster kafka = ExternalKafkaCluster.at(kafkaContainer.getBootstrapServers());
 
         // use the accessors that cluster provides to interact with the Kafka container
     }

@@ -14,7 +14,7 @@ public interface RecordConsumer {
 }
 ```
 
-Implementations of the `RecordConsumer` interface use the high-level consumer API that comes with Apache Kafka. Hence, the underlying consumer is a `KafkaConsumer`. This `KafkaConsumer` is fully parameterizable via both `ReadKeyValues` and `ObserveKeyValues` by means of `kafka.consumer.ConsumerConfig`.
+Implementations of the `RecordConsumer` interface use the high-level consumer API that comes with Apache Kafka. Hence, the underlying consumer is a `KafkaConsumer`. This `KafkaConsumer` is fully parameterizable via both `ReadKeyValues` and `ObserveKeyValues` by means of the provided builders.
 
 All operations are executed *synchronously*.
 
@@ -23,9 +23,7 @@ With these abstractions in place, reading content from a Kafka topic is easy. As
 === Consuming values using defaults
 
 ```java
-ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic").useDefaults();
-
-List<String> values = cluster.readValues(readRequest);
+List<String> values = kafka.readValues(ReadKeyValues.from("test-topic"));
 ```
 
 By default, `ReadKeyValues.from` uses `StringDeserializer.class` for both the record key and value. Calling `readValues` just yields the values from the consumed Kafka records. Please have a look at the next example if you are interested in obtaining not only the values, but also the record key and possibly attached headers.
@@ -33,9 +31,7 @@ By default, `ReadKeyValues.from` uses `StringDeserializer.class` for both the re
 === Consuming key-value based records using defaults
 
 ```java
-ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic").useDefaults();
-
-List<KeyValue<String, String>> consumedRecords = cluster.read(readRequest);
+List<KeyValue<String, String>> consumedRecords = kafka.read(ReadKeyValues.from("test-topic"));
 ```
 
 Notice the difference to the example before this one: Instead of calling `readValues` we call `read` using the same `ReadKeyValues` request. Instead of a `List<String>`, this yields a `List<KeyValue<String, String>>` where each `KeyValue` is comprised of the record key, the record value and the headers that have been attached to that record.
@@ -43,11 +39,9 @@ Notice the difference to the example before this one: Instead of calling `readVa
 === Consuming key-value based records using overrides
 
 ```java
-ReadKeyValues<String, Long> readRequest = ReadKeyValues.from("test-topic-value-types", Long.class)
-        .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class)
-        .build();
-
-List<KeyValue<String, Long>> consumedRecords = cluster.read(readRequest);
+List<KeyValue<String Long>> consumedRecords = kafka.read(ReadKeyValues
+    .from("test-topic-value-types", Long.class)
+    .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class));
 ```
 
 Since we are interested in consuming records that use `Long`-based values, we have to parameterize the `ReadKeyValues` request such that the proper type is bound and a compatible `Deserializer` is used. This is all done by calling `from(String, Class<V>)` and overriding the default deserializer using `with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class)`.
@@ -55,7 +49,7 @@ Since we are interested in consuming records that use `Long`-based values, we ha
 === Working with attached headers
 
 ```java
-Headers headersOfFirstRecord = cluster.read(ReadKeyValues.from("test-topic").useDefaults())
+Headers headersOfFirstRecord = kafka.read(ReadKeyValues.from("test-topic"))
         .stream()
         .findFirst()
         .map(KeyValue::getHeaders)
@@ -67,11 +61,9 @@ The example grabs the `Headers` of the first record that it reads. `Headers` is 
 === Consuming values or records transactionally
 
 ```java
-ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic")
-    .with(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed")
-    .build();
-
-List<String> consumedValues = cluster.readValues(readRequest);
+List<String> consumedValues = kafka.readValues(ReadKeyValues
+    .from("test-topic")
+    .with(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed"));
 ```
 
 Consuming records that have been written transactionally is just a matter of the configuration of the underlying `KafkaConsumer`. As `ReadKeyValues` provides full access to the configuration of the `KafkaConsumer` a simple `with(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed")` suffices to enable transactional consume semantics.
@@ -79,9 +71,7 @@ Consuming records that have been written transactionally is just a matter of the
 === Observing a topic until `N` values have been consumed
 
 ```java
-ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 3).useDefaults();
-
-List<String> observedValues = cluster.observeValues(observeRequest);
+List<String> observedValues = kafka.observeValues(ObserveKeyValues.on("test-topic", 3));
 ```
 
 Sometimes you are not interested in reading all available values from a topic, but want to block test execution until a certain amount of values have been read from a topic. This enables you to synchronize your test logic with the system-under-test as the test blocks until the system-under-test has been able to write its records to the Kafka topic you are currently observing.
@@ -91,7 +81,7 @@ Of course, observing a topic cannot run indefinitely and thus has to be paramete
 If the timeout elapses before the desired amount of values have been read from the given topic, the `observe` method will throw an `AssertionError`. Hence, if you are just interested in the fact that records have been written by the system-under-test to the topic you are observing, it fully suffices to use
 
 ```java
-cluster.observeValues(observeRequest);
+kafka.observeValues(ObserveKeyValues.on("test-topic", 3));
 ```
 
 and let the timeout elapse to fail the test.
@@ -101,9 +91,7 @@ If you are interested in the observed values, you can however simply grab all re
 === Observing a topic until `N` records have been consumed
 
 ```java
-ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 3).useDefaults();
-
-List<KeyValue<String, String>> observedValues = cluster.observe(observeRequest);
+List<KeyValue<String, String>> observedValues = kafka.observe(ObserveKeyValues.on("test-topic", 3));
 ```
 
 This is just the same as the example above, but instead of observing and returning `List<String>` it returns a `List<KeyValue<String, String>>` in the example.
@@ -113,12 +101,10 @@ This is just the same as the example above, but instead of observing and returni
 ```java
 Predicate<String> keyFilter = k -> Integer.parseInt(k) % 2 == 0;
 
-ReadKeyValues<String, Integer> readRequest = ReadKeyValues.from("test-topic", Integer.class)
-        .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
-        .filterOnKeys(keyFilter)
-        .build();
-
-List<KeyValue<String, Integer>> consumedRecords = cluster.read(readRequest);
+List<KeyValue<String, Integer>> consumedRecords = kafka.read(ReadKeyValues
+    .from("test-topic", Integer.class)
+    .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
+    .filterOnKeys(keyFilter));
 ```
 
 It is possible to parameterize both `ReadKeyValues` and `ObserveKeyValues` with a key filter. The key filter is modelled using `java.util.function.Predicate` and thus can be arbitrarily complex. The default key filter evaluates to `true` every time, so unless you do not explicitly provide a filter using `filterOnKeys` like in the example, all consumed records pass the filter.
@@ -134,12 +120,10 @@ NOTE: Combining key, value and header filters is possible. Please note that in t
 ```java
 Predicate<Integer> valueFilter = v -> v > 2;
 
-ReadKeyValues<String, Integer> readRequest = ReadKeyValues.from("test-topic", Integer.class)
-        .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
-        .filterOnValues(valueFilter)
-        .build();
-
-List<KeyValue<String, Integer>> consumedRecords = cluster.read(readRequest);
+List<KeyValue<String, Integer>> consumedRecords = kafka.read(ReadKeyValues
+    .from("test-topic", Integer.class)
+    .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
+    .filterOnValues(valueFilter));
 ```
 
 It is possible to parameterize both `ReadKeyValues` and `ObserveKeyValues` with a value filter. Like the key filter, the value filter is also modelled using `java.util.function.Predicate`. The default value filter evaluates to `true` every time, so unless you do not explicitly provide a filter using `filterOnValues` like in the example, all consumed records pass the filter.
@@ -155,12 +139,10 @@ NOTE: Combining key, value and header filters is possible. Please note that in t
 ```java
 Predicate<Headers> headersFilter = headers -> new String(headers.lastHeader("aggregate").value()).equals("a");
 
-ReadKeyValues<String, Integer> readRequest = ReadKeyValues.from("test-topic-header-filter", Integer.class)
-        .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
-        .filterOnHeaders(headersFilter)
-        .build();
-
-List<KeyValue<String, Integer>> consumedRecords = cluster.read(readRequest);
+List<KeyValue<String, Integer>> consumedRecords = kafka.read(ReadKeyValues
+    .from("test-topic-header-filter", Integer.class)
+    .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
+    .filterOnHeaders(headersFilter));
 ```
 
 It is possible to parameterize both `ReadKeyValues` and `ObserveKeyValues` with a headers filter. Like key and value filters, it is modelled using a `java.util.function.Predicate` on the target type `org.apache.kafka.common.header.Headers`. The default headers filter evaluates to `true` every time, so unless you do not explicitly provide a filter using `filterOnHeaders` like in the example, all consumed records pass the filter.
@@ -176,11 +158,9 @@ NOTE: Combining key, value and header filters is possible. Please note that in t
 An instance of `KeyValue` is associated with the optional type `KeyValueMetadata`. By default, this type is not set and thus `KeyValue::getMetadata` returns `Optional.empty`. Both `ReadKeyValues` and `ObserveKeyValues` provide a method called `includeMetadata` that explicitly enables metadata on a per-record basis. The listing underneath demonstrates this:
 
 ```java
-ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 3)
-        .includeMetadata()
-        .build();
-
-List<KeyValue<String, String>> records = cluster.observe(observeRequest);
+List<KeyValue<String, String>> records = kafka.observe(ObserveKeyValues
+    .on("test-topic", 3)
+    .includeMetadata());
 ```
 
 In this example, all instances of `KeyValue` feature an instance of `Optional<KeyValueMetadata>` which contains metadata for the resp. record. Metadata is currently limited to the coordinates of the record and thus closes over the 3-tuple `(topic, partition, offset)`.
@@ -189,11 +169,10 @@ In this example, all instances of `KeyValue` feature an instance of `Optional<Ke
 
 Consuming data continuously from topics that contain a huge amountof data may take quite some time, if a new consumer instance always starts to read from the beginning of the topic. To speed things up, you can skip to a dedicated offset for topic-partitions and start reading from there. The example underneath demonstrates how this is done when reading key-values using `ReadKeyValues`.
 
-
 ```java
-ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic").seekTo(0, 2).build();
-
-List<KeyValue<String, String>> records = cluster.read(readRequest);
+List<KeyValue<String, String>> records = kafka.read(ReadKeyValues
+    .from("test-topic")
+    .seekTo(0, 2));
 ```
 
 NOTE: Seeking is also a feature of `ObserveKeyValues` which means, that seeking to a dedicated offset is possible for all operations that a `RecordConsumer` provides.

@@ -14,14 +14,14 @@ public interface TopicManager {
 }
 ```
 
-Implementations of the `TopicCreator` interface currently use the `zkclient` library for topic management.
+Implementations of the `TopicManager` interface currently use the `AdminClient` implementation of the Kafka Client library for topic management.
 
 All operations are executed *synchronously*.
 
 === Creating a topic
 
 ```java
-cluster.createTopic(TopicConfig.forTopic("test-topic").useDefaults());
+kafka.createTopic(TopicConfig.withName("test-topic"));
 ```
 
 NOTE: By default, Kafka for JUnit enables the automatic creation of topics at the broker with defaults that should be sensible for local testing. However, if you find yourself in the situation to create a topic with a specific replication factor or number of partitions that deviate from their default setting, you should create that topic with the respective settings before writing the first Kafka record to it.
@@ -29,7 +29,7 @@ NOTE: By default, Kafka for JUnit enables the automatic creation of topics at th
 === Deleting a topic
 
 ```java
-cluster.deleteTopic("test-topic");
+kafka.deleteTopic("test-topic");
 ```
 
 NOTE: Deleting a topic will only set a deletion marker for that topic. The topic may not be deleted immediately after `deleteTopic` completes.
@@ -37,7 +37,7 @@ NOTE: Deleting a topic will only set a deletion marker for that topic. The topic
 === Determine whether a topic exists
 
 ```java
-cluster.exists("test-topic");
+kafka.exists("test-topic");
 ```
 
 NOTE: Returns `true` even if the topic is marked for deletion.
@@ -47,7 +47,7 @@ NOTE: Returns `true` even if the topic is marked for deletion.
 In case you have multiple brokers running and want to query their assignments and roles for a specific topic, you can use `TopicManager#fetchLeaderAndIsr` to retrieve that kind of information. The method returns an unmodifiable `java.util.Map` of `LeaderAndIsr` instances by their designated partition. The listing underneath shows how to retrieve this information for the topic named `test-topic`.
 
 ```java
-Map<Integer, LeaderAndIsr> leaderAndIsr = cluster.fetchLeaderAndIsr("test-topic");
+Map<Integer, LeaderAndIsr> leaderAndIsr = kafka.fetchLeaderAndIsr("test-topic");
 ```
 
 The type `LeaderAndIsr` is not to be confused with the same type in package `kafka.api`. The `LeaderAndIsr` implementation Kafka for JUnit is a simple transfer object that only contains the ID of the leader node and the IDs of all nodes that comprise the ISR.
@@ -57,5 +57,5 @@ The type `LeaderAndIsr` is not to be confused with the same type in package `kaf
 Looking up the topic configuration by accessing the cluster is easily done using the `TopicManager`.
 
 ```java
-Properties topicConfig = cluster.fetchTopicConfig("test-topic");
+Properties topicConfig = kafka.fetchTopicConfig("test-topic");
 ```
