@@ -20,6 +20,7 @@ import static net.mguenther.kafka.junit.ObserveKeyValues.on;
 import static net.mguenther.kafka.junit.SendKeyValuesTransactional.inTransaction;
 import static net.mguenther.kafka.junit.SendValues.to;
 import static net.mguenther.kafka.junit.SendValuesTransactional.inTransaction;
+import static net.mguenther.kafka.junit.TopicConfig.withName;
 import static net.mguenther.kafka.junit.Wait.delay;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
@@ -29,18 +30,17 @@ public class MultipleBrokersTest {
 
     @Rule
     public EmbeddedKafkaCluster kafka = provisionWith(newClusterConfig()
-                    .configure(brokers()
-                            .withNumberOfBrokers(3)
-                            .with(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp(), "1")
-                            .with(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp(), "1")));
+            .configure(brokers()
+                    .withNumberOfBrokers(3)
+                    .with(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp(), "1")
+                    .with(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp(), "1")));
 
     @Test
     public void multipleBrokersCompriseTheInSyncReplicaSetOfTopics() throws Exception {
 
-        kafka.createTopic(TopicConfig.forTopic("test-topic")
+        kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
-                .withNumberOfReplicas(3)
-                .build());
+                .withNumberOfReplicas(3));
 
         delay(5);
 
@@ -55,10 +55,9 @@ public class MultipleBrokersTest {
     @Test
     public void disconnectedBrokerLeavesIsrOfTopicAndRejoinsItAfterReconnecting() throws Exception {
 
-        kafka.createTopic(TopicConfig.forTopic("test-topic")
+        kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
-                .withNumberOfReplicas(3)
-                .build());
+                .withNumberOfReplicas(3));
 
         delay(5);
 
@@ -92,11 +91,10 @@ public class MultipleBrokersTest {
     @Test(expected = NotEnoughReplicasException.class)
     public void disconnectUntilIsrFallsBelowMinimumSizeShouldThrowNotEnoughReplicasExceptionWhenSendingValues() throws Exception {
 
-        kafka.createTopic(TopicConfig.forTopic("test-topic")
+        kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
                 .withNumberOfReplicas(3)
-                .with("min.insync.replicas", "2")
-                .build());
+                .with("min.insync.replicas", "2"));
 
         delay(5);
 
@@ -110,11 +108,10 @@ public class MultipleBrokersTest {
     @Test(expected = NotEnoughReplicasException.class)
     public void disconnectUntilIsrFallsBelowMinimumSizeShouldThrowNotEnoughReplicasExceptionWhenSendingValuesTransactionally() throws Exception {
 
-        kafka.createTopic(TopicConfig.forTopic("test-topic")
+        kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
                 .withNumberOfReplicas(3)
-                .with("min.insync.replicas", "2")
-                .build());
+                .with("min.insync.replicas", "2"));
 
         delay(5);
 
@@ -129,11 +126,10 @@ public class MultipleBrokersTest {
     @Test(expected = NotEnoughReplicasException.class)
     public void disconnectUntilIsrFallsBelowMinimumSizeShouldThrowNotEnoughReplicasExceptionWhenSendingKeyValues() throws Exception {
 
-        kafka.createTopic(TopicConfig.forTopic("test-topic")
+        kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
                 .withNumberOfReplicas(3)
-                .with("min.insync.replicas", "2")
-                .build());
+                .with("min.insync.replicas", "2"));
 
         delay(5);
 
@@ -147,11 +143,10 @@ public class MultipleBrokersTest {
     @Test(expected = NotEnoughReplicasException.class)
     public void disconnectUntilIsrFallsBelowMinimumSizeShouldThrowNotEnoughReplicasExceptionWhenSendingKeyValuesTransactionally() throws Exception {
 
-        kafka.createTopic(TopicConfig.forTopic("test-topic")
+        kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
                 .withNumberOfReplicas(3)
-                .with("min.insync.replicas", "2")
-                .build());
+                .with("min.insync.replicas", "2"));
 
         delay(5);
 
@@ -166,11 +161,10 @@ public class MultipleBrokersTest {
     @Test
     public void shouldBeAbleToWriteRecordsAfterRestoringDisconnectedIsr() throws Exception {
 
-        kafka.createTopic(TopicConfig.forTopic("test-topic")
+        kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
                 .withNumberOfReplicas(3)
-                .with("min.insync.replicas", "2")
-                .build());
+                .with("min.insync.replicas", "2"));
 
         delay(5);
 
@@ -196,11 +190,10 @@ public class MultipleBrokersTest {
     @Test
     public void reActivatedBrokersShouldBindToTheSamePortAsTheyWereBoundToBefore() throws Exception {
 
-        kafka.createTopic(TopicConfig.forTopic("test-topic")
+        kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
                 .withNumberOfReplicas(3)
-                .with("min.insync.replicas", "2")
-                .build());
+                .with("min.insync.replicas", "2"));
 
         final List<String> brokersBeforeDisconnect = Arrays.asList(kafka.getBrokerList().split(","));
 

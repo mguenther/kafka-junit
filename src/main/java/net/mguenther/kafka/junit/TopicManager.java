@@ -21,6 +21,22 @@ public interface TopicManager {
     void createTopic(TopicConfig config);
 
     /**
+     * Creates the topic as defined by the given {@link TopicConfig} synchronously. This
+     * method blocks as long as it takes to complete the underlying topic creation request.
+     * Please note that this does not imply that the topic is usable directly after this
+     * method returns due to an outstanding partition leader election. This is a convenience
+     * method that accepts a {@link net.mguenther.kafka.junit.TopicConfig.TopicConfigBuilder}
+     * and immediately constructs a {@link TopicConfig} request from it that is passed on to
+     * {@link #createTopic(TopicConfig)}.
+     *
+     * @param builder
+     *      provides the settings for the topic to create
+     */
+    default void createTopic(TopicConfig.TopicConfigBuilder builder) {
+        createTopic(builder.build());
+    }
+
+    /**
      * Marks the given {@code topic} for deletion. Please note that topics are not immediately
      * deleted from a Kafka cluster. This method will fail if the configuration of Kafka brokers
      * prohibits topic deletions and if the topic has already been marked for deletion.
