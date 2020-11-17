@@ -192,10 +192,6 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
         return Collections.unmodifiableSet(disconnectedBrokers);
     }
 
-    public static EmbeddedKafkaCluster provisionWith(final EmbeddedKafkaClusterConfig config) {
-        return new EmbeddedKafkaCluster(config);
-    }
-
     @Override
     public <K, V> List<RecordMetadata> send(final SendKeyValues<K, V> sendRequest) throws InterruptedException {
         return producerDelegate.send(sendRequest);
@@ -264,5 +260,30 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
     @Override
     public void close() {
         stop();
+    }
+
+    /**
+     * Uses an {@link EmbeddedKafkaClusterConfig} to provision an {@link EmbeddedKafkaCluster}.
+     *
+     * @param config
+     *      represents the configuration of the embedded Kafka cluster
+     * @return
+     *      instance of {@link EmbeddedKafkaCluster}
+     */
+    public static EmbeddedKafkaCluster provisionWith(final EmbeddedKafkaClusterConfig config) {
+        return new EmbeddedKafkaCluster(config);
+    }
+
+    /**
+     * Accepts an {@link EmbeddedKafkaClusterConfig.EmbeddedKafkaClusterConfigBuilder} to construct
+     * a {@link EmbeddedKafkaClusterConfig} from it which is used to provision a {@link EmbeddedKafkaCluster}.
+     *
+     * @param builder
+     *      the configuration builder for the embedded Kafka cluster
+     * @return
+     *      instance of {@link EmbeddedKafkaCluster}
+     */
+    public static EmbeddedKafkaCluster provisionWith(final EmbeddedKafkaClusterConfig.EmbeddedKafkaClusterConfigBuilder builder) {
+        return provisionWith(builder.build());
     }
 }

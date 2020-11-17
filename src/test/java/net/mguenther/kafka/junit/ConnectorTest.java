@@ -19,8 +19,7 @@ public class ConnectorTest {
                     EmbeddedConnectConfig
                             .create()
                             .deployConnector(connectorConfig(topic, key))
-                            .build())
-            .build());
+                            .build()));
 
     @Test
     public void connectorShouldBeProvisionedAndEmitRecords() throws Exception {

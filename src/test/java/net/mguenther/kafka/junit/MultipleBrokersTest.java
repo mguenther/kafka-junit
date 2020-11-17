@@ -31,8 +31,7 @@ public class MultipleBrokersTest {
                             .withNumberOfBrokers(3)
                             .with(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp(), "1")
                             .with(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp(), "1")
-                            .build())
-                    .build());
+                            .build()));
 
     @Test
     public void multipleBrokersCompriseTheInSyncReplicaSetOfTopics() throws Exception {
