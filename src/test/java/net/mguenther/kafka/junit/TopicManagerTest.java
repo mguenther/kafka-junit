@@ -9,7 +9,7 @@ import java.util.Properties;
 import java.util.UUID;
 
 import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
+import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.defaultClusterConfig;
 import static net.mguenther.kafka.junit.Wait.delay;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class TopicManagerTest {
 
     @Rule
-    public EmbeddedKafkaCluster kafka = provisionWith(useDefaults());
+    public EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig());
 
     @Test
     public void manageTopics() {
@@ -36,9 +36,9 @@ public class TopicManagerTest {
     public void fetchLeaderAndIsrShouldRetrieveTheIsr() throws Exception {
 
         kafka.createTopic(TopicConfig.forTopic("test-topic")
-            .withNumberOfPartitions(5)
-            .withNumberOfReplicas(1)
-            .build());
+                .withNumberOfPartitions(5)
+                .withNumberOfReplicas(1)
+                .build());
 
         // it takes a couple of seconds until topic-partition assignments are there
         delay(5);
@@ -53,8 +53,8 @@ public class TopicManagerTest {
     public void fetchTopicConfigShouldRetrieveTheProperConfig() throws Exception {
 
         kafka.createTopic(TopicConfig.forTopic("test-topic")
-            .with("min.insync.replicas", "1")
-            .build());
+                .with("min.insync.replicas", "1")
+                .build());
 
         delay(3);
 

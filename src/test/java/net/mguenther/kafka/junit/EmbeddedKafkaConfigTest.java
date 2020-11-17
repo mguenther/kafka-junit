@@ -12,7 +12,7 @@ public class EmbeddedKafkaConfigTest {
     @Test
     public void shouldUseDefaultsIfNotOverridden() {
 
-        final EmbeddedKafkaConfig config = EmbeddedKafkaConfig.useDefaults();
+        final EmbeddedKafkaConfig config = EmbeddedKafkaConfig.defaultBrokers();
         final Properties props = config.getBrokerProperties();
 
         assertThat(props.get(KafkaConfig$.MODULE$.ZkSessionTimeoutMsProp())).isEqualTo("8000");
@@ -33,7 +33,7 @@ public class EmbeddedKafkaConfigTest {
     public void withShouldOverrideDefaultSetting() {
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig
-                .create()
+                .brokers()
                 .with(KafkaConfig$.MODULE$.PortProp(), "9092")
                 .build();
         final Properties props = config.getBrokerProperties();
@@ -49,7 +49,7 @@ public class EmbeddedKafkaConfigTest {
         overrides.put(KafkaConfig$.MODULE$.NumPartitionsProp(), "2");
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig
-                .create()
+                .brokers()
                 .withAll(overrides)
                 .build();
         final Properties props = config.getBrokerProperties();
@@ -62,7 +62,7 @@ public class EmbeddedKafkaConfigTest {
     public void shouldAdjustConfiguredDedicatedPortToAnyEphemeralPortIfUsingMultipleBrokers() {
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig
-                .create()
+                .brokers()
                 .with(KafkaConfig$.MODULE$.PortProp(), "9092")
                 .withNumberOfBrokers(3)
                 .build();

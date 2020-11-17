@@ -6,15 +6,15 @@ Kafka for JUnit is able to spin up a fully-fledged embedded Kafka cluster that i
 
 Using `EmbeddedKafkaCluster` in a JUnit test is quite simple. The necessary code to set it up is minimal if you are comfortable with the default configuration.
 
-[source, java]
+[source,java]
 ----
 import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
+import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.defaultClusterConfig;
 
 public class MyTest {
 
     @Rule
-    public EmbeddedKafkaCluster cluster = provisionWith(useDefaults());
+    public EmbeddedKafkaCluster cluster = provisionWith(defaultClusterConfig());
 }
 ----
 
@@ -22,15 +22,15 @@ public class MyTest {
 
 The example underneath demonstrates how to use `@ClassRule` instead of `@Rule`.
 
-[source, java]
+[source,java]
 ----
 import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
+import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.defaultClusterConfig;
 
 public class MyTest {
 
     @ClassRule
-    public static EmbeddedKafkaCluster cluster = provisionWith(useDefaults());
+    public static EmbeddedKafkaCluster cluster = provisionWith(defaultClusterConfig());
 }
 ----
 

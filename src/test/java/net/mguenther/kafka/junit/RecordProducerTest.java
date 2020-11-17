@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
+import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.defaultClusterConfig;
 import static net.mguenther.kafka.junit.ObserveKeyValues.on;
 import static net.mguenther.kafka.junit.SendKeyValuesTransactional.inTransaction;
 import static net.mguenther.kafka.junit.SendValues.to;
@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class RecordProducerTest {
 
     @Rule
-    public EmbeddedKafkaCluster kafka = provisionWith(useDefaults());
+    public EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig());
 
     @Test
     public void sendingUnkeyedRecordsWithDefaults() throws Exception {

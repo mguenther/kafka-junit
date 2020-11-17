@@ -29,11 +29,36 @@ public class EmbeddedZooKeeperConfig {
         this.port = builder.port;
     }
 
-    public static EmbeddedZooKeeperConfigBuilder create() {
+    public static EmbeddedZooKeeperConfigBuilder zooKeeper() {
         return new EmbeddedZooKeeperConfigBuilder();
     }
 
+    /**
+     * @return
+     *      instance of {@link EmbeddedZooKeeperConfigBuilder}
+     * @deprecated
+     *      This method is deprecated since 2.7.0. Expect it to be removed in a future release.
+     *      Use {@link #zooKeeper()} instead.
+     */
+    @Deprecated
+    public static EmbeddedZooKeeperConfigBuilder create() {
+        return zooKeeper();
+    }
+
+    public static EmbeddedZooKeeperConfig defaultZooKeeper() {
+        return zooKeeper().build();
+    }
+
+    /**
+     * @return
+     *      instance of {@link EmbeddedZooKeeperConfig} that contains the default configuration
+     *      for the embedded ZooKeeper instance
+     * @deprecated
+     *      This method is deprecated since 2.7.0. Expect it to be removed in a future release.
+     *      Use {@link #defaultZooKeeper()} instead.
+     */
+    @Deprecated
     public static EmbeddedZooKeeperConfig useDefaults() {
-        return create().build();
+        return defaultZooKeeper();
     }
 }

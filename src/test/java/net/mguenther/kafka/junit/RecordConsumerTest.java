@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
+import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.defaultClusterConfig;
 import static net.mguenther.kafka.junit.ReadKeyValues.from;
 import static net.mguenther.kafka.junit.SendKeyValues.to;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class RecordConsumerTest {
 
     @Rule
-    public EmbeddedKafkaCluster kafka = provisionWith(useDefaults());
+    public EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig());
 
     @Before
     public void prepareTestTopic() throws Exception {

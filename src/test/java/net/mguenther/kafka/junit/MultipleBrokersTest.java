@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
 import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
+import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.newClusterConfig;
+import static net.mguenther.kafka.junit.EmbeddedKafkaConfig.brokers;
 import static net.mguenther.kafka.junit.ObserveKeyValues.on;
 import static net.mguenther.kafka.junit.SendKeyValuesTransactional.inTransaction;
 import static net.mguenther.kafka.junit.SendValues.to;
@@ -26,12 +28,11 @@ import static org.assertj.core.api.Fail.fail;
 public class MultipleBrokersTest {
 
     @Rule
-    public EmbeddedKafkaCluster kafka = provisionWith(EmbeddedKafkaClusterConfig.create()
-                    .provisionWith(EmbeddedKafkaConfig.create()
+    public EmbeddedKafkaCluster kafka = provisionWith(newClusterConfig()
+                    .configure(brokers()
                             .withNumberOfBrokers(3)
                             .with(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp(), "1")
-                            .with(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp(), "1")
-                            .build()));
+                            .with(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp(), "1")));
 
     @Test
     public void multipleBrokersCompriseTheInSyncReplicaSetOfTopics() throws Exception {
