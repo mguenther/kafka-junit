@@ -8,14 +8,14 @@ public class EmbeddedZooKeeperConfigTest {
 
     @Test
     public void useDefaultsShouldUseRandomPort() {
-        final EmbeddedZooKeeperConfig config = EmbeddedZooKeeperConfig.useDefaults();
+        final EmbeddedZooKeeperConfig config = EmbeddedZooKeeperConfig.defaultZooKeeper();
         assertThat(config.getPort()).isEqualTo(EmbeddedZooKeeperConfig.USE_RANDOM_ZOOKEEPER_PORT);
     }
 
     @Test
     public void withPortShouldOverrideDefaultPort() {
         final EmbeddedZooKeeperConfig config = EmbeddedZooKeeperConfig
-                .create()
+                .zooKeeper()
                 .withPort(8090)
                 .build();
         assertThat(config.getPort()).isEqualTo(8090);

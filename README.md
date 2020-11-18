@@ -16,12 +16,12 @@ Kafka for JUnit provides the necessary infrastructure to exercise your Kafka-bas
 public class KafkaTest {
 
   @Rule
-  public EmbeddedKafkaCluster cluster = provisionWith(useDefaults());
+  public EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig());
 
   @Test
   public void shouldWaitForRecordsToBePublished() throws Exception {
-    cluster.send(to("test-topic", "a", "b", "c").useDefaults());
-    cluster.observe(on("test-topic", 4).useDefaults());
+    kafka.send(to("test-topic", "a", "b", "c"));
+    kafka.observe(on("test-topic", 4));
   }
 }
 ```
@@ -30,11 +30,37 @@ The same applies for `@ClassRule`.
 
 ### What about JUnit 5?
 
-You can use Kafka for JUnit with JUnit 5 of course. However, with its rule-based implementations, Kafka for JUnit is currently tailored for ease of use with JUnit 4. It implements no JUnit Jupiter extension for JUnit 5. There is an issue for that (cf. [ISSUE-004](link:https://github.com/mguenther/kafka-junit/issues/4)), so the development wrt. a JUnit Jupiter extension is planned for a future release. PRs are welcome, though!
+You can use Kafka for JUnit with JUnit 5 of course. However, with its rule-based implementations, Kafka for JUnit is currently tailored for ease of use with JUnit 4. It implements no JUnit Jupiter extension for JUnit 5. There is an issue for that (cf. link:https://github.com/mguenther/kafka-junit/issues/4[ISSUE-004]), so the development wrt. a JUnit Jupiter extension is planned for a future release. PRs are welcome, though!
+As Junit 5 does not support rules, one approach is to start your cluster in a `@BeforeEach` method and it stop in an `@AfterEach` method. 
+
+```java
+public class JUnit5KafkaTest {
+
+    private EmbeddedKafkaCluster kafka;
+
+    @BeforeEach
+    public void setupKafka() {
+        kafka = provisionWith(defaultClusterConfig());
+        kafka.start();
+    }
+
+    @AfterEach
+    public void tearDownKafka() {
+        kafka.stop();
+    }
+
+    @Test
+    public void shouldWaitForRecordsToBePublished() throws Exception {
+        kafka.send(to("test-topic", "a", "b", "c"));
+        kafka.observe(on("test-topic", 4));
+    }
+
+}
+```
 
 ### Alternative ways
 
-You do not have to use the JUnit 4 rules if you are not comfortable with them or if you happen to use JUnit 5, which does not support rules any longer. `EmbeddedKafkaCluster` implements the `AutoCloseable` interface, so it is easy to manage it inside your tests yourself.
+You do not have to use the JUnit 4 rules if you are not comfortable with them. `EmbeddedKafkaCluster` implements the `AutoCloseable` interface, so it is easy to manage it inside your tests yourself.
 
 ```java
 public class KafkaTest {
@@ -42,14 +68,16 @@ public class KafkaTest {
   @Test
   public void shouldWaitForRecordsToBePublished() throws Exception {
 
-    try (EmbeddedKafkaCluster cluster = provisionWith(useDefaults())) {
-      cluster.start();
-      cluster.send(to("test-topic", "a", "b", "c").useDefaults());
-      cluster.observe(on("test-topic", 3).useDefaults());
+    try (EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig())) {
+      kafka.start();
+      kafka.send(to("test-topic", "a", "b", "c"));
+      kafka.observe(on("test-topic", 3));
     }
   }
 }
 ```
+
+Of course, you can also test against existing clusters using `ExternalKafkaCluster` instead of `EmbeddableKafkaCluster`. See section <<section:external-kafka-cluster, Working with an external Kafka cluster>> for more information.
 
 ### Supported versions of Apache Kafka
 

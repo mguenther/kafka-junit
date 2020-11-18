@@ -7,25 +7,25 @@ import org.junit.Test;
 import java.util.Properties;
 import java.util.UUID;
 
+import static net.mguenther.kafka.junit.EmbeddedConnectConfig.kafkaConnect;
+import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
+import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.newClusterConfig;
+
 public class ConnectorTest {
 
     private final String topic = String.format("topic-%s", UUID.randomUUID().toString());
+
     private final String key = String.format("key-%s", UUID.randomUUID().toString());
 
     @Rule
-    public EmbeddedKafkaCluster cluster = EmbeddedKafkaCluster.provisionWith(EmbeddedKafkaClusterConfig
-            .create()
-            .provisionWith(
-                    EmbeddedConnectConfig
-                            .create()
-                            .deployConnector(connectorConfig(topic, key))
-                            .build())
-            .build());
+    public EmbeddedKafkaCluster kafka = provisionWith(newClusterConfig()
+            .configure(kafkaConnect()
+                    .deployConnector(connectorConfig(topic, key))));
 
     @Test
     public void connectorShouldBeProvisionedAndEmitRecords() throws Exception {
 
-        cluster.observe(ObserveKeyValues.on(topic, 1)
+        kafka.observe(ObserveKeyValues.on(topic, 1)
                 .filterOnKeys(k -> k.equalsIgnoreCase(key))
                 .build());
     }

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static net.mguenther.kafka.junit.ObserveKeyValues.on;
+import static net.mguenther.kafka.junit.SendKeyValues.to;
 
 public class ExternalKafkaClusterTest {
 
@@ -17,17 +18,15 @@ public class ExternalKafkaClusterTest {
     @Test
     public void externalKafkaClusterShouldWorkWithExternalResources() throws Exception {
 
-        ExternalKafkaCluster cluster = ExternalKafkaCluster.at(kafkaContainer.getBootstrapServers());
+        final ExternalKafkaCluster kafka = ExternalKafkaCluster.at(kafkaContainer.getBootstrapServers());
 
-        List<KeyValue<String, String>> records = new ArrayList<>();
+        final List<KeyValue<String, String>> records = new ArrayList<>();
 
         records.add(new KeyValue<>("aggregate", "a"));
         records.add(new KeyValue<>("aggregate", "b"));
         records.add(new KeyValue<>("aggregate", "c"));
 
-        SendKeyValues<String, String> sendRequest = SendKeyValues.to("test-topic", records).useDefaults();
-
-        cluster.send(sendRequest);
-        cluster.observe(on("test-topic", 3).useDefaults());
+        kafka.send(to("test-topic", records));
+        kafka.observe(on("test-topic", 3).useDefaults());
     }
 }

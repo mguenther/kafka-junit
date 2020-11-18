@@ -35,7 +35,7 @@ public class EmbeddedConnectConfigTest {
     public void withShouldOverrideDefaultSetting() {
 
         final EmbeddedConnectConfig config = EmbeddedConnectConfig
-                .create()
+                .kafkaConnect()
                 .with(DistributedConfig.GROUP_ID_CONFIG, "test-group")
                 .build();
         final Properties props = config.getConnectProperties();
@@ -51,7 +51,7 @@ public class EmbeddedConnectConfigTest {
         overrides.put(DistributedConfig.STATUS_STORAGE_TOPIC_CONFIG, "status-topic");
 
         final EmbeddedConnectConfig config = EmbeddedConnectConfig
-                .create()
+                .kafkaConnect()
                 .withAll(overrides)
                 .build();
         final Properties props = config.getConnectProperties();
@@ -65,7 +65,7 @@ public class EmbeddedConnectConfigTest {
 
         final Properties connectorConfig = new Properties();
         final EmbeddedConnectConfig config = EmbeddedConnectConfig
-                .create()
+                .kafkaConnect()
                 .deployConnector(connectorConfig)
                 .build();
 
@@ -77,7 +77,7 @@ public class EmbeddedConnectConfigTest {
     public void deployConnectorsShouldStoreConnectorConfigs() {
 
         final EmbeddedConnectConfig config = EmbeddedConnectConfig
-                .create()
+                .kafkaConnect()
                 .deployConnectors(new Properties(), new Properties())
                 .build();
 

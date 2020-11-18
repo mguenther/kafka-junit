@@ -20,35 +20,33 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Arrays.asList;
 import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
+import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.defaultClusterConfig;
+import static net.mguenther.kafka.junit.ReadKeyValues.from;
+import static net.mguenther.kafka.junit.SendKeyValues.to;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class RecordConsumerTest {
 
     @Rule
-    public EmbeddedKafkaCluster cluster = provisionWith(useDefaults());
+    public EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig());
 
     @Before
     public void prepareTestTopic() throws Exception {
 
-        List<KeyValue<String, String>> records = new ArrayList<>();
+        final List<KeyValue<String, String>> records = asList(
+                new KeyValue<>("aggregate", "a"),
+                new KeyValue<>("aggregate", "b"),
+                new KeyValue<>("aggregate", "c"));
 
-        records.add(new KeyValue<>("aggregate", "a"));
-        records.add(new KeyValue<>("aggregate", "b"));
-        records.add(new KeyValue<>("aggregate", "c"));
-
-        SendKeyValues<String, String> sendRequest = SendKeyValues.to("test-topic", records).useDefaults();
-
-        cluster.send(sendRequest);
+        kafka.send(to("test-topic", records));
     }
 
     @Test
     public void readValuesConsumesOnlyValuesFromPreviouslySentRecords() throws Exception {
 
-        ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic").useDefaults();
-
-        List<String> values = cluster.readValues(readRequest);
+        final List<String> values = kafka.readValues(from("test-topic"));
 
         assertThat(values.size()).isEqualTo(3);
     }
@@ -56,32 +54,23 @@ public class RecordConsumerTest {
     @Test
     public void readConsumesPreviouslySentRecords() throws Exception {
 
-        ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic").useDefaults();
-
-        List<KeyValue<String, String>> consumedRecords = cluster.read(readRequest);
+        final List<KeyValue<String, String>> consumedRecords = kafka.read(from("test-topic"));
 
         assertThat(consumedRecords.size()).isEqualTo(3);
     }
 
     @Test
-    public void readConsumesPreviouslySentCustomValueTypedRecords()  throws Exception {
+    public void readConsumesPreviouslySentCustomValueTypedRecords() throws Exception {
 
-        List<KeyValue<String, Long>> records = new ArrayList<>();
+        final List<KeyValue<String, Long>> records = asList(
+                new KeyValue<>("min", Long.MIN_VALUE),
+                new KeyValue<>("max", Long.MAX_VALUE));
 
-        records.add(new KeyValue<>("min", Long.MIN_VALUE));
-        records.add(new KeyValue<>("max", Long.MAX_VALUE));
+        kafka.send(to("test-topic-value-types", records)
+                .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, LongSerializer.class));
 
-        SendKeyValues<String, Long> sendRequest = SendKeyValues.to("test-topic-value-types", records)
-                .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, LongSerializer.class)
-                .build();
-
-        cluster.send(sendRequest);
-
-        ReadKeyValues<String, Long> readRequest = ReadKeyValues.from("test-topic-value-types", Long.class)
-                .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class)
-                .build();
-
-        List<KeyValue<String, Long>> consumedRecords = cluster.read(readRequest);
+        final List<KeyValue<String, Long>> consumedRecords = kafka.read(from("test-topic-value-types", Long.class)
+                .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class));
 
         assertThat(consumedRecords.size()).isEqualTo(records.size());
     }
@@ -89,24 +78,17 @@ public class RecordConsumerTest {
     @Test
     public void readConsumesPreviouslySentCustomKeyValueTypedRecords() throws Exception {
 
-        List<KeyValue<Integer, Long>> records = new ArrayList<>();
+        final List<KeyValue<Integer, Long>> records = asList(
+                new KeyValue<>(1, Long.MIN_VALUE),
+                new KeyValue<>(2, Long.MAX_VALUE));
 
-        records.add(new KeyValue<>(1, Long.MIN_VALUE));
-        records.add(new KeyValue<>(2, Long.MAX_VALUE));
-
-        SendKeyValues<Integer, Long> sendRequest = SendKeyValues.to("test-topic-key-value-types", records)
+        kafka.send(to("test-topic-key-value-types", records)
                 .with(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class)
-                .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, LongSerializer.class)
-                .build();
+                .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, LongSerializer.class));
 
-        cluster.send(sendRequest);
-
-        ReadKeyValues<Integer, Long> readRequest = ReadKeyValues.from("test-topic-key-value-types", Integer.class, Long.class)
+        final List<KeyValue<Integer, Long>> consumedRecords = kafka.read(from("test-topic-key-value-types", Integer.class, Long.class)
                 .with(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
-                .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class)
-                .build();
-
-        List<KeyValue<Integer, Long>> consumedRecords = cluster.read(readRequest);
+                .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class));
 
         assertThat(consumedRecords.size()).isEqualTo(records.size());
     }
@@ -114,27 +96,20 @@ public class RecordConsumerTest {
     @Test
     public void readConsumesOnlyRecordsThatPassKeyFilter() throws Exception {
 
-        List<KeyValue<String, Integer>> records = new ArrayList<>();
+        final List<KeyValue<String, Integer>> records = asList(
+                new KeyValue<>("1", 1),
+                new KeyValue<>("2", 2),
+                new KeyValue<>("3", 3),
+                new KeyValue<>("4", 4));
 
-        records.add(new KeyValue<>("1", 1));
-        records.add(new KeyValue<>("2", 2));
-        records.add(new KeyValue<>("3", 3));
-        records.add(new KeyValue<>("4", 4));
+        kafka.send(to("test-topic-key-filter", records)
+                .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class));
 
-        SendKeyValues<String, Integer> sendRequest = SendKeyValues.to("test-topic-key-filter", records)
-                .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class)
-                .build();
+        final Predicate<String> keyFilter = k -> Integer.parseInt(k) % 2 == 0;
 
-        cluster.send(sendRequest);
-
-        Predicate<String> keyFilter = k -> Integer.parseInt(k) % 2 == 0;
-
-        ReadKeyValues<String, Integer> readRequest = ReadKeyValues.from("test-topic-key-filter", Integer.class)
+        final List<KeyValue<String, Integer>> consumedRecords = kafka.read(from("test-topic-key-filter", Integer.class)
                 .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
-                .filterOnKeys(keyFilter)
-                .build();
-
-        List<KeyValue<String, Integer>> consumedRecords = cluster.read(readRequest);
+                .filterOnKeys(keyFilter));
 
         assertThat(consumedRecords.size()).isEqualTo(2);
         assertThat(consumedRecords.stream().map(KeyValue::getKey).allMatch(keyFilter)).isTrue();
@@ -143,27 +118,20 @@ public class RecordConsumerTest {
     @Test
     public void readConsumesOnlyRecordsThatPassValueFilter() throws Exception {
 
-        List<KeyValue<String, Integer>> records = new ArrayList<>();
+        final List<KeyValue<String, Integer>> records = asList(
+                new KeyValue<>("1", 1),
+                new KeyValue<>("2", 2),
+                new KeyValue<>("3", 3),
+                new KeyValue<>("4", 4));
 
-        records.add(new KeyValue<>("1", 1));
-        records.add(new KeyValue<>("2", 2));
-        records.add(new KeyValue<>("3", 3));
-        records.add(new KeyValue<>("4", 4));
+        kafka.send(to("test-topic-value-filter", records)
+                .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class));
 
-        SendKeyValues<String, Integer> sendRequest = SendKeyValues.to("test-topic-value-filter", records)
-                .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class)
-                .build();
+        final Predicate<Integer> valueFilter = v -> v % 2 == 1;
 
-        cluster.send(sendRequest);
-
-        Predicate<Integer> valueFilter = v -> v % 2 == 1;
-
-        ReadKeyValues<String, Integer> readRequest = ReadKeyValues.from("test-topic-value-filter", Integer.class)
+        final List<KeyValue<String, Integer>> consumedRecords = kafka.read(from("test-topic-value-filter", Integer.class)
                 .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
-                .filterOnValues(valueFilter)
-                .build();
-
-        List<KeyValue<String, Integer>> consumedRecords = cluster.read(readRequest);
+                .filterOnValues(valueFilter));
 
         assertThat(consumedRecords.size()).isEqualTo(2);
         assertThat(consumedRecords.stream().map(KeyValue::getValue).allMatch(valueFilter)).isTrue();
@@ -172,28 +140,21 @@ public class RecordConsumerTest {
     @Test
     public void readConsumesOnlyRecordsThatPassHeaderFilter() throws Exception {
 
-        Headers headersA = new RecordHeaders().add("aggregate", "a".getBytes());
-        Headers headersB = new RecordHeaders().add("aggregate", "b".getBytes());
+        final Headers headersA = new RecordHeaders().add("aggregate", "a".getBytes());
+        final Headers headersB = new RecordHeaders().add("aggregate", "b".getBytes());
 
-        List<KeyValue<String, Integer>> records = new ArrayList<>();
+        final List<KeyValue<String, Integer>> records = asList(
+                new KeyValue<>("1", 1, headersA),
+                new KeyValue<>("2", 2, headersB));
 
-        records.add(new KeyValue<>("1", 1, headersA));
-        records.add(new KeyValue<>("2", 2, headersB));
+        kafka.send(to("test-topic-header-filter", records)
+                .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class));
 
-        SendKeyValues<String, Integer> sendRequest = SendKeyValues.to("test-topic-header-filter", records)
-                .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class)
-                .build();
+        final Predicate<Headers> headerFilter = headers -> new String(headers.lastHeader("aggregate").value()).equals("a");
 
-        cluster.send(sendRequest);
-
-        Predicate<Headers> headerFilter = headers -> new String(headers.lastHeader("aggregate").value()).equals("a");
-
-        ReadKeyValues<String, Integer> readRequest = ReadKeyValues.from("test-topic-header-filter", Integer.class)
+        final List<KeyValue<String, Integer>> consumedRecords = kafka.read(from("test-topic-header-filter", Integer.class)
                 .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
-                .filterOnHeaders(headerFilter)
-                .build();
-
-        List<KeyValue<String, Integer>> consumedRecords = cluster.read(readRequest);
+                .filterOnHeaders(headerFilter));
 
         assertThat(consumedRecords.size()).isEqualTo(1);
         assertThat(new String(consumedRecords.get(0).getHeaders().lastHeader("aggregate").value())).isEqualTo("a");
@@ -207,22 +168,22 @@ public class RecordConsumerTest {
                 .map(i -> new KeyValue<>(String.format("%s", i), i))
                 .collect(Collectors.toList());
 
-        SendKeyValues<String, Integer> sendRequest = SendKeyValues.to("test-topic-key-value-filter", records)
+        SendKeyValues<String, Integer> sendRequest = to("test-topic-key-value-filter", records)
                 .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class)
                 .build();
 
-        cluster.send(sendRequest);
+        kafka.send(sendRequest);
 
         Predicate<String> keyFilter = k -> Integer.parseInt(k) % 3 == 0;
         Predicate<Integer> valueFilter = v -> v % 5 == 0;
 
-        ReadKeyValues<String, Integer> readRequest = ReadKeyValues.from("test-topic-key-value-filter", Integer.class)
+        ReadKeyValues<String, Integer> readRequest = from("test-topic-key-value-filter", Integer.class)
                 .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
                 .filterOnKeys(keyFilter)
                 .filterOnValues(valueFilter)
                 .build();
 
-        List<KeyValue<String, Integer>> consumedRecords = cluster.read(readRequest);
+        List<KeyValue<String, Integer>> consumedRecords = kafka.read(readRequest);
 
         Predicate<KeyValue<String, Integer>> combinedFilter = kv -> keyFilter.test(kv.getKey()) && valueFilter.test(kv.getValue());
 
@@ -241,20 +202,20 @@ public class RecordConsumerTest {
         records.add(new KeyValue<>("1", 1, headersA));
         records.add(new KeyValue<>("2", 2, headersB));
 
-        SendKeyValues<String, Integer> sendRequest = SendKeyValues.to("test-topic-header-filter", records)
+        SendKeyValues<String, Integer> sendRequest = to("test-topic-header-filter", records)
                 .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class)
                 .build();
 
-        cluster.send(sendRequest);
+        kafka.send(sendRequest);
 
         Predicate<Headers> headerFilter = headers -> new String(headers.lastHeader("aggregate").value()).equals("a");
 
-        ReadKeyValues<String, Integer> readRequest = ReadKeyValues.from("test-topic-header-filter", Integer.class)
+        ReadKeyValues<String, Integer> readRequest = from("test-topic-header-filter", Integer.class)
                 .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
                 .filterOnHeaders(headerFilter)
                 .build();
 
-        List<Integer> values = cluster.readValues(readRequest);
+        List<Integer> values = kafka.readValues(readRequest);
 
         assertThat(values.size()).isEqualTo(1);
         assertThat(values.get(0)).isEqualTo(1);
@@ -265,7 +226,7 @@ public class RecordConsumerTest {
 
         ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 3).useDefaults();
 
-        int observedRecords = cluster.observe(observeRequest).size();
+        int observedRecords = kafka.observe(observeRequest).size();
 
         assertThat(observedRecords).isEqualTo(3);
     }
@@ -277,7 +238,7 @@ public class RecordConsumerTest {
                 .observeFor(5, TimeUnit.SECONDS)
                 .build();
 
-        cluster.observe(observeRequest);
+        kafka.observe(observeRequest);
     }
 
     @Test
@@ -288,17 +249,17 @@ public class RecordConsumerTest {
         records.add(new KeyValue<>("min", Long.MIN_VALUE));
         records.add(new KeyValue<>("max", Long.MAX_VALUE));
 
-        SendKeyValues<String, Long> sendRequest = SendKeyValues.to("test-topic-value-types", records)
+        SendKeyValues<String, Long> sendRequest = to("test-topic-value-types", records)
                 .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, LongSerializer.class)
                 .build();
 
-        cluster.send(sendRequest);
+        kafka.send(sendRequest);
 
         ObserveKeyValues<String, Long> observeRequest = ObserveKeyValues.on("test-topic-value-types", 2, Long.class)
                 .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class)
                 .build();
 
-        int observedRecords = cluster.observe(observeRequest).size();
+        int observedRecords = kafka.observe(observeRequest).size();
 
         assertThat(observedRecords).isEqualTo(2);
     }
@@ -311,19 +272,19 @@ public class RecordConsumerTest {
         records.add(new KeyValue<>(1, Long.MIN_VALUE));
         records.add(new KeyValue<>(2, Long.MAX_VALUE));
 
-        SendKeyValues<Integer, Long> sendRequest = SendKeyValues.to("test-topic-key-value-types", records)
+        SendKeyValues<Integer, Long> sendRequest = to("test-topic-key-value-types", records)
                 .with(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class)
                 .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, LongSerializer.class)
                 .build();
 
-        cluster.send(sendRequest);
+        kafka.send(sendRequest);
 
         ObserveKeyValues<Integer, Long> observeRequest = ObserveKeyValues.on("test-topic-key-value-types", 2, Integer.class, Long.class)
                 .with(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
                 .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class)
                 .build();
 
-        int observedRecords = cluster.observe(observeRequest).size();
+        int observedRecords = kafka.observe(observeRequest).size();
 
         assertThat(observedRecords).isEqualTo(2);
     }
@@ -336,11 +297,11 @@ public class RecordConsumerTest {
                 .map(i -> new KeyValue<>(String.format("%s", i), i))
                 .collect(Collectors.toList());
 
-        SendKeyValues<String, Integer> sendRequest = SendKeyValues.to("test-topic-key-value-filter", records)
+        SendKeyValues<String, Integer> sendRequest = to("test-topic-key-value-filter", records)
                 .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class)
                 .build();
 
-        cluster.send(sendRequest);
+        kafka.send(sendRequest);
 
         Predicate<String> keyFilter = k -> Integer.parseInt(k) % 3 == 0;
         Predicate<Integer> valueFilter = v -> v % 5 == 0;
@@ -352,7 +313,7 @@ public class RecordConsumerTest {
                 .filterOnValues(valueFilter)
                 .build();
 
-        List<KeyValue<String, Integer>> observedRecords = cluster.observe(observeRequest);
+        List<KeyValue<String, Integer>> observedRecords = kafka.observe(observeRequest);
 
         Predicate<KeyValue<String, Integer>> combinedFilter = kv -> keyFilter.test(kv.getKey()) && valueFilter.test(kv.getValue());
 
@@ -370,11 +331,11 @@ public class RecordConsumerTest {
         records.add(new KeyValue<>("1", 1, headersA));
         records.add(new KeyValue<>("2", 2, headersB));
 
-        SendKeyValues<String, Integer> sendRequest = SendKeyValues.to("test-topic-header-filter", records)
+        SendKeyValues<String, Integer> sendRequest = to("test-topic-header-filter", records)
                 .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class)
                 .build();
 
-        cluster.send(sendRequest);
+        kafka.send(sendRequest);
 
         Predicate<Headers> headerFilter = headers -> new String(headers.lastHeader("aggregate").value()).equals("b");
 
@@ -384,7 +345,7 @@ public class RecordConsumerTest {
                 .filterOnHeaders(headerFilter)
                 .build();
 
-        List<KeyValue<String, Integer>> observedRecords = cluster.observe(observeRequest);
+        List<KeyValue<String, Integer>> observedRecords = kafka.observe(observeRequest);
 
         assertThat(observedRecords.size()).isEqualTo(1);
         assertThat(observedRecords.get(0).getValue()).isEqualTo(2);
@@ -400,11 +361,11 @@ public class RecordConsumerTest {
         records.add(new KeyValue<>("3", 3));
         records.add(new KeyValue<>("4", 4));
 
-        SendKeyValues<String, Integer> sendRequest = SendKeyValues.to("test-topic-key-value-filter", records)
+        SendKeyValues<String, Integer> sendRequest = to("test-topic-key-value-filter", records)
                 .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class)
                 .build();
 
-        cluster.send(sendRequest);
+        kafka.send(sendRequest);
 
         Predicate<String> keyFilter = k -> Integer.parseInt(k) % 2 == 0;
         Predicate<Integer> valueFilter = v -> v % 2 == 1;
@@ -416,7 +377,7 @@ public class RecordConsumerTest {
                 .filterOnValues(valueFilter)
                 .build();
 
-        cluster.observe(observeRequest);
+        kafka.observe(observeRequest);
     }
 
     @Test(expected = AssertionError.class)
@@ -430,11 +391,11 @@ public class RecordConsumerTest {
         records.add(new KeyValue<>("1", 1, headersA));
         records.add(new KeyValue<>("2", 2, headersB));
 
-        SendKeyValues<String, Integer> sendRequest = SendKeyValues.to("test-topic-header-filter", records)
+        SendKeyValues<String, Integer> sendRequest = to("test-topic-header-filter", records)
                 .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class)
                 .build();
 
-        cluster.send(sendRequest);
+        kafka.send(sendRequest);
 
         Predicate<Headers> headerFilter = headers -> new String(headers.lastHeader("aggregate").value()).equals("c"); // not existing
 
@@ -444,17 +405,17 @@ public class RecordConsumerTest {
                 .filterOnHeaders(headerFilter)
                 .build();
 
-        cluster.observe(observeRequest);
+        kafka.observe(observeRequest);
     }
 
     @Test
     public void readShouldIncludeMetadataIfExplicitlyEnabled() throws Exception {
 
-        ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic")
+        ReadKeyValues<String, String> readRequest = from("test-topic")
                 .includeMetadata()
                 .build();
 
-        List<KeyValue<String, String>> records = cluster.read(readRequest);
+        List<KeyValue<String, String>> records = kafka.read(readRequest);
 
         assertThat(records.stream().allMatch(kv -> kv.getMetadata().isPresent()))
                 .withFailMessage("All records must include a reference to the topic-partition-offset if includeMetadata is set to true.")
@@ -488,9 +449,9 @@ public class RecordConsumerTest {
     @Test
     public void readShouldNotIncludeMetadataIfNotExplicitlyEnabled() throws Exception {
 
-        ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic").useDefaults();
+        ReadKeyValues<String, String> readRequest = from("test-topic").useDefaults();
 
-        List<KeyValue<String, String>> records = cluster.read(readRequest);
+        List<KeyValue<String, String>> records = kafka.read(readRequest);
 
         assertThat(records.stream().noneMatch(kv -> kv.getMetadata().isPresent()))
                 .withFailMessage("None of the returned record must include a reference to topic-partition-offset.")
@@ -504,7 +465,7 @@ public class RecordConsumerTest {
                 .includeMetadata()
                 .build();
 
-        List<KeyValue<String, String>> records = cluster.observe(observeRequest);
+        List<KeyValue<String, String>> records = kafka.observe(observeRequest);
 
         assertThat(records.stream().allMatch(kv -> kv.getMetadata().isPresent()))
                 .withFailMessage("All records must include a reference to the topic-partition-offset if includeMetadata is set to true.")
@@ -540,7 +501,7 @@ public class RecordConsumerTest {
 
         ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 3).useDefaults();
 
-        List<KeyValue<String, String>> records = cluster.observe(observeRequest);
+        List<KeyValue<String, String>> records = kafka.observe(observeRequest);
 
         assertThat(records.stream().noneMatch(kv -> kv.getMetadata().isPresent()))
                 .withFailMessage("None of the returned record must include a reference to topic-partition-offset.")
@@ -550,9 +511,9 @@ public class RecordConsumerTest {
     @Test
     public void seekToShouldSkipAllMessagesBeforeGivenOffsetWhenReadingKeyValues() throws Exception {
 
-        ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic").seekTo(0, 2).build();
+        ReadKeyValues<String, String> readRequest = from("test-topic").seekTo(0, 2).build();
 
-        List<KeyValue<String, String>> records = cluster.read(readRequest);
+        List<KeyValue<String, String>> records = kafka.read(readRequest);
 
         assertThat(records.size()).isEqualTo(1);
         assertThat(records.get(0).getValue()).isEqualTo("c");
@@ -561,9 +522,9 @@ public class RecordConsumerTest {
     @Test
     public void seekToShouldSkipAllMessagesBeforeGivenOffsetWhenReadingValues() throws Exception {
 
-        ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test-topic").seekTo(0, 2).build();
+        ReadKeyValues<String, String> readRequest = from("test-topic").seekTo(0, 2).build();
 
-        List<String> records = cluster.readValues(readRequest);
+        List<String> records = kafka.readValues(readRequest);
 
         assertThat(records.size()).isEqualTo(1);
         assertThat(records.get(0)).isEqualTo("c");
@@ -574,7 +535,7 @@ public class RecordConsumerTest {
 
         ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 1).seekTo(0, 2).build();
 
-        List<KeyValue<String, String>> records = cluster.observe(observeRequest);
+        List<KeyValue<String, String>> records = kafka.observe(observeRequest);
 
         assertThat(records.size()).isEqualTo(1);
         assertThat(records.get(0).getValue()).isEqualTo("c");
@@ -585,7 +546,7 @@ public class RecordConsumerTest {
 
         ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 1).seekTo(0, 2).build();
 
-        List<String> records = cluster.observeValues(observeRequest);
+        List<String> records = kafka.observeValues(observeRequest);
 
         assertThat(records.size()).isEqualTo(1);
         assertThat(records.get(0)).isEqualTo("c");
@@ -602,7 +563,7 @@ public class RecordConsumerTest {
         // if the implementation of observe would start over at the given offset, then we would the record with value
         // "c" multiple times until the expected number (in this case 2) is met. if this times out and throws an
         // AssertionError, the implementation works as expected.
-        cluster.observe(observeRequest);
+        kafka.observe(observeRequest);
     }
 
     @Test(expected = AssertionError.class)
@@ -616,6 +577,6 @@ public class RecordConsumerTest {
         // if the implementation of observe would start over at the given offset, then we would the record with value
         // "c" multiple times until the expected number (in this case 2) is met. if this times out and throws an
         // AssertionError, the implementation works as expected.
-        cluster.observeValues(observeRequest);
+        kafka.observeValues(observeRequest);
     }
 }

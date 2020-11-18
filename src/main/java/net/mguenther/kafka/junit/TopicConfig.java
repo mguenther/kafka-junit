@@ -77,7 +77,24 @@ public class TopicConfig {
         return map;
     }
 
-    public static TopicConfigBuilder forTopic(final String topic) {
+    public static TopicConfigBuilder withName(final String topic) {
         return new TopicConfigBuilder(topic);
+    }
+
+    /**
+     * Returns a {@link TopicConfigBuilder} with default settings for the topic {@code topic}.
+     * Use the returned builder to override those default settings.
+     *
+     * @param topic
+     *      the name of the topic
+     * @return
+     *      instance of {@link TopicConfigBuilder} used to parameterize the topic creation request
+     * @deprecated
+     *      This method is deprecated since 2.7.0. Expect it to be removed in a future release.
+     *      Use {@link #withName(String)} instead.
+     */
+    @Deprecated
+    public static TopicConfigBuilder forTopic(final String topic) {
+        return withName(topic);
     }
 }
