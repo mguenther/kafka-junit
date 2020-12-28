@@ -8,9 +8,11 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.LongSerializer;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,13 +29,14 @@ import static net.mguenther.kafka.junit.ReadKeyValues.from;
 import static net.mguenther.kafka.junit.SendKeyValues.to;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class RecordConsumerTest {
+class RecordConsumerTest {
 
-    @Rule
-    public EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig());
+    private EmbeddedKafkaCluster kafka;
 
-    @Before
-    public void prepareTestTopic() throws Exception {
+    @BeforeEach
+    void prepareEnvironment() throws Exception {
+        kafka = provisionWith(defaultClusterConfig());
+        kafka.start();
 
         final List<KeyValue<String, String>> records = asList(
                 new KeyValue<>("aggregate", "a"),
@@ -43,8 +46,14 @@ public class RecordConsumerTest {
         kafka.send(to("test-topic", records));
     }
 
+    @AfterEach
+    void tearDownEnvironment() {
+        if (kafka != null) kafka.stop();
+    }
+
     @Test
-    public void readValuesConsumesOnlyValuesFromPreviouslySentRecords() throws Exception {
+    @DisplayName("readValues should consume only values from previously sent records")
+    void readValuesConsumesOnlyValuesFromPreviouslySentRecords() throws Exception {
 
         final List<String> values = kafka.readValues(from("test-topic"));
 
@@ -52,7 +61,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void readConsumesPreviouslySentRecords() throws Exception {
+    @DisplayName("read should consume only values from previously sent records")
+    void readConsumesPreviouslySentRecords() throws Exception {
 
         final List<KeyValue<String, String>> consumedRecords = kafka.read(from("test-topic"));
 
@@ -60,7 +70,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void readConsumesPreviouslySentCustomValueTypedRecords() throws Exception {
+    @DisplayName("read should consume only values with a custom type that have been sent previously")
+    void readConsumesPreviouslySentCustomValueTypedRecords() throws Exception {
 
         final List<KeyValue<String, Long>> records = asList(
                 new KeyValue<>("min", Long.MIN_VALUE),
@@ -76,7 +87,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void readConsumesPreviouslySentCustomKeyValueTypedRecords() throws Exception {
+    @DisplayName("read should only consume records with custom types for key and values that have been sent previously")
+    void readConsumesPreviouslySentCustomKeyValueTypedRecords() throws Exception {
 
         final List<KeyValue<Integer, Long>> records = asList(
                 new KeyValue<>(1, Long.MIN_VALUE),
@@ -94,7 +106,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void readConsumesOnlyRecordsThatPassKeyFilter() throws Exception {
+    @DisplayName("read should only consume records that pass the key filter")
+    void readConsumesOnlyRecordsThatPassKeyFilter() throws Exception {
 
         final List<KeyValue<String, Integer>> records = asList(
                 new KeyValue<>("1", 1),
@@ -116,7 +129,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void readConsumesOnlyRecordsThatPassValueFilter() throws Exception {
+    @DisplayName("read should only consume those records that pass the value filter")
+    void readConsumesOnlyRecordsThatPassValueFilter() throws Exception {
 
         final List<KeyValue<String, Integer>> records = asList(
                 new KeyValue<>("1", 1),
@@ -138,7 +152,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void readConsumesOnlyRecordsThatPassHeaderFilter() throws Exception {
+    @DisplayName("read should only consume those records that pass the header filter")
+    void readConsumesOnlyRecordsThatPassHeaderFilter() throws Exception {
 
         final Headers headersA = new RecordHeaders().add("aggregate", "a".getBytes());
         final Headers headersB = new RecordHeaders().add("aggregate", "b".getBytes());
@@ -161,7 +176,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void readConsumesOnlyRecordsThatPassBothKeyAndValueFilter() throws Exception {
+    @DisplayName("read should only consume those records that pass both key and value filter")
+    void readConsumesOnlyRecordsThatPassBothKeyAndValueFilter() throws Exception {
 
         List<KeyValue<String, Integer>> records = Stream.iterate(1, k -> k + 1)
                 .limit(30)
@@ -192,7 +208,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void readValuesConsumesOnlyRecordsThatPassHeaderFilter() throws Exception {
+    @DisplayName("readValues should only consume those records that pass the header filter")
+    void readValuesConsumesOnlyRecordsThatPassHeaderFilter() throws Exception {
 
         Headers headersA = new RecordHeaders().add("aggregate", "a".getBytes());
         Headers headersB = new RecordHeaders().add("aggregate", "b".getBytes());
@@ -222,7 +239,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void observeWaitsUntilRequestedNumberOfRecordsHaveBeenConsumed() throws Exception {
+    @DisplayName("observe should wait until the requested number of records have been consumed")
+    void observeWaitsUntilRequestedNumberOfRecordsHaveBeenConsumed() throws Exception {
 
         ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 3).useDefaults();
 
@@ -231,18 +249,20 @@ public class RecordConsumerTest {
         assertThat(observedRecords).isEqualTo(3);
     }
 
-    @Test(expected = AssertionError.class)
-    public void observeThrowsAnAssertionErrorIfTimeoutElapses() throws Exception {
+    @Test
+    @DisplayName("observe should throw an AssertionError if its timeout elapses")
+    void observeThrowsAnAssertionErrorIfTimeoutElapses() throws Exception {
 
         ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 4)
                 .observeFor(5, TimeUnit.SECONDS)
                 .build();
 
-        kafka.observe(observeRequest);
+        Assertions.assertThrows(AssertionError.class, () -> kafka.observe(observeRequest));
     }
 
     @Test
-    public void observeWaitsUntilRequestedNumberOfCustomValueTypedRecordsHaveBeenConsumed() throws Exception {
+    @DisplayName("observe should wait until the requested number of records with a custom type have been consumed")
+    void observeWaitsUntilRequestedNumberOfCustomValueTypedRecordsHaveBeenConsumed() throws Exception {
 
         List<KeyValue<String, Long>> records = new ArrayList<>();
 
@@ -265,7 +285,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void observeWaitsUntilRequestedNumberOfCustomKeyValueTypedRecordsHaveBeenConsumed() throws Exception {
+    @DisplayName("observe should wait until the requested number of records with custom key and value have been consumed")
+    void observeWaitsUntilRequestedNumberOfCustomKeyValueTypedRecordsHaveBeenConsumed() throws Exception {
 
         List<KeyValue<Integer, Long>> records = new ArrayList<>();
 
@@ -290,7 +311,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void observeWaitsUntilRequestedNumberOfFilteredRecordsHaveBeenConsumed() throws Exception {
+    @DisplayName("observe should wait until the requested number of filtered records have been consumed")
+    void observeWaitsUntilRequestedNumberOfFilteredRecordsHaveBeenConsumed() throws Exception {
 
         List<KeyValue<String, Integer>> records = Stream.iterate(1, k -> k + 1)
                 .limit(30)
@@ -321,7 +343,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void observeShouldRetainHeaderFilters() throws Exception {
+    @DisplayName("observe should retain header filters")
+    void observeShouldRetainHeaderFilters() throws Exception {
 
         Headers headersA = new RecordHeaders().add("aggregate", "a".getBytes());
         Headers headersB = new RecordHeaders().add("aggregate", "b".getBytes());
@@ -351,8 +374,9 @@ public class RecordConsumerTest {
         assertThat(observedRecords.get(0).getValue()).isEqualTo(2);
     }
 
-    @Test(expected = AssertionError.class)
-    public void observeShouldThrowAnAssertionErrorIfNoRecordPassesTheFilterAndTimeoutElapses() throws Exception {
+    @Test
+    @DisplayName("observe should throw an AssertionError if no record passes the filter and its timeout elapses")
+    void observeShouldThrowAnAssertionErrorIfNoRecordPassesTheFilterAndTimeoutElapses() throws Exception {
 
         List<KeyValue<String, Integer>> records = new ArrayList<>();
 
@@ -377,11 +401,14 @@ public class RecordConsumerTest {
                 .filterOnValues(valueFilter)
                 .build();
 
-        kafka.observe(observeRequest);
+        Assertions.assertThrows(AssertionError.class, () -> {
+            kafka.observe(observeRequest);
+        });
     }
 
-    @Test(expected = AssertionError.class)
-    public void observeShouldThrowAnAssertionErrorIfNoRecordPassesTheHeaderFilterAndTimeoutElapses() throws Exception {
+    @Test
+    @DisplayName("observe should throw an AssertionError if no record passes the header filter and its timeout elapses")
+    void observeShouldThrowAnAssertionErrorIfNoRecordPassesTheHeaderFilterAndTimeoutElapses() throws Exception {
 
         Headers headersA = new RecordHeaders().add("aggregate", "a".getBytes());
         Headers headersB = new RecordHeaders().add("aggregate", "b".getBytes());
@@ -405,11 +432,12 @@ public class RecordConsumerTest {
                 .filterOnHeaders(headerFilter)
                 .build();
 
-        kafka.observe(observeRequest);
+        Assertions.assertThrows(AssertionError.class, () -> kafka.observe(observeRequest));
     }
 
     @Test
-    public void readShouldIncludeMetadataIfExplicitlyEnabled() throws Exception {
+    @DisplayName("read should include record metadata if explicitly enabled")
+    void readShouldIncludeMetadataIfExplicitlyEnabled() throws Exception {
 
         ReadKeyValues<String, String> readRequest = from("test-topic")
                 .includeMetadata()
@@ -447,7 +475,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void readShouldNotIncludeMetadataIfNotExplicitlyEnabled() throws Exception {
+    @DisplayName("read should not include any record metadata if not enabled")
+    void readShouldNotIncludeMetadataIfNotExplicitlyEnabled() throws Exception {
 
         ReadKeyValues<String, String> readRequest = from("test-topic").useDefaults();
 
@@ -459,7 +488,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void observeShouldIncludeMetadataIfExplicitlyEnabled() throws Exception {
+    @DisplayName("observe should include record metadata if explicitly enabled")
+    void observeShouldIncludeMetadataIfExplicitlyEnabled() throws Exception {
 
         ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 3)
                 .includeMetadata()
@@ -497,7 +527,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void observeShouldNotIncludeMetadataIfNotExplicitlyEnabled() throws Exception {
+    @DisplayName("observe should not include any record metadata if not enabled")
+    void observeShouldNotIncludeMetadataIfNotExplicitlyEnabled() throws Exception {
 
         ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 3).useDefaults();
 
@@ -509,7 +540,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void seekToShouldSkipAllMessagesBeforeGivenOffsetWhenReadingKeyValues() throws Exception {
+    @DisplayName("a seekTo prior to a call to read should skip all messages before the given offset")
+    void seekToShouldSkipAllMessagesBeforeGivenOffsetWhenReadingKeyValues() throws Exception {
 
         ReadKeyValues<String, String> readRequest = from("test-topic").seekTo(0, 2).build();
 
@@ -520,7 +552,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void seekToShouldSkipAllMessagesBeforeGivenOffsetWhenReadingValues() throws Exception {
+    @DisplayName("a seekTo prior to a call to readValues should skip all messages before the given offset")
+    void seekToShouldSkipAllMessagesBeforeGivenOffsetWhenReadingValues() throws Exception {
 
         ReadKeyValues<String, String> readRequest = from("test-topic").seekTo(0, 2).build();
 
@@ -531,7 +564,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void seekToShouldSkipAllMessagesBeforeGivenOffsetWhenObservingKeyValues() throws Exception {
+    @DisplayName("a seekTo prior to a call to observe should skip all messages before the given offset")
+    void seekToShouldSkipAllMessagesBeforeGivenOffsetWhenObservingKeyValues() throws Exception {
 
         ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 1).seekTo(0, 2).build();
 
@@ -542,7 +576,8 @@ public class RecordConsumerTest {
     }
 
     @Test
-    public void seekToShouldSkipAllMessagesBeforeGivenOffsetWhenObservingValues() throws Exception {
+    @DisplayName("a seekTo prior to a call to observeValues should skip all messages before the given offset")
+    void seekToShouldSkipAllMessagesBeforeGivenOffsetWhenObservingValues() throws Exception {
 
         ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 1).seekTo(0, 2).build();
 
@@ -552,8 +587,9 @@ public class RecordConsumerTest {
         assertThat(records.get(0)).isEqualTo("c");
     }
 
-    @Test(expected = AssertionError.class)
-    public void whenObservingKeyValuesSeekToShouldNotRestartObservationAtGivenOffsetForSubsequentReads() throws Exception {
+    @Test
+    @DisplayName("when observing key-value pairs a call to seekTo should not restart observation at the given offset for subsequent reads")
+    void whenObservingKeyValuesSeekToShouldNotRestartObservationAtGivenOffsetForSubsequentReads() throws Exception {
 
         ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 2)
                 .seekTo(0, 2)
@@ -563,11 +599,12 @@ public class RecordConsumerTest {
         // if the implementation of observe would start over at the given offset, then we would the record with value
         // "c" multiple times until the expected number (in this case 2) is met. if this times out and throws an
         // AssertionError, the implementation works as expected.
-        kafka.observe(observeRequest);
+        Assertions.assertThrows(AssertionError.class, () -> kafka.observe(observeRequest));
     }
 
-    @Test(expected = AssertionError.class)
-    public void whenObservingValuesSeekToShouldNotRestartObservationAtGivenOffsetForSubsequentReads() throws Exception {
+    @Test
+    @DisplayName("when observing values a call to seekTo should not restart observation at the given offset for subsequent reads")
+    void whenObservingValuesSeekToShouldNotRestartObservationAtGivenOffsetForSubsequentReads() throws Exception {
 
         ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 2)
                 .seekTo(0, 2)
@@ -577,6 +614,6 @@ public class RecordConsumerTest {
         // if the implementation of observe would start over at the given offset, then we would the record with value
         // "c" multiple times until the expected number (in this case 2) is met. if this times out and throws an
         // AssertionError, the implementation works as expected.
-        kafka.observeValues(observeRequest);
+        Assertions.assertThrows(AssertionError.class, () -> kafka.observeValues(observeRequest));
     }
 }

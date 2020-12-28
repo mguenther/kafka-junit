@@ -1,16 +1,18 @@
 package net.mguenther.kafka.junit;
 
 import kafka.server.KafkaConfig$;
-import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class EmbeddedKafkaConfigTest {
+class EmbeddedKafkaConfigTest {
 
     @Test
-    public void shouldUseDefaultsIfNotOverridden() {
+    @DisplayName("should use defaults if not explicitly overriden")
+    void shouldUseDefaultsIfNotOverridden() {
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig.defaultBrokers();
         final Properties props = config.getBrokerProperties();
@@ -30,7 +32,8 @@ public class EmbeddedKafkaConfigTest {
     }
 
     @Test
-    public void withShouldOverrideDefaultSetting() {
+    @DisplayName("with(param) should override the corresponding default setting")
+    void withShouldOverrideDefaultSetting() {
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig
                 .brokers()
@@ -42,7 +45,8 @@ public class EmbeddedKafkaConfigTest {
     }
 
     @Test
-    public void withAllShouldOverrideDefaultSettings() {
+    @DisplayName("withAll(params) should override the corresponding default settings")
+    void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
         overrides.put(KafkaConfig$.MODULE$.PortProp(), "9092");
@@ -59,7 +63,8 @@ public class EmbeddedKafkaConfigTest {
     }
 
     @Test
-    public void shouldAdjustConfiguredDedicatedPortToAnyEphemeralPortIfUsingMultipleBrokers() {
+    @DisplayName("should adjust the configured dedicated port to any ephemeral port if using multiple brokers")
+    void shouldAdjustConfiguredDedicatedPortToAnyEphemeralPortIfUsingMultipleBrokers() {
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig
                 .brokers()

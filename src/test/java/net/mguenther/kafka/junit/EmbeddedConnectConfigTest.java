@@ -2,16 +2,18 @@ package net.mguenther.kafka.junit;
 
 import org.apache.kafka.connect.runtime.WorkerConfig;
 import org.apache.kafka.connect.runtime.distributed.DistributedConfig;
-import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class EmbeddedConnectConfigTest {
+class EmbeddedConnectConfigTest {
 
     @Test
-    public void shouldUseDefaultsIfNotOverridden() {
+    @DisplayName("should use defaults if not explicitly overriden")
+    void shouldUseDefaultsIfNotOverridden() {
 
         final EmbeddedConnectConfig config = EmbeddedConnectConfig.useDefaults();
         final Properties props = config.getConnectProperties();
@@ -32,7 +34,8 @@ public class EmbeddedConnectConfigTest {
     }
 
     @Test
-    public void withShouldOverrideDefaultSetting() {
+    @DisplayName("with(param) should override the corresponding default setting")
+    void withShouldOverrideDefaultSetting() {
 
         final EmbeddedConnectConfig config = EmbeddedConnectConfig
                 .kafkaConnect()
@@ -44,7 +47,8 @@ public class EmbeddedConnectConfigTest {
     }
 
     @Test
-    public void withAllShouldOverrideDefaultSettings() {
+    @DisplayName("withAll(params) should override the corresponding default settings")
+    void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
         overrides.put(DistributedConfig.GROUP_ID_CONFIG, "test-group");
@@ -61,7 +65,8 @@ public class EmbeddedConnectConfigTest {
     }
 
     @Test
-    public void deployConnectorShouldStoreConnectorConfig() {
+    @DisplayName("deployConnector should retain the configuration of the connector")
+    void deployConnectorShouldStoreConnectorConfig() {
 
         final Properties connectorConfig = new Properties();
         final EmbeddedConnectConfig config = EmbeddedConnectConfig
@@ -74,7 +79,8 @@ public class EmbeddedConnectConfigTest {
     }
 
     @Test
-    public void deployConnectorsShouldStoreConnectorConfigs() {
+    @DisplayName("deployConnectors should retain all configurations for the given connectors")
+    void deployConnectorsShouldStoreConnectorConfigs() {
 
         final EmbeddedConnectConfig config = EmbeddedConnectConfig
                 .kafkaConnect()

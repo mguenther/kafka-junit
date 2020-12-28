@@ -3,7 +3,8 @@ package net.mguenther.kafka.junit;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -11,21 +12,23 @@ import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SendKeyValuesTest {
+class SendKeyValuesTest {
 
     @Test
-    public void shouldPreserveConstructorArguments() {
+    @DisplayName("should preserve constructor arguments")
+    void shouldPreserveConstructorArguments() {
 
         final Collection<KeyValue<String, String>> records = Collections.singletonList(new KeyValue<>("k", "v"));
         final SendKeyValues<String, String> sendRequest = SendKeyValues.to("test-topic", records).useDefaults();
 
         assertThat(sendRequest.getTopic()).isEqualTo("test-topic");
         assertThat(sendRequest.getRecords().size()).isEqualTo(1);
-        assertThat(sendRequest.getRecords().contains(new KeyValue<>("k", "v")));
+        assertThat(sendRequest.getRecords()).contains(new KeyValue<>("k", "v"));
     }
 
     @Test
-    public void shouldUseDefaultsIfNotOverridden() {
+    @DisplayName("should use defaults if not overridden")
+    void shouldUseDefaultsIfNotOverridden() {
 
         final Collection<KeyValue<String, String>> records = Collections.singletonList(new KeyValue<>("k", "v"));
         final SendKeyValues<String, String> sendRequest = SendKeyValues.to("test-topic", records).useDefaults();
@@ -36,7 +39,8 @@ public class SendKeyValuesTest {
     }
 
     @Test
-    public void withShouldOverrideDefaultSetting() {
+    @DisplayName("with should override the default setting of the given parameter with the given value")
+    void withShouldOverrideDefaultSetting() {
 
         final Collection<KeyValue<String, Integer>> records = Collections.singletonList(new KeyValue<>("k", 1));
         final SendKeyValues<String, Integer> sendRequest = SendKeyValues.to("test-topic", records)
@@ -48,7 +52,8 @@ public class SendKeyValuesTest {
     }
 
     @Test
-    public void withAllShouldOverrideDefaultSettings() {
+    @DisplayName("withAll should override the default settings of the given parameters with the resp. values")
+    void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
         overrides.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class);

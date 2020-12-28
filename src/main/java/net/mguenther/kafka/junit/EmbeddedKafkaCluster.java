@@ -8,7 +8,6 @@ import net.mguenther.kafka.junit.provider.DefaultRecordProducer;
 import net.mguenther.kafka.junit.provider.DefaultTopicManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.junit.rules.ExternalResource;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,7 +20,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
-public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLifecycle, RecordProducer, RecordConsumer, TopicManager, AutoCloseable {
+public class EmbeddedKafkaCluster implements EmbeddedLifecycle, RecordProducer, RecordConsumer, TopicManager, AutoCloseable {
 
     private final EmbeddedKafkaClusterConfig config;
 
@@ -36,16 +35,6 @@ public class EmbeddedKafkaCluster extends ExternalResource implements EmbeddedLi
     private RecordConsumer consumerDelegate;
 
     private TopicManager topicManagerDelegate;
-
-    @Override
-    protected void before() {
-        start();
-    }
-
-    @Override
-    protected void after() {
-        stop();
-    }
 
     @Override
     public void start() {

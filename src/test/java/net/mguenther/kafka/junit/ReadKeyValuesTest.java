@@ -2,7 +2,8 @@ package net.mguenther.kafka.junit;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.Properties;
@@ -10,10 +11,11 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ReadKeyValuesTest {
+class ReadKeyValuesTest {
 
     @Test
-    public void shouldPreserveConstructorArguments() {
+    @DisplayName("should preserve constructor arguments")
+    void shouldPreserveConstructorArguments() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test").useDefaults();
 
@@ -23,7 +25,8 @@ public class ReadKeyValuesTest {
     }
 
     @Test
-    public void shouldUseDefaultsIfNotOverridden() {
+    @DisplayName("should use defaults if not overridden")
+    void shouldUseDefaultsIfNotOverridden() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test").useDefaults();
         final Properties props = readRequest.getConsumerProps();
@@ -39,7 +42,8 @@ public class ReadKeyValuesTest {
     }
 
     @Test
-    public void unlimitedShouldNotRestrictLimitSetting() {
+    @DisplayName("unlimited should not restrict limit setting")
+    void unlimitedShouldNotRestrictLimitSetting() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
                 .withLimit(1)
@@ -50,7 +54,8 @@ public class ReadKeyValuesTest {
     }
 
     @Test
-    public void withLimitShouldRestrictLimitSetting() {
+    @DisplayName("withLimit should restrict limit setting")
+    void withLimitShouldRestrictLimitSetting() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
                 .withLimit(1)
@@ -60,7 +65,8 @@ public class ReadKeyValuesTest {
     }
 
     @Test
-    public void withMaxPollTimeShouldOverrideItsDefault() {
+    @DisplayName("withMaxPollTime should override its default setting")
+    void withMaxPollTimeShouldOverrideItsDefault() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
                 .withMaxTotalPollTime(10, TimeUnit.SECONDS)
@@ -70,7 +76,8 @@ public class ReadKeyValuesTest {
     }
 
     @Test
-    public void includeMetadataShouldOverrideItsDefaultSetting() {
+    @DisplayName("includeMetadata should override its default setting")
+    void includeMetadataShouldOverrideItsDefaultSetting() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
                 .includeMetadata()
@@ -80,7 +87,8 @@ public class ReadKeyValuesTest {
     }
 
     @Test
-    public void seekToShouldPreserveSeekSettings() {
+    @DisplayName("seekTo should preserve seek settings")
+    void seekToShouldPreserveSeekSettings() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
                 .seekTo(0, 1L)
@@ -93,7 +101,8 @@ public class ReadKeyValuesTest {
     }
 
     @Test
-    public void withShouldOverrideDefaultSetting() {
+    @DisplayName("with should override the default setting of the given parameter with the given value")
+    void withShouldOverrideDefaultSetting() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
                 .with(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed")
@@ -103,7 +112,8 @@ public class ReadKeyValuesTest {
     }
 
     @Test
-    public void withAllShouldOverrideDefaultSettings() {
+    @DisplayName("withAll should override the default settings of the given parameters with the resp. values")
+    void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
         overrides.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");

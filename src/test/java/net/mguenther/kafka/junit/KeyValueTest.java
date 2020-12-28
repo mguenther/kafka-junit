@@ -2,16 +2,18 @@ package net.mguenther.kafka.junit;
 
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.header.internals.RecordHeaders;
-import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class KeyValueTest {
+class KeyValueTest {
 
     @Test
-    public void shouldPreserveAddedHeaders() {
+    @DisplayName("should preserve added headers")
+    void shouldPreserveAddedHeaders() {
 
         final KeyValue<String, String> keyValue = new KeyValue<>("k", "v");
         keyValue.addHeader("headerName", "headerValue", StandardCharsets.UTF_8);
@@ -20,7 +22,8 @@ public class KeyValueTest {
     }
 
     @Test
-    public void shouldPreserveHeadersGivenOnConstruction() {
+    @DisplayName("should preserve headers given on construction")
+    void shouldPreserveHeadersGivenOnConstruction() {
 
         final Headers headers = new RecordHeaders();
         headers.add("headerName", "headerValue".getBytes(StandardCharsets.UTF_8));

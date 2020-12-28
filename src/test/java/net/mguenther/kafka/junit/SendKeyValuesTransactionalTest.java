@@ -4,17 +4,19 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SendKeyValuesTransactionalTest {
+class SendKeyValuesTransactionalTest {
 
     @Test
-    public void shouldPreserveConstructorArguments() {
+    @DisplayName("should preserve constructor arguments")
+    void shouldPreserveConstructorArguments() {
 
         final SendKeyValuesTransactional<String, String> sendRequest = SendKeyValuesTransactional
                 .inTransaction("test-topic", Collections.singletonList(new KeyValue<>("k", "v")))
@@ -25,7 +27,8 @@ public class SendKeyValuesTransactionalTest {
     }
 
     @Test
-    public void shouldBeAbleToCloseOverRecordsForMultipleTopics() {
+    @DisplayName("should be able to close over records for multiple topics")
+    void shouldBeAbleToCloseOverRecordsForMultipleTopics() {
 
         final SendKeyValuesTransactional<String, String> sendRequest = SendKeyValuesTransactional
                 .inTransaction("test-topic", Collections.singletonList(new KeyValue<>("k", "v")))
@@ -37,7 +40,8 @@ public class SendKeyValuesTransactionalTest {
     }
 
     @Test
-    public void shouldUseDefaultsIfNotOverridden() {
+    @DisplayName("should use defaults if not overridden")
+    void shouldUseDefaultsIfNotOverridden() {
 
         final SendKeyValuesTransactional<String, String> sendRequest = SendKeyValuesTransactional
                 .inTransaction("test-topic", Collections.singletonList(new KeyValue<>("k", "v")))
@@ -50,7 +54,8 @@ public class SendKeyValuesTransactionalTest {
     }
 
     @Test
-    public void shouldPreserveFailTransactionSettingIfOverridden() {
+    @DisplayName("should preserve fail transaction setting if overridden")
+    void shouldPreserveFailTransactionSettingIfOverridden() {
 
         final SendKeyValuesTransactional<String, String> sendRequest = SendKeyValuesTransactional
                 .inTransaction("test-topic", Collections.singletonList(new KeyValue<>("k", "v")))
@@ -61,7 +66,8 @@ public class SendKeyValuesTransactionalTest {
     }
 
     @Test
-    public void withShouldOverrideDefaultSetting() {
+    @DisplayName("with should override the default setting of the given parameter with the given value")
+    void withShouldOverrideDefaultSetting() {
 
         final SendKeyValuesTransactional<String, Integer> sendRequest = SendKeyValuesTransactional
                 .inTransaction("test-topic", Collections.singletonList(new KeyValue<>("a", 1)))
@@ -73,7 +79,8 @@ public class SendKeyValuesTransactionalTest {
     }
 
     @Test
-    public void withAllShouldOverrideDefaultSettings() {
+    @DisplayName("withAll should override the default settings of the given parameters with the resp. values")
+    void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
         overrides.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class);

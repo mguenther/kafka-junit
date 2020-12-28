@@ -3,17 +3,19 @@ package net.mguenther.kafka.junit;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SendValuesTransactionalTest {
+class SendValuesTransactionalTest {
 
     @Test
-    public void shouldPreserveConstructorArguments() {
+    @DisplayName("should preserve constructor arguments")
+    void shouldPreserveConstructorArguments() {
 
         final SendValuesTransactional<String> sendRequest = SendValuesTransactional
                 .inTransaction("test-topic", Collections.singletonList("a"))
@@ -24,7 +26,8 @@ public class SendValuesTransactionalTest {
     }
 
     @Test
-    public void shouldBeAbleToCloseOverRecordsForMultipleTopics() {
+    @DisplayName("should be able to close over records for multiple topics")
+    void shouldBeAbleToCloseOverRecordsForMultipleTopics() {
 
         final SendValuesTransactional<String> sendRequest = SendValuesTransactional
                 .inTransaction("test-topic", Collections.singletonList("a"))
@@ -36,7 +39,8 @@ public class SendValuesTransactionalTest {
     }
 
     @Test
-    public void shouldUseDefaultsIfNotOverridden() {
+    @DisplayName("should use defaults if not overridden")
+    void shouldUseDefaultsIfNotOverridden() {
 
         final SendValuesTransactional<String> sendRequest = SendValuesTransactional
                 .inTransaction("test-topic", Collections.singletonList("a"))
@@ -49,7 +53,8 @@ public class SendValuesTransactionalTest {
     }
 
     @Test
-    public void shouldPreserveFailTransactionSettingIfOverridden() {
+    @DisplayName("should preserve fail transaction setting if overridden")
+    void shouldPreserveFailTransactionSettingIfOverridden() {
 
         final SendValuesTransactional<String> sendRequest = SendValuesTransactional
                 .inTransaction("test-topic", Collections.singletonList("a"))
@@ -60,7 +65,8 @@ public class SendValuesTransactionalTest {
     }
 
     @Test
-    public void withShouldOverrideDefaultSetting() {
+    @DisplayName("with should override default setting of given parameter with the given value")
+    void withShouldOverrideDefaultSetting() {
 
         final SendValuesTransactional<Integer> sendRequest = SendValuesTransactional
                 .inTransaction("test-topic", Collections.singletonList(1))
@@ -72,7 +78,8 @@ public class SendValuesTransactionalTest {
     }
 
     @Test
-    public void withAllShouldOverrideDefaultSettings() {
+    @DisplayName("withAll should override default settings of given parameters with the resp. values")
+    void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
         overrides.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class);

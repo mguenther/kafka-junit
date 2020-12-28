@@ -2,7 +2,8 @@ package net.mguenther.kafka.junit;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.Properties;
@@ -10,10 +11,11 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ObserveKeyValuesTest {
+class ObserveKeyValuesTest {
 
     @Test
-    public void shouldPreserveConstructorArguments() {
+    @DisplayName("should preserve constructor arguments")
+    void shouldPreserveConstructorArguments() {
 
         final ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test", 10).useDefaults();
 
@@ -23,7 +25,8 @@ public class ObserveKeyValuesTest {
     }
 
     @Test
-    public void shouldUseDefaultsIfNotOverridden() {
+    @DisplayName("should use defaults if not overridden")
+    void shouldUseDefaultsIfNotOverridden() {
 
         final ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test", 10).useDefaults();
         final Properties props = observeRequest.getConsumerProps();
@@ -39,7 +42,8 @@ public class ObserveKeyValuesTest {
     }
 
     @Test
-    public void observeForShouldOverrideDefaultObservationTime() {
+    @DisplayName("observeFor should override default observation time")
+    void observeForShouldOverrideDefaultObservationTime() {
 
         final ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test", 10)
                 .observeFor(10, TimeUnit.SECONDS)
@@ -49,7 +53,8 @@ public class ObserveKeyValuesTest {
     }
 
     @Test
-    public void withShouldOverrideDefaultSetting() {
+    @DisplayName("with should override default setting of the given parameter with the given value")
+    void withShouldOverrideDefaultSetting() {
 
         final ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test", 10)
                 .with(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed")
@@ -59,7 +64,8 @@ public class ObserveKeyValuesTest {
     }
 
     @Test
-    public void withAllShouldOverrideDefaultSettings() {
+    @DisplayName("withAll should override the default settings of the given parameters with the resp. values")
+    void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
         overrides.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
@@ -74,7 +80,8 @@ public class ObserveKeyValuesTest {
     }
 
     @Test
-    public void includeMetadataShouldOverrideItsDefaultSetting() {
+    @DisplayName("includeMetadata should override its default setting")
+    void includeMetadataShouldOverrideItsDefaultSetting() {
 
         final ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test", 10)
                 .includeMetadata()
@@ -84,7 +91,8 @@ public class ObserveKeyValuesTest {
     }
 
     @Test
-    public void seekToShouldPreserveSeekSettings() {
+    @DisplayName("seekTo should preserve seek settings")
+    void seekToShouldPreserveSeekSettings() {
 
         final ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test", 10)
                 .seekTo(0, 1L)
