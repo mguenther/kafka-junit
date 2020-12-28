@@ -2,6 +2,7 @@ package net.mguenther.kafka.junit;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -13,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ObserveKeyValuesTest {
 
     @Test
+    @DisplayName("should preserve constructor arguments")
     public void shouldPreserveConstructorArguments() {
 
         final ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test", 10).useDefaults();
@@ -23,6 +25,7 @@ public class ObserveKeyValuesTest {
     }
 
     @Test
+    @DisplayName("should use defaults if not overridden")
     public void shouldUseDefaultsIfNotOverridden() {
 
         final ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test", 10).useDefaults();
@@ -39,6 +42,7 @@ public class ObserveKeyValuesTest {
     }
 
     @Test
+    @DisplayName("observeFor should override default observation time")
     public void observeForShouldOverrideDefaultObservationTime() {
 
         final ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test", 10)
@@ -49,6 +53,7 @@ public class ObserveKeyValuesTest {
     }
 
     @Test
+    @DisplayName("with should override default setting of the given parameter with the given value")
     public void withShouldOverrideDefaultSetting() {
 
         final ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test", 10)
@@ -59,6 +64,7 @@ public class ObserveKeyValuesTest {
     }
 
     @Test
+    @DisplayName("withAll should override the default settings of the given parameters with the resp. values")
     public void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
@@ -74,6 +80,7 @@ public class ObserveKeyValuesTest {
     }
 
     @Test
+    @DisplayName("includeMetadata should override its default setting")
     public void includeMetadataShouldOverrideItsDefaultSetting() {
 
         final ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test", 10)
@@ -84,6 +91,7 @@ public class ObserveKeyValuesTest {
     }
 
     @Test
+    @DisplayName("seekTo should preserve seek settings")
     public void seekToShouldPreserveSeekSettings() {
 
         final ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test", 10)

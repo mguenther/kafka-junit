@@ -3,6 +3,7 @@ package net.mguenther.kafka.junit;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -13,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SendValuesTransactionalTest {
 
     @Test
+    @DisplayName("should preserve constructor arguments")
     public void shouldPreserveConstructorArguments() {
 
         final SendValuesTransactional<String> sendRequest = SendValuesTransactional
@@ -24,6 +26,7 @@ public class SendValuesTransactionalTest {
     }
 
     @Test
+    @DisplayName("should be able to close over records for multiple topics")
     public void shouldBeAbleToCloseOverRecordsForMultipleTopics() {
 
         final SendValuesTransactional<String> sendRequest = SendValuesTransactional
@@ -36,6 +39,7 @@ public class SendValuesTransactionalTest {
     }
 
     @Test
+    @DisplayName("should use defaults if not overridden")
     public void shouldUseDefaultsIfNotOverridden() {
 
         final SendValuesTransactional<String> sendRequest = SendValuesTransactional
@@ -49,6 +53,7 @@ public class SendValuesTransactionalTest {
     }
 
     @Test
+    @DisplayName("should preserve fail transaction setting if overridden")
     public void shouldPreserveFailTransactionSettingIfOverridden() {
 
         final SendValuesTransactional<String> sendRequest = SendValuesTransactional
@@ -60,6 +65,7 @@ public class SendValuesTransactionalTest {
     }
 
     @Test
+    @DisplayName("with should override default setting of given parameter with the given value")
     public void withShouldOverrideDefaultSetting() {
 
         final SendValuesTransactional<Integer> sendRequest = SendValuesTransactional
@@ -72,6 +78,7 @@ public class SendValuesTransactionalTest {
     }
 
     @Test
+    @DisplayName("withAll should override default settings of given parameters with the resp. values")
     public void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();

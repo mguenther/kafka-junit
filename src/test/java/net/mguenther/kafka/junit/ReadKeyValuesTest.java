@@ -2,6 +2,7 @@ package net.mguenther.kafka.junit;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -13,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ReadKeyValuesTest {
 
     @Test
+    @DisplayName("should preserve constructor arguments")
     public void shouldPreserveConstructorArguments() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test").useDefaults();
@@ -23,6 +25,7 @@ public class ReadKeyValuesTest {
     }
 
     @Test
+    @DisplayName("should use defaults if not overridden")
     public void shouldUseDefaultsIfNotOverridden() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test").useDefaults();
@@ -39,6 +42,7 @@ public class ReadKeyValuesTest {
     }
 
     @Test
+    @DisplayName("unlimited should not restrict limit setting")
     public void unlimitedShouldNotRestrictLimitSetting() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
@@ -50,6 +54,7 @@ public class ReadKeyValuesTest {
     }
 
     @Test
+    @DisplayName("withLimit should restrict limit setting")
     public void withLimitShouldRestrictLimitSetting() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
@@ -60,6 +65,7 @@ public class ReadKeyValuesTest {
     }
 
     @Test
+    @DisplayName("withMaxPollTime should override its default setting")
     public void withMaxPollTimeShouldOverrideItsDefault() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
@@ -70,6 +76,7 @@ public class ReadKeyValuesTest {
     }
 
     @Test
+    @DisplayName("includeMetadata should override its default setting")
     public void includeMetadataShouldOverrideItsDefaultSetting() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
@@ -80,6 +87,7 @@ public class ReadKeyValuesTest {
     }
 
     @Test
+    @DisplayName("seekTo should preserve seek settings")
     public void seekToShouldPreserveSeekSettings() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
@@ -93,6 +101,7 @@ public class ReadKeyValuesTest {
     }
 
     @Test
+    @DisplayName("with should override the default setting of the given parameter with the given value")
     public void withShouldOverrideDefaultSetting() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
@@ -103,6 +112,7 @@ public class ReadKeyValuesTest {
     }
 
     @Test
+    @DisplayName("withAll should override the default settings of the given parameters with the resp. values")
     public void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();

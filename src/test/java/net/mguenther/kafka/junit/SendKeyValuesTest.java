@@ -3,6 +3,7 @@ package net.mguenther.kafka.junit;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
@@ -14,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SendKeyValuesTest {
 
     @Test
+    @DisplayName("should preserve constructor arguments")
     public void shouldPreserveConstructorArguments() {
 
         final Collection<KeyValue<String, String>> records = Collections.singletonList(new KeyValue<>("k", "v"));
@@ -25,6 +27,7 @@ public class SendKeyValuesTest {
     }
 
     @Test
+    @DisplayName("should use defaults if not overridden")
     public void shouldUseDefaultsIfNotOverridden() {
 
         final Collection<KeyValue<String, String>> records = Collections.singletonList(new KeyValue<>("k", "v"));
@@ -36,6 +39,7 @@ public class SendKeyValuesTest {
     }
 
     @Test
+    @DisplayName("with should override the default setting of the given parameter with the given value")
     public void withShouldOverrideDefaultSetting() {
 
         final Collection<KeyValue<String, Integer>> records = Collections.singletonList(new KeyValue<>("k", 1));
@@ -48,6 +52,7 @@ public class SendKeyValuesTest {
     }
 
     @Test
+    @DisplayName("withAll should override the default settings of the given parameters with the resp. values")
     public void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();

@@ -4,6 +4,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -14,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SendKeyValuesTransactionalTest {
 
     @Test
+    @DisplayName("should preserve constructor arguments")
     public void shouldPreserveConstructorArguments() {
 
         final SendKeyValuesTransactional<String, String> sendRequest = SendKeyValuesTransactional
@@ -25,6 +27,7 @@ public class SendKeyValuesTransactionalTest {
     }
 
     @Test
+    @DisplayName("should be able to close over records for multiple topics")
     public void shouldBeAbleToCloseOverRecordsForMultipleTopics() {
 
         final SendKeyValuesTransactional<String, String> sendRequest = SendKeyValuesTransactional
@@ -37,6 +40,7 @@ public class SendKeyValuesTransactionalTest {
     }
 
     @Test
+    @DisplayName("should use defaults if not overridden")
     public void shouldUseDefaultsIfNotOverridden() {
 
         final SendKeyValuesTransactional<String, String> sendRequest = SendKeyValuesTransactional
@@ -50,6 +54,7 @@ public class SendKeyValuesTransactionalTest {
     }
 
     @Test
+    @DisplayName("should preserve fail transaction setting if overridden")
     public void shouldPreserveFailTransactionSettingIfOverridden() {
 
         final SendKeyValuesTransactional<String, String> sendRequest = SendKeyValuesTransactional
@@ -61,6 +66,7 @@ public class SendKeyValuesTransactionalTest {
     }
 
     @Test
+    @DisplayName("with should override the default setting of the given parameter with the given value")
     public void withShouldOverrideDefaultSetting() {
 
         final SendKeyValuesTransactional<String, Integer> sendRequest = SendKeyValuesTransactional
@@ -73,6 +79,7 @@ public class SendKeyValuesTransactionalTest {
     }
 
     @Test
+    @DisplayName("withAll should override the default settings of the given parameters with the resp. values")
     public void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();

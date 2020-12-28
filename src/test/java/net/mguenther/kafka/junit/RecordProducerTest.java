@@ -5,6 +5,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -37,6 +38,7 @@ public class RecordProducerTest {
     }
 
     @Test
+    @DisplayName("calling send with non-keyed records and default settings should write all given records to the target topic")
     public void sendingUnkeyedRecordsWithDefaults() throws Exception {
 
         kafka.send(to("test-topic", "a", "b", "c"));
@@ -46,6 +48,7 @@ public class RecordProducerTest {
     }
 
     @Test
+    @DisplayName("calling send with keyed records and default settings should write all given records to the target topic")
     public void sendingKeyedRecordsWithDefaults() throws Exception {
 
         final List<KeyValue<String, String>> records = new ArrayList<>();
@@ -61,6 +64,7 @@ public class RecordProducerTest {
     }
 
     @Test
+    @DisplayName("calling send with non-keyed records and altered producer settings should write all given records to the target topic")
     public void sendingUnkeyedRecordsWithAlteredProducerSettings() throws Exception {
 
         final SendValues<String> sendRequest = to("test-topic", "a", "b", "c")
@@ -75,6 +79,7 @@ public class RecordProducerTest {
     }
 
     @Test
+    @DisplayName("calling send with keyed records within a transaction should write all given records to the target topic")
     public void sendingKeyedRecordsWithinTransaction() throws Exception {
 
         final List<KeyValue<String, String>> records = new ArrayList<>();
@@ -88,6 +93,7 @@ public class RecordProducerTest {
     }
 
     @Test
+    @DisplayName("calling send with non-keyed records within a transaction should write all given records to the target topic")
     public void sendingUnkeyedRecordsWithinTransaction() throws Exception {
 
         kafka.send(SendValuesTransactional.inTransaction("test-topic", asList("a", "b", "c")));
@@ -95,6 +101,7 @@ public class RecordProducerTest {
     }
 
     @Test
+    @DisplayName("calling send with non-keyed records for multiple topics should write all given records to the correct topic")
     public void sendingUnkeyedRecordsToMultipleTopics() throws Exception {
 
         kafka.send(SendValuesTransactional
@@ -105,6 +112,7 @@ public class RecordProducerTest {
     }
 
     @Test
+    @DisplayName("record headers should be retained")
     public void usingRecordHeaders() throws Exception {
 
         final KeyValue<String, String> record = new KeyValue<>("a", "b");
@@ -119,6 +127,7 @@ public class RecordProducerTest {
     }
 
     @Test
+    @DisplayName("non-keyed records written during a failed transaction should not be visible by a transactional consumer")
     public void valuesOfAbortedTransactionsShouldNotBeVisibleByTransactionalConsumer() throws Exception {
 
         kafka.send(SendValuesTransactional
@@ -132,6 +141,7 @@ public class RecordProducerTest {
     }
 
     @Test
+    @DisplayName("keyed records written during a failed transaction should be not visible by a transactional consumer")
     public void keyValuesOfAbortedTransactionsShouldNotBeVisibleByTransactionalConsumer() throws Exception {
 
         kafka.send(inTransaction("test-topic", singletonList(new KeyValue<>("a", "b"))).failTransaction());

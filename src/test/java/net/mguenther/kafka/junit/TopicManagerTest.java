@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -33,7 +34,8 @@ public class TopicManagerTest {
     }
 
     @Test
-    public void manageTopics() {
+    @DisplayName("should be able to create topics and mark them for deletion")
+    public void shouldBeAbleToCreateTopicsAndMarkThemForDeletion() {
 
         kafka.createTopic(withName("test-topic"));
 
@@ -46,6 +48,7 @@ public class TopicManagerTest {
     }
 
     @Test
+    @DisplayName("fetchLeaderAndIsr should retrieve the in-sync replica set")
     public void fetchLeaderAndIsrShouldRetrieveTheIsr() throws Exception {
 
         kafka.createTopic(withName("test-topic")
@@ -62,6 +65,7 @@ public class TopicManagerTest {
     }
 
     @Test
+    @DisplayName("fetchToppiConfig should retrieve the proper config")
     public void fetchTopicConfigShouldRetrieveTheProperConfig() throws Exception {
 
         kafka.createTopic(withName("test-topic")
@@ -75,6 +79,7 @@ public class TopicManagerTest {
     }
 
     @Test
+    @DisplayName("fetchTopicConfig should throw a RuntimeException if the topic does not exist")
     public void fetchTopicConfigShouldThrowRuntimeExceptionIfTopicDoesNotExist() {
         Assertions.assertThrows(RuntimeException.class, () -> kafka.fetchTopicConfig(UUID.randomUUID().toString()));
     }
