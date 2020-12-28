@@ -7,7 +7,7 @@
     <artifactId>kafka-junit</artifactId>
     <packaging>jar</packaging>
     <version>2.7.0-SNAPSHOT</version>
-    <name>Kafka JUnit Integration</name>
+    <name>Kafka for JUnit</name>
     <description>
         Provides an embedded Kafka cluster consisting of Apache ZooKeeper, Apache Kafka Brokers and Kafka Connect
         workers in distributed mode along with a rich set of convenient accessors and fault injectors to interact
