@@ -68,6 +68,7 @@ Of course, you can also test against existing clusters using `ExternalKafkaClust
 | 2.4.x                      | Apache Kafka 2.4.0 |
 | 2.5.x                      | Apache Kafka 2.5.1 |
 | 2.6.x                      | Apache Kafka 2.6.0 |
+| 2.7.x                      | Apache Kafka 2.7.0 |
 
 ## Interacting with the Kafka cluster
 
