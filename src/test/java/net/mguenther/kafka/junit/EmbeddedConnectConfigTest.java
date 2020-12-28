@@ -20,8 +20,6 @@ class EmbeddedConnectConfigTest {
 
         assertThat(props.get(WorkerConfig.KEY_CONVERTER_CLASS_CONFIG)).isEqualTo("org.apache.kafka.connect.storage.StringConverter");
         assertThat(props.get(WorkerConfig.VALUE_CONVERTER_CLASS_CONFIG)).isEqualTo("org.apache.kafka.connect.storage.StringConverter");
-        assertThat(props.get(WorkerConfig.INTERNAL_KEY_CONVERTER_CLASS_CONFIG)).isEqualTo("org.apache.kafka.connect.json.JsonConverter");
-        assertThat(props.get(WorkerConfig.INTERNAL_VALUE_CONVERTER_CLASS_CONFIG)).isEqualTo("org.apache.kafka.connect.json.JsonConverter");
         assertThat(props.get("internal.key.converter.schemas.enable")).isEqualTo("false");
         assertThat(props.get("internal.value.converter.schemas.enable")).isEqualTo("false");
         assertThat(props.get(DistributedConfig.CONFIG_STORAGE_REPLICATION_FACTOR_CONFIG)).isEqualTo("1");

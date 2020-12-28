@@ -57,8 +57,6 @@ public class EmbeddedConnectConfig {
 
             ifNonExisting(WorkerConfig.KEY_CONVERTER_CLASS_CONFIG, "org.apache.kafka.connect.storage.StringConverter");
             ifNonExisting(WorkerConfig.VALUE_CONVERTER_CLASS_CONFIG, "org.apache.kafka.connect.storage.StringConverter");
-            ifNonExisting(WorkerConfig.INTERNAL_KEY_CONVERTER_CLASS_CONFIG, "org.apache.kafka.connect.json.JsonConverter");
-            ifNonExisting(WorkerConfig.INTERNAL_VALUE_CONVERTER_CLASS_CONFIG, "org.apache.kafka.connect.json.JsonConverter");
             ifNonExisting(WorkerConfig.CONNECTOR_CLIENT_POLICY_CLASS_CONFIG, "All");
             ifNonExisting("internal.key.converter.schemas.enable", "false");
             ifNonExisting("internal.value.converter.schemas.enable", "false");
