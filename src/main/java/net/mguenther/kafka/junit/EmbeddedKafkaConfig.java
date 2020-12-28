@@ -19,8 +19,8 @@ public class EmbeddedKafkaConfig {
 
     public static class EmbeddedKafkaConfigBuilder {
 
+        private final Properties properties = new Properties();
         private int numberOfBrokers = DEFAULT_NUMBER_OF_BROKERS;
-        private Properties properties = new Properties();
 
         private EmbeddedKafkaConfigBuilder() {
             properties.put(KafkaConfig$.MODULE$.PortProp(), "0");

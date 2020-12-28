@@ -4,7 +4,8 @@
 
 Class `EmbeddedKafkaClusterRule` as well as `EmbeddedKafkaCluster` expose convenience methods for producing new Kafka records. Have a look at the `RecordProducer` interface (Javadoc omitted for brevity).
 
-```java
+[source,java]
+----
 public interface RecordProducer {
 
     <V> List<RecordMetadata> send(SendValues<V> sendRequest) throws InterruptedException;
@@ -12,7 +13,7 @@ public interface RecordProducer {
     <K, V> List<RecordMetadata> send(SendKeyValues<K, V> sendRequest) throws InterruptedException;
     <K, V> List<RecordMetadata> send(SendKeyValuesTransactional<K, V> sendRequest) throws InterruptedException;
 }
-```
+----
 
 Calling `send` using an instance of `SendValues` does just that: It produces non-keyed Kafka records that only feature a value. The key of a record that has been produced this way is simply `null`.  If you wish to associate a key, you can do so by passing an instance of `SendKeyValues` to the `send` method. Both `SendValues` and `SendKeyValues` use the link:https://en.wikipedia.org/wiki/Builder_pattern[Builder pattern] so that creating the resp. send parameterization is easy and does not pollute your test code with any kind of boilerplate.
 
@@ -24,35 +25,40 @@ With these abstractions in place, sending content to your embedded Kafka cluster
 
 === Sending non-keyed values using defaults
 
-```java
+[source,java]
+----
 kafka.send(SendValues.to("test-topic", "a", "b", "c"));
-```
+----
 
 === Sending non-keyed values using overrides
 
-```java
+[source,java]
+----
 kafka.send(SendValues.to("test-topic", "a", "b", "c")
     .with(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
     .with(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "1"));
-```
+----
 
 === Sending non-keyed values transactionally
 
-```java
+[source,java]
+----
 kafka
     .send(SendValuesTransactional
     .inTransaction("test-topic", Arrays.asList("a", "b", "c")));
-```
+----
 
 NOTE: The API of Kafka for JUnit has been designed with great care and readability in mind. Using `static` imports for factory methods shows that we can interact with the embedded Kafka cluster in a lean and readable way.
 
-```java
+[source,java]
+----
 kafka.send(inTransaction("test-topic", Arrays.asList("a", "b", "c")));
-```
+----
 
 === Sending keyed records using defaults
 
-```java
+[source,java]
+----
 List<KeyValue<String, String>> records = new ArrayList<>();
 
 records.add(new KeyValue<>("aggregate", "a"));
@@ -60,11 +66,12 @@ records.add(new KeyValue<>("aggregate", "b"));
 records.add(new KeyValue<>("aggregate", "c"));
 
 kafka.send(SendKeyValues.to("test-topic", records));
-```
+----
 
 === Sending keyed records using overrides
 
-```java
+[source,java]
+----
 List<KeyValue<String, String>> records = new ArrayList<>();
 
 records.add(new KeyValue<>("aggregate", "a"));
@@ -74,11 +81,12 @@ records.add(new KeyValue<>("aggregate", "c"));
 kafka.send(SendKeyValues.to("test-topic", records)
     .with(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
     .with(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "1"));
-```
+----
 
 === Sending keyed records transactionally
 
-```java
+[source,java]
+----
 List<KeyValue<String, String>> records = new ArrayList<>();
 
 records.add(new KeyValue<>("aggregate", "a"));
@@ -86,23 +94,25 @@ records.add(new KeyValue<>("aggregate", "b"));
 records.add(new KeyValue<>("aggregate", "c"));
 
 kafka.send(inTransaction("test-topic", records));
-```
+----
 
 === Sending records or values transactionally to multiple topics
 
-```java
+[source,java]
+----
 kafka.send(SendValuesTransactional
     .inTransaction("test-topic-1", Arrays.asList("a", "b"))
     .inTransaction("test-topic-2", Arrays.asList("c", "d")));
-```
+----
 
 === Failing a transaction on purpose
 
-```java
+[source,java]
+----
 kafka.send(SendValuesTransactional
     .inTransaction("test-topic", Arrays.asList("a", "b"))
     .failTransaction());
-```
+----
 
 Defining a `SendValuesTransactional` request with `failTransaction` will write records to the Kafka log, but abort the transaction they belong to. This allows you to test if your application-specific Kafka consumers adhere to the transactional guarantees they claim to satisfy, since only a correct implementation of a consumer with `isolation.level` set to `read_committed` must see - and process - those records.
 
@@ -110,12 +120,13 @@ NOTE: This works for `SendKeyValuesTransactional` as well.
 
 === Attaching record headers
 
-```java
+[source,java]
+----
 KeyValue<String, String> record = new KeyValue<>("a", "b");
 record.addHeader("client", "kafka-junit-test".getBytes("utf-8"));
 
 kafka.send(SendKeyValues
     .to("test-topic", Collections.singletonList(record)));
-```
+----
 
 NOTE: You can also pre-construct an instance of `Headers` and pass it along via the constructor of a `KeyValue`.

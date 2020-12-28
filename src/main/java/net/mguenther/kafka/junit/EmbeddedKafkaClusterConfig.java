@@ -11,9 +11,9 @@ public class EmbeddedKafkaClusterConfig {
 
     public static class EmbeddedKafkaClusterConfigBuilder {
 
-        private EmbeddedZooKeeperConfig zooKeeperConfig = EmbeddedZooKeeperConfig.useDefaults();
+        private EmbeddedZooKeeperConfig zooKeeperConfig = EmbeddedZooKeeperConfig.defaultZooKeeper();
 
-        private EmbeddedKafkaConfig kafkaConfig = EmbeddedKafkaConfig.useDefaults();
+        private EmbeddedKafkaConfig kafkaConfig = EmbeddedKafkaConfig.defaultBrokers();
 
         private EmbeddedConnectConfig connectConfig = null;
 

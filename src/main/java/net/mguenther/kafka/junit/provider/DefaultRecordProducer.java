@@ -92,7 +92,7 @@ public class DefaultRecordProducer implements RecordProducer {
             producer.beginTransaction();
             for (String topic : sendRequest.getRecordsPerTopic().keySet()) {
                 for (KeyValue<K, V> record : sendRequest.getRecordsPerTopic().get(topic)) {
-                    final ProducerRecord<K, V> producerRecord = new ProducerRecord<K, V>(topic, null, record.getKey(), record.getValue(), record.getHeaders());
+                    final ProducerRecord<K, V> producerRecord = new ProducerRecord<>(topic, null, record.getKey(), record.getValue(), record.getHeaders());
                     final Future<RecordMetadata> f = producer.send(producerRecord);
                     try {
                         metadata.add(f.get());

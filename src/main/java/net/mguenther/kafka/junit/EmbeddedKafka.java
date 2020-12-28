@@ -108,7 +108,7 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
             }
 
             @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
                 dir.toFile().delete();
                 return FileVisitResult.CONTINUE;
             }
@@ -124,7 +124,7 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
     }
 
     public String getBrokerList() {
-        return String.format("%s:%s", kafka.config().hostName(), Integer.toString(kafka.boundPort(forSecurityProtocol(SecurityProtocol.PLAINTEXT))));
+        return String.format("%s:%s", kafka.config().hostName(), kafka.boundPort(forSecurityProtocol(SecurityProtocol.PLAINTEXT)));
     }
 
     public String getClusterId() {

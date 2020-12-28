@@ -28,13 +28,13 @@ public class ReadKeyValues<K, V> {
         private final Class<K> clazzOfK;
         private final Class<V> clazzOfV;
         private final Properties consumerProps = new Properties();
+        private final Map<Integer, Long> seekTo = new HashMap<>();
         private Predicate<K> filterOnKeys = key -> true;
         private Predicate<V> filterOnValues = value -> true;
         private Predicate<Headers> filterOnHeaders = value -> true;
         private int limit = WITHOUT_LIMIT;
         private int maxTotalPollTimeMillis = DEFAULT_MAX_TOTAL_POLL_TIME_MILLIS;
         private boolean includeMetadata = false;
-        private Map<Integer, Long> seekTo = new HashMap<>();
 
         ReadKeyValuesBuilder(final String topic, final Class<K> clazzOfK, final Class<V> clazzOfV) {
             this.topic = topic;
