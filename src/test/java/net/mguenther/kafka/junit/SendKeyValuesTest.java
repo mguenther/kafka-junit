@@ -3,7 +3,7 @@ package net.mguenther.kafka.junit;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -21,7 +21,7 @@ public class SendKeyValuesTest {
 
         assertThat(sendRequest.getTopic()).isEqualTo("test-topic");
         assertThat(sendRequest.getRecords().size()).isEqualTo(1);
-        assertThat(sendRequest.getRecords().contains(new KeyValue<>("k", "v")));
+        assertThat(sendRequest.getRecords()).contains(new KeyValue<>("k", "v"));
     }
 
     @Test

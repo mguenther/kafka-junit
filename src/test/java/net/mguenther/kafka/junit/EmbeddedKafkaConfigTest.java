@@ -1,7 +1,8 @@
 package net.mguenther.kafka.junit;
 
 import kafka.server.KafkaConfig$;
-import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
 
@@ -10,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class EmbeddedKafkaConfigTest {
 
     @Test
+    @DisplayName("should use defaults if not explicitly overriden")
     public void shouldUseDefaultsIfNotOverridden() {
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig.defaultBrokers();
@@ -30,6 +32,7 @@ public class EmbeddedKafkaConfigTest {
     }
 
     @Test
+    @DisplayName("with(param) should override the corresponding default setting")
     public void withShouldOverrideDefaultSetting() {
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig
@@ -42,6 +45,7 @@ public class EmbeddedKafkaConfigTest {
     }
 
     @Test
+    @DisplayName("withAll(params) should override the corresponding default settings")
     public void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
@@ -59,6 +63,7 @@ public class EmbeddedKafkaConfigTest {
     }
 
     @Test
+    @DisplayName("should adjust the configured dedicated port to any ephemeral port if using multiple brokers")
     public void shouldAdjustConfiguredDedicatedPortToAnyEphemeralPortIfUsingMultipleBrokers() {
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig

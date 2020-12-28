@@ -1,8 +1,10 @@
 package net.mguenther.kafka.junit;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 import java.util.Properties;
@@ -10,19 +12,30 @@ import java.util.UUID;
 
 import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
 import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.defaultClusterConfig;
+import static net.mguenther.kafka.junit.TopicConfig.withName;
 import static net.mguenther.kafka.junit.Wait.delay;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 public class TopicManagerTest {
 
-    @Rule
-    public EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig());
+    public EmbeddedKafkaCluster kafka;
+
+    @BeforeEach
+    public void prepareEnvironment() {
+        kafka = provisionWith(defaultClusterConfig());
+        kafka.start();
+    }
+
+    @AfterEach
+    public void tearDownEnvironment() {
+        if (kafka != null) kafka.stop();
+    }
 
     @Test
     public void manageTopics() {
 
-        kafka.createTopic(TopicConfig.forTopic("test-topic").useDefaults());
+        kafka.createTopic(withName("test-topic"));
 
         assertThat(kafka.exists("test-topic")).isTrue();
 
@@ -35,10 +48,9 @@ public class TopicManagerTest {
     @Test
     public void fetchLeaderAndIsrShouldRetrieveTheIsr() throws Exception {
 
-        kafka.createTopic(TopicConfig.forTopic("test-topic")
+        kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
-                .withNumberOfReplicas(1)
-                .build());
+                .withNumberOfReplicas(1));
 
         // it takes a couple of seconds until topic-partition assignments are there
         delay(5);
@@ -52,9 +64,8 @@ public class TopicManagerTest {
     @Test
     public void fetchTopicConfigShouldRetrieveTheProperConfig() throws Exception {
 
-        kafka.createTopic(TopicConfig.forTopic("test-topic")
-                .with("min.insync.replicas", "1")
-                .build());
+        kafka.createTopic(withName("test-topic")
+                .with("min.insync.replicas", "1"));
 
         delay(3);
 
@@ -63,9 +74,8 @@ public class TopicManagerTest {
         assertThat(topicConfig.getProperty("min.insync.replicas")).isEqualTo("1");
     }
 
-    @Test(expected = RuntimeException.class)
-    public void fetchTopicConfigShouldThrowRuntimeExceptionIfTopicDoesNotExist() throws Exception {
-
-        kafka.fetchTopicConfig(UUID.randomUUID().toString());
+    @Test
+    public void fetchTopicConfigShouldThrowRuntimeExceptionIfTopicDoesNotExist() {
+        Assertions.assertThrows(RuntimeException.class, () -> kafka.fetchTopicConfig(UUID.randomUUID().toString()));
     }
 }

@@ -2,7 +2,8 @@ package net.mguenther.kafka.junit;
 
 import org.apache.kafka.connect.runtime.WorkerConfig;
 import org.apache.kafka.connect.runtime.distributed.DistributedConfig;
-import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
 
@@ -11,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class EmbeddedConnectConfigTest {
 
     @Test
+    @DisplayName("should use defaults if not explicitly overriden")
     public void shouldUseDefaultsIfNotOverridden() {
 
         final EmbeddedConnectConfig config = EmbeddedConnectConfig.useDefaults();
@@ -32,6 +34,7 @@ public class EmbeddedConnectConfigTest {
     }
 
     @Test
+    @DisplayName("with(param) should override the corresponding default setting")
     public void withShouldOverrideDefaultSetting() {
 
         final EmbeddedConnectConfig config = EmbeddedConnectConfig
@@ -44,6 +47,7 @@ public class EmbeddedConnectConfigTest {
     }
 
     @Test
+    @DisplayName("withAll(params) should override the corresponding default settings")
     public void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
@@ -61,6 +65,7 @@ public class EmbeddedConnectConfigTest {
     }
 
     @Test
+    @DisplayName("deployConnector should retain the configuration of the connector")
     public void deployConnectorShouldStoreConnectorConfig() {
 
         final Properties connectorConfig = new Properties();
@@ -74,6 +79,7 @@ public class EmbeddedConnectConfigTest {
     }
 
     @Test
+    @DisplayName("deployConnectors should retain all configurations for the given connectors")
     public void deployConnectorsShouldStoreConnectorConfigs() {
 
         final EmbeddedConnectConfig config = EmbeddedConnectConfig

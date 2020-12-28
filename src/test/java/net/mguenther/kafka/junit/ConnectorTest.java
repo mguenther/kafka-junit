@@ -1,8 +1,10 @@
 package net.mguenther.kafka.junit;
 
 import net.mguenther.kafka.junit.connector.InstrumentingConfigBuilder;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
 import java.util.UUID;
@@ -17,12 +19,23 @@ public class ConnectorTest {
 
     private final String key = String.format("key-%s", UUID.randomUUID().toString());
 
-    @Rule
-    public EmbeddedKafkaCluster kafka = provisionWith(newClusterConfig()
-            .configure(kafkaConnect()
-                    .deployConnector(connectorConfig(topic, key))));
+    private EmbeddedKafkaCluster kafka;
+
+    @BeforeEach
+    public void prepareEnvironment() {
+        kafka = provisionWith(newClusterConfig()
+                .configure(kafkaConnect()
+                        .deployConnector(connectorConfig(topic, key))));
+        kafka.start();
+    }
+
+    @AfterEach
+    public void tearDownEnvironment() {
+        if (kafka != null) kafka.stop();
+    }
 
     @Test
+    @DisplayName("A given Kafka Connect connector should be provisioned and able to emit records")
     public void connectorShouldBeProvisionedAndEmitRecords() throws Exception {
 
         kafka.observe(ObserveKeyValues.on(topic, 1)

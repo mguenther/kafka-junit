@@ -4,8 +4,11 @@ import kafka.server.KafkaConfig$;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.errors.NotEnoughReplicasException;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,14 +31,25 @@ import static org.assertj.core.api.Fail.fail;
 @Slf4j
 public class MultipleBrokersTest {
 
-    @Rule
-    public EmbeddedKafkaCluster kafka = provisionWith(newClusterConfig()
-            .configure(brokers()
-                    .withNumberOfBrokers(3)
-                    .with(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp(), "1")
-                    .with(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp(), "1")));
+    private EmbeddedKafkaCluster kafka;
+
+    @BeforeEach
+    public void prepareEnvironment() {
+        kafka = provisionWith(newClusterConfig()
+                .configure(brokers()
+                        .withNumberOfBrokers(3)
+                        .with(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp(), "1")
+                        .with(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp(), "1")));
+        kafka.start();
+    }
+
+    @AfterEach
+    public void tearDownEnvironment() {
+        if (kafka != null) kafka.stop();
+    }
 
     @Test
+    @DisplayName("multiple brokers should comprise the in-sync replica set of topics")
     public void multipleBrokersCompriseTheInSyncReplicaSetOfTopics() throws Exception {
 
         kafka.createTopic(withName("test-topic")
@@ -53,6 +67,7 @@ public class MultipleBrokersTest {
     }
 
     @Test
+    @DisplayName("disconnected broker leaves in-sync replica set of topic and rejoins it after re-joining the cluster")
     public void disconnectedBrokerLeavesIsrOfTopicAndRejoinsItAfterReconnecting() throws Exception {
 
         kafka.createTopic(withName("test-topic")
@@ -88,7 +103,8 @@ public class MultipleBrokersTest {
         assertThat(leadersAfterReconnect.contains(3)).isTrue();
     }
 
-    @Test(expected = NotEnoughReplicasException.class)
+    @Test
+    @DisplayName("should throw NotEnoughReplicasException when trying to send non-keyed records and ISR has fallen below its minimum size")
     public void disconnectUntilIsrFallsBelowMinimumSizeShouldThrowNotEnoughReplicasExceptionWhenSendingValues() throws Exception {
 
         kafka.createTopic(withName("test-topic")
@@ -102,10 +118,13 @@ public class MultipleBrokersTest {
 
         delay(5);
 
-        kafka.send(to("test-topic", "A"));
+        Assertions.assertThrows(NotEnoughReplicasException.class, () -> {
+            kafka.send(to("test-topic", "A"));
+        });
     }
 
-    @Test(expected = NotEnoughReplicasException.class)
+    @Test
+    @DisplayName("should throw NotEnoughReplicasException when trying to send non-keyed records within a transaction and ISR has fallen below its minimum size")
     public void disconnectUntilIsrFallsBelowMinimumSizeShouldThrowNotEnoughReplicasExceptionWhenSendingValuesTransactionally() throws Exception {
 
         kafka.createTopic(withName("test-topic")
@@ -119,11 +138,14 @@ public class MultipleBrokersTest {
 
         delay(5);
 
-        kafka.send(inTransaction("test-topic", "A")
-                .with(ProducerConfig.RETRIES_CONFIG, 1));
+        Assertions.assertThrows(NotEnoughReplicasException.class, () -> {
+            kafka.send(inTransaction("test-topic", "A")
+                    .with(ProducerConfig.RETRIES_CONFIG, 1));
+        });
     }
 
-    @Test(expected = NotEnoughReplicasException.class)
+    @Test
+    @DisplayName("should throw NotEnoughReplicasException when trying to send keyed records and ISR has fallen below its minimum size")
     public void disconnectUntilIsrFallsBelowMinimumSizeShouldThrowNotEnoughReplicasExceptionWhenSendingKeyValues() throws Exception {
 
         kafka.createTopic(withName("test-topic")
@@ -137,10 +159,13 @@ public class MultipleBrokersTest {
 
         delay(5);
 
-        kafka.send(SendKeyValues.to("test-topic", singletonList(new KeyValue<>("a", "A"))));
+        Assertions.assertThrows(NotEnoughReplicasException.class, () -> {
+            kafka.send(SendKeyValues.to("test-topic", singletonList(new KeyValue<>("a", "A"))));
+        });
     }
 
-    @Test(expected = NotEnoughReplicasException.class)
+    @Test
+    @DisplayName("should throw NotEnoughReplicasException when trying to send keyed records within a transaction and ISR has fallen below its minimum size")
     public void disconnectUntilIsrFallsBelowMinimumSizeShouldThrowNotEnoughReplicasExceptionWhenSendingKeyValuesTransactionally() throws Exception {
 
         kafka.createTopic(withName("test-topic")
@@ -154,11 +179,14 @@ public class MultipleBrokersTest {
 
         delay(5);
 
-        kafka.send(inTransaction("test-topic", singletonList(new KeyValue<>("a", "A")))
-                .with(ProducerConfig.RETRIES_CONFIG, 1));
+        Assertions.assertThrows(NotEnoughReplicasException.class, () -> {
+            kafka.send(inTransaction("test-topic", singletonList(new KeyValue<>("a", "A")))
+                    .with(ProducerConfig.RETRIES_CONFIG, 1));
+        });
     }
 
     @Test
+    @DisplayName("should be able to submit reords after restoring previously disconnected in-sync replica set")
     public void shouldBeAbleToWriteRecordsAfterRestoringDisconnectedIsr() throws Exception {
 
         kafka.createTopic(withName("test-topic")
@@ -188,6 +216,7 @@ public class MultipleBrokersTest {
     }
 
     @Test
+    @DisplayName("a re-enabled broker should bind to the same port as it was bound before")
     public void reActivatedBrokersShouldBindToTheSamePortAsTheyWereBoundToBefore() throws Exception {
 
         kafka.createTopic(withName("test-topic")

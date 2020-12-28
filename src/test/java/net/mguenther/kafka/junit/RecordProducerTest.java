@@ -2,8 +2,10 @@ package net.mguenther.kafka.junit;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -21,8 +23,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class RecordProducerTest {
 
-    @Rule
-    public EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig());
+    public EmbeddedKafkaCluster kafka;
+
+    @BeforeEach
+    public void prepareEnvironment() {
+        kafka = provisionWith(defaultClusterConfig());
+        kafka.start();
+    }
+
+    @AfterEach
+    public void tearDownEnvironment() {
+        if (kafka != null) kafka.stop();
+    }
 
     @Test
     public void sendingUnkeyedRecordsWithDefaults() throws Exception {
@@ -106,24 +118,26 @@ public class RecordProducerTest {
         assertThat(new String(consumedRecords.get(0).getHeaders().lastHeader("client").value())).isEqualTo("kafka-junit-test");
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void valuesOfAbortedTransactionsShouldNotBeVisibleByTransactionalConsumer() throws Exception {
 
         kafka.send(SendValuesTransactional
                 .inTransaction("test-topic", asList("a", "b"))
                 .failTransaction());
-        kafka.observe(on("test-topic", 2)
+
+        Assertions.assertThrows(AssertionError.class, () -> kafka.observe(on("test-topic", 2)
                 .with(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed")
                 .observeFor(5, TimeUnit.SECONDS)
-                .build());
+                .build()));
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void keyValuesOfAbortedTransactionsShouldNotBeVisibleByTransactionalConsumer() throws Exception {
 
         kafka.send(inTransaction("test-topic", singletonList(new KeyValue<>("a", "b"))).failTransaction());
-        kafka.observe(on("test-topic", 1)
+
+        Assertions.assertThrows(AssertionError.class, () -> kafka.observe(on("test-topic", 1)
                 .with(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed")
-                .observeFor(5, TimeUnit.SECONDS));
+                .observeFor(5, TimeUnit.SECONDS)));
     }
 }

@@ -8,9 +8,10 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.LongSerializer;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,11 +30,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class RecordConsumerTest {
 
-    @Rule
-    public EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig());
+    public EmbeddedKafkaCluster kafka;
 
-    @Before
-    public void prepareTestTopic() throws Exception {
+    @BeforeEach
+    public void prepareEnvironment() throws Exception {
+        kafka = provisionWith(defaultClusterConfig());
+        kafka.start();
 
         final List<KeyValue<String, String>> records = asList(
                 new KeyValue<>("aggregate", "a"),
@@ -41,6 +43,11 @@ public class RecordConsumerTest {
                 new KeyValue<>("aggregate", "c"));
 
         kafka.send(to("test-topic", records));
+    }
+
+    @AfterEach
+    public void tearDownEnvironment() {
+        if (kafka != null) kafka.stop();
     }
 
     @Test
@@ -231,14 +238,14 @@ public class RecordConsumerTest {
         assertThat(observedRecords).isEqualTo(3);
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void observeThrowsAnAssertionErrorIfTimeoutElapses() throws Exception {
 
         ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 4)
                 .observeFor(5, TimeUnit.SECONDS)
                 .build();
 
-        kafka.observe(observeRequest);
+        Assertions.assertThrows(AssertionError.class, () -> kafka.observe(observeRequest));
     }
 
     @Test
@@ -351,7 +358,7 @@ public class RecordConsumerTest {
         assertThat(observedRecords.get(0).getValue()).isEqualTo(2);
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void observeShouldThrowAnAssertionErrorIfNoRecordPassesTheFilterAndTimeoutElapses() throws Exception {
 
         List<KeyValue<String, Integer>> records = new ArrayList<>();
@@ -377,10 +384,12 @@ public class RecordConsumerTest {
                 .filterOnValues(valueFilter)
                 .build();
 
-        kafka.observe(observeRequest);
+        Assertions.assertThrows(AssertionError.class, () -> {
+            kafka.observe(observeRequest);
+        });
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void observeShouldThrowAnAssertionErrorIfNoRecordPassesTheHeaderFilterAndTimeoutElapses() throws Exception {
 
         Headers headersA = new RecordHeaders().add("aggregate", "a".getBytes());
@@ -405,7 +414,7 @@ public class RecordConsumerTest {
                 .filterOnHeaders(headerFilter)
                 .build();
 
-        kafka.observe(observeRequest);
+        Assertions.assertThrows(AssertionError.class, () -> kafka.observe(observeRequest));
     }
 
     @Test
@@ -552,7 +561,7 @@ public class RecordConsumerTest {
         assertThat(records.get(0)).isEqualTo("c");
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void whenObservingKeyValuesSeekToShouldNotRestartObservationAtGivenOffsetForSubsequentReads() throws Exception {
 
         ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 2)
@@ -563,10 +572,10 @@ public class RecordConsumerTest {
         // if the implementation of observe would start over at the given offset, then we would the record with value
         // "c" multiple times until the expected number (in this case 2) is met. if this times out and throws an
         // AssertionError, the implementation works as expected.
-        kafka.observe(observeRequest);
+        Assertions.assertThrows(AssertionError.class, () -> kafka.observe(observeRequest));
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void whenObservingValuesSeekToShouldNotRestartObservationAtGivenOffsetForSubsequentReads() throws Exception {
 
         ObserveKeyValues<String, String> observeRequest = ObserveKeyValues.on("test-topic", 2)
@@ -577,6 +586,6 @@ public class RecordConsumerTest {
         // if the implementation of observe would start over at the given offset, then we would the record with value
         // "c" multiple times until the expected number (in this case 2) is met. if this times out and throws an
         // AssertionError, the implementation works as expected.
-        kafka.observeValues(observeRequest);
+        Assertions.assertThrows(AssertionError.class, () -> kafka.observeValues(observeRequest));
     }
 }
