@@ -8,21 +8,25 @@ Class `ExternalKafkaCluster` integrates an external cluster. Just like `Embeddab
 
 Using `ExternalKafkaCluster` in a JUnit test is easy. The listing below shows the necessary code to use `ExternalKafkaCluster` in combination with Testcontainers.
 
-[source, java]
+[source,java]
 ----
-public class MyTest {
+@Testcontainers
+class ExternalKafkaClusterTest {
 
     // This is not part of Kafka for JUnit, but a sub-module provided
     // by Testcontainers (org.testcontainers:kafka)
-    @Rule
-    public KafkaContainer kafkaContainer = new KafkaContainer();
+    @Container
+    private KafkaContainer kafkaContainer = new KafkaContainer();
 
     @Test
-    public void externalKafkaClusterDemo() throws Exception {
+    @DisplayName("should be able to observe records written to an external Kafka cluster")
+    void externalKafkaClusterShouldWorkWithExternalResources() throws Exception {
 
         ExternalKafkaCluster kafka = ExternalKafkaCluster.at(kafkaContainer.getBootstrapServers());
 
         // use the accessors that cluster provides to interact with the Kafka container
+
+        [...]
     }
 }
 ----

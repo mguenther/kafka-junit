@@ -8,29 +8,26 @@ Using `EmbeddedKafkaCluster` in a JUnit test is quite simple. The necessary code
 
 [source,java]
 ----
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+
 import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
 import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.defaultClusterConfig;
 
-public class MyTest {
+class KafkaTest {
 
-    @Rule
-    public EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig());
-}
-----
+    private EmbeddedKafkaCluster kafka;
 
-`EmbeddedKafkaCluster` is a JUnit rule (it is derived from `ExternalResource` to be precise). The `@Rule` annotation ties the lifecycle to the execution of the test method. The `@ClassRule` annotation ties the lifecycle of `EmbeddedKafkaCluster` to the execution of the test class. In both cases, all acquired resources are released automatically once the resp. lifecycle terminates.
+    @BeforeEach
+    void setupKafka() {
+        kafka = provisionWith(defaultClusterConfig());
+        kafka.start();
+    }
 
-The example underneath demonstrates how to use `@ClassRule` instead of `@Rule`.
-
-[source,java]
-----
-import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.defaultClusterConfig;
-
-public class MyTest {
-
-    @ClassRule
-    public static EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig());
+    @AfterEach
+    void tearDownKafka() {
+        kafka.stop();
+    }
 }
 ----
 
@@ -38,15 +35,9 @@ Kafka for JUnit uses the Builder pattern extensively to provide a fluent API whe
 
 [source,java]
 ----
-import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.newClusterConfig;
-
-public class MyTest {
-    @Rule
-    public EmbeddedKafkaCluster kafka = provisionWith(newClusterConfig()
-        .configure(kafkaConnect()
-        .with(KafkaConfig$.MODULE$.NumPartitionsProp(), "5")));
-}
+EmbeddedKafkaCluster kafka = provisionWith(newClusterConfig()
+    .configure(kafkaConnect()
+    .with(KafkaConfig$.MODULE$.NumPartitionsProp(), "5")));
 ----
 
 The builders for those configurations provide a uniform interface for overriding defaults, comprising two methods `with(String propertyName, T value)` and `withAll(java.util.Properties overrides)`. To override a default value, you simply provide the name of the configuration parameter as defined by the resp. Kafka component along with the new value.
@@ -55,25 +46,42 @@ Using the default setting will provide you with a single embedded Kafka broker. 
 
 [source,java]
 ----
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.newClusterConfig;
-import static net.mguenther.kafka.junit.EmbeddedKafkaConfig.brokers;
 
-public class MultipleBrokersTest {
-
-    @Rule
-    public EmbeddedKafkaCluster kafka = provisionWith(newClusterConfig()
-            .configure(brokers()
-                .withNumberOfBrokers(3)
-                .with(KafkaConfig$.MODULE$.NumPartitionsProp(), "5")
-                .with(KafkaConfig$.MODULE$.DefaultReplicationFactorProp(), "3")
-                .with(KafkaConfig$.MODULE$.MinInSyncReplicasProp(), "2")
-                .with(KafkaConfig$.MODULE$.OffsetsTopicReplicationFactorProp(), "3")
-                .with(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp(), "3")
-                .with(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp(), "2")));
-}
+EmbeddedKafkaCluster kafka = provisionWith(newClusterConfig()
+    .configure(brokers()
+        .withNumberOfBrokers(3)
+        .with(KafkaConfig$.MODULE$.NumPartitionsProp(), "5")
+        .with(KafkaConfig$.MODULE$.DefaultReplicationFactorProp(), "3")
+        .with(KafkaConfig$.MODULE$.MinInSyncReplicasProp(), "2")
+        .with(KafkaConfig$.MODULE$.OffsetsTopicReplicationFactorProp(), "3")
+        .with(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp(), "3")
+        .with(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp(), "2")));
 ----
 
 Using this configuration, we end up with a total of three brokers that form an embedded Kafka cluster, while the defaults for topic partitions and replicas have been adjusted to be consistent with the size of the cluster.
+
+Of course, you can also use the `try-with-resources`-pattern to fire up an embedded cluster. Have a look at the following test setup.
+
+[source,java]
+----
+import org.junit.jupiter.api.Test;
+
+import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
+import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.defaultClusterConfig;
+
+class KafkaTest {
+
+  @Test
+  void shouldWaitForRecordsToBePublished() throws Exception {
+
+    try (EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig())) {
+      kafka.start();
+      kafka.send(to("test-topic", "a", "b", "c"));
+      kafka.observe(on("test-topic", 3));
+    }
+  }
+}
+----
 
 See sections on <<section:producing-records, Producing records>>, <<section:consuming-records, Consuming records>> and <<section:managing-topics, Managing topics>> for further reference on how to interact with the cluster.
 
@@ -93,7 +101,8 @@ The following listing shows how to disconnect and re-connect a certain broker, w
 
 NOTE: If you do use this feature of Kafka for JUnit, then please give the embedded cluster some time to handle broker churn. Identifying that a leader for a topic-partition is not available and conducting the leader election takes some time. In the example underneath we introduce a delay of five seconds in between operations that affect cluster membership.
 
-```java
+[source,java]
+----
 kafka.createTopic(TopicConfig.withName("test-topic")
     .withNumberOfPartitions(5)
     .withNumberOfReplicas(3));
@@ -137,7 +146,7 @@ Set<Integer> leadersAfterReconnect = kafka.fetchLeaderAndIsr("test-topic")
 assertThat(leadersAfterReconnect.contains(1)).isTrue();
 assertThat(leadersAfterReconnect.contains(2)).isTrue();
 assertThat(leadersAfterReconnect.contains(3)).isTrue();
-```
+----
 
 ==== Disconnect until In-Sync-Replica Set falls below minimum size
 
@@ -145,8 +154,8 @@ The following listing shows how to disconnect the In-Sync-Replica Set (ISR) for 
 
 NOTE: If you do use this feature of Kafka for JUnit, then please give the embedded cluster some time to handle broker churn. Identifying that a leader for a topic-partition is not available and conducting the leader election takes some time. In the example underneath we introduce a delay of five seconds in between operations that affect cluster membership.
 
-```java
-
+[source,java]
+----
 // Create a topic and configure the number of replicas as well as the size of the ISR
 
 kafka.createTopic(TopicConfig.withName("test-topic")
@@ -167,7 +176,7 @@ delay(5);
 // Submitting records to this topic will yield a NotEnoughReplicasException
 
 kafka.send(SendValues.to("test-topic", "A"));
-```
+----
 
 The last line of the listing shows the effect of an ISR that can no longer operate reliably. Your Kafka-based component or application would run concurrently to this test so that you are able to observe if it behaves correctly (e.g. by checking that the component progresses normally if the ISR is restored).
 
@@ -175,7 +184,8 @@ The last line of the listing shows the effect of an ISR that can no longer opera
 
 Restoring the In-Sync-Replica Set is easy, as method `disconnectUntilIsrFallsBelowMinimumSize` returns a list of broker IDs for all brokers that have been deactivated during the shrinking. The following listing shows how to restore the ISR.
 
-```java
+[source,java]
+----
 kafka.createTopic(TopicConfig.withName("test-topic")
     .withNumberOfPartitions(5)
     .withNumberOfReplicas(3)
@@ -196,4 +206,4 @@ kafka.connect(disconnectedBrokers);
 delay(5);
 
 // Do some more testing ...
-```
+----
