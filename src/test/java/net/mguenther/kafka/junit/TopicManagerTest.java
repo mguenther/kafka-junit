@@ -18,24 +18,24 @@ import static net.mguenther.kafka.junit.Wait.delay;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
-public class TopicManagerTest {
+class TopicManagerTest {
 
-    public EmbeddedKafkaCluster kafka;
+    private EmbeddedKafkaCluster kafka;
 
     @BeforeEach
-    public void prepareEnvironment() {
+    void prepareEnvironment() {
         kafka = provisionWith(defaultClusterConfig());
         kafka.start();
     }
 
     @AfterEach
-    public void tearDownEnvironment() {
+    void tearDownEnvironment() {
         if (kafka != null) kafka.stop();
     }
 
     @Test
     @DisplayName("should be able to create topics and mark them for deletion")
-    public void shouldBeAbleToCreateTopicsAndMarkThemForDeletion() {
+    void shouldBeAbleToCreateTopicsAndMarkThemForDeletion() {
 
         kafka.createTopic(withName("test-topic"));
 
@@ -49,7 +49,7 @@ public class TopicManagerTest {
 
     @Test
     @DisplayName("fetchLeaderAndIsr should retrieve the in-sync replica set")
-    public void fetchLeaderAndIsrShouldRetrieveTheIsr() throws Exception {
+    void fetchLeaderAndIsrShouldRetrieveTheIsr() throws Exception {
 
         kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
@@ -66,7 +66,7 @@ public class TopicManagerTest {
 
     @Test
     @DisplayName("fetchToppiConfig should retrieve the proper config")
-    public void fetchTopicConfigShouldRetrieveTheProperConfig() throws Exception {
+    void fetchTopicConfigShouldRetrieveTheProperConfig() throws Exception {
 
         kafka.createTopic(withName("test-topic")
                 .with("min.insync.replicas", "1"));
@@ -80,7 +80,7 @@ public class TopicManagerTest {
 
     @Test
     @DisplayName("fetchTopicConfig should throw a RuntimeException if the topic does not exist")
-    public void fetchTopicConfigShouldThrowRuntimeExceptionIfTopicDoesNotExist() {
+    void fetchTopicConfigShouldThrowRuntimeExceptionIfTopicDoesNotExist() {
         Assertions.assertThrows(RuntimeException.class, () -> kafka.fetchTopicConfig(UUID.randomUUID().toString()));
     }
 }

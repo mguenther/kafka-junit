@@ -29,12 +29,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 
 @Slf4j
-public class MultipleBrokersTest {
+class MultipleBrokersTest {
 
     private EmbeddedKafkaCluster kafka;
 
     @BeforeEach
-    public void prepareEnvironment() {
+    void prepareEnvironment() {
         kafka = provisionWith(newClusterConfig()
                 .configure(brokers()
                         .withNumberOfBrokers(3)
@@ -44,13 +44,13 @@ public class MultipleBrokersTest {
     }
 
     @AfterEach
-    public void tearDownEnvironment() {
+    void tearDownEnvironment() {
         if (kafka != null) kafka.stop();
     }
 
     @Test
     @DisplayName("multiple brokers should comprise the in-sync replica set of topics")
-    public void multipleBrokersCompriseTheInSyncReplicaSetOfTopics() throws Exception {
+    void multipleBrokersCompriseTheInSyncReplicaSetOfTopics() throws Exception {
 
         kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
@@ -68,7 +68,7 @@ public class MultipleBrokersTest {
 
     @Test
     @DisplayName("disconnected broker leaves in-sync replica set of topic and rejoins it after re-joining the cluster")
-    public void disconnectedBrokerLeavesIsrOfTopicAndRejoinsItAfterReconnecting() throws Exception {
+    void disconnectedBrokerLeavesIsrOfTopicAndRejoinsItAfterReconnecting() throws Exception {
 
         kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
@@ -105,7 +105,7 @@ public class MultipleBrokersTest {
 
     @Test
     @DisplayName("should throw NotEnoughReplicasException when trying to send non-keyed records and ISR has fallen below its minimum size")
-    public void disconnectUntilIsrFallsBelowMinimumSizeShouldThrowNotEnoughReplicasExceptionWhenSendingValues() throws Exception {
+    void disconnectUntilIsrFallsBelowMinimumSizeShouldThrowNotEnoughReplicasExceptionWhenSendingValues() throws Exception {
 
         kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
@@ -125,7 +125,7 @@ public class MultipleBrokersTest {
 
     @Test
     @DisplayName("should throw NotEnoughReplicasException when trying to send non-keyed records within a transaction and ISR has fallen below its minimum size")
-    public void disconnectUntilIsrFallsBelowMinimumSizeShouldThrowNotEnoughReplicasExceptionWhenSendingValuesTransactionally() throws Exception {
+    void disconnectUntilIsrFallsBelowMinimumSizeShouldThrowNotEnoughReplicasExceptionWhenSendingValuesTransactionally() throws Exception {
 
         kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
@@ -146,7 +146,7 @@ public class MultipleBrokersTest {
 
     @Test
     @DisplayName("should throw NotEnoughReplicasException when trying to send keyed records and ISR has fallen below its minimum size")
-    public void disconnectUntilIsrFallsBelowMinimumSizeShouldThrowNotEnoughReplicasExceptionWhenSendingKeyValues() throws Exception {
+    void disconnectUntilIsrFallsBelowMinimumSizeShouldThrowNotEnoughReplicasExceptionWhenSendingKeyValues() throws Exception {
 
         kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
@@ -166,7 +166,7 @@ public class MultipleBrokersTest {
 
     @Test
     @DisplayName("should throw NotEnoughReplicasException when trying to send keyed records within a transaction and ISR has fallen below its minimum size")
-    public void disconnectUntilIsrFallsBelowMinimumSizeShouldThrowNotEnoughReplicasExceptionWhenSendingKeyValuesTransactionally() throws Exception {
+    void disconnectUntilIsrFallsBelowMinimumSizeShouldThrowNotEnoughReplicasExceptionWhenSendingKeyValuesTransactionally() throws Exception {
 
         kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
@@ -187,7 +187,7 @@ public class MultipleBrokersTest {
 
     @Test
     @DisplayName("should be able to submit reords after restoring previously disconnected in-sync replica set")
-    public void shouldBeAbleToWriteRecordsAfterRestoringDisconnectedIsr() throws Exception {
+    void shouldBeAbleToWriteRecordsAfterRestoringDisconnectedIsr() throws Exception {
 
         kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)
@@ -217,7 +217,7 @@ public class MultipleBrokersTest {
 
     @Test
     @DisplayName("a re-enabled broker should bind to the same port as it was bound before")
-    public void reActivatedBrokersShouldBindToTheSamePortAsTheyWereBoundToBefore() throws Exception {
+    void reActivatedBrokersShouldBindToTheSamePortAsTheyWereBoundToBefore() throws Exception {
 
         kafka.createTopic(withName("test-topic")
                 .withNumberOfPartitions(5)

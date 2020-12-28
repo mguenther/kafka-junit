@@ -8,11 +8,11 @@ import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class EmbeddedKafkaConfigTest {
+class EmbeddedKafkaConfigTest {
 
     @Test
     @DisplayName("should use defaults if not explicitly overriden")
-    public void shouldUseDefaultsIfNotOverridden() {
+    void shouldUseDefaultsIfNotOverridden() {
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig.defaultBrokers();
         final Properties props = config.getBrokerProperties();
@@ -33,7 +33,7 @@ public class EmbeddedKafkaConfigTest {
 
     @Test
     @DisplayName("with(param) should override the corresponding default setting")
-    public void withShouldOverrideDefaultSetting() {
+    void withShouldOverrideDefaultSetting() {
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig
                 .brokers()
@@ -46,7 +46,7 @@ public class EmbeddedKafkaConfigTest {
 
     @Test
     @DisplayName("withAll(params) should override the corresponding default settings")
-    public void withAllShouldOverrideDefaultSettings() {
+    void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
         overrides.put(KafkaConfig$.MODULE$.PortProp(), "9092");
@@ -64,7 +64,7 @@ public class EmbeddedKafkaConfigTest {
 
     @Test
     @DisplayName("should adjust the configured dedicated port to any ephemeral port if using multiple brokers")
-    public void shouldAdjustConfiguredDedicatedPortToAnyEphemeralPortIfUsingMultipleBrokers() {
+    void shouldAdjustConfiguredDedicatedPortToAnyEphemeralPortIfUsingMultipleBrokers() {
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig
                 .brokers()

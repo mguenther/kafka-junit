@@ -7,11 +7,11 @@ import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TopicConfigTest {
+class TopicConfigTest {
 
     @Test
     @DisplayName("should preserve constructor arguments")
-    public void shouldPreserveConstructorArguments() {
+    void shouldPreserveConstructorArguments() {
 
         final TopicConfig topicConfig = TopicConfig.withName("test").useDefaults();
 
@@ -20,7 +20,7 @@ public class TopicConfigTest {
 
     @Test
     @DisplayName("should use defaults if not overridden")
-    public void shouldUseDefaultsIfNotOverridden() {
+    void shouldUseDefaultsIfNotOverridden() {
 
         final TopicConfig topicConfig = TopicConfig.withName("test").useDefaults();
 
@@ -33,7 +33,7 @@ public class TopicConfigTest {
 
     @Test
     @DisplayName("withNumberOfReplicas should override its default setting")
-    public void withNumberOfReplicasShouldOverrideDefaultSetting() {
+    void withNumberOfReplicasShouldOverrideDefaultSetting() {
 
         final TopicConfig topicConfig = TopicConfig.withName("test")
                 .withNumberOfReplicas(99)
@@ -44,7 +44,7 @@ public class TopicConfigTest {
 
     @Test
     @DisplayName("withNumberOfPartitions should override its default setting")
-    public void withNumberOfPartitionsShouldOverrideDefaultSetting() {
+    void withNumberOfPartitionsShouldOverrideDefaultSetting() {
 
         final TopicConfig topicConfig = TopicConfig.withName("test")
                 .withNumberOfPartitions(99)
@@ -55,7 +55,7 @@ public class TopicConfigTest {
 
     @Test
     @DisplayName("with should override the default setting of the given parameter with the given value")
-    public void withShouldOverrideDefaultSetting() {
+    void withShouldOverrideDefaultSetting() {
 
         final TopicConfig topicConfig = TopicConfig.withName("test")
                 .with("min.insync.replicas", "2")
@@ -66,7 +66,7 @@ public class TopicConfigTest {
 
     @Test
     @DisplayName("withAll should override the default settings of the given parameters with the resp. values")
-    public void withAllShouldOverrideDefaulSettings() {
+    void withAllShouldOverrideDefaulSettings() {
 
         final Properties overrides = new Properties();
         overrides.put("min.insync.replicas", "2");

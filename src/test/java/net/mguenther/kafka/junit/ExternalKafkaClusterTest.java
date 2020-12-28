@@ -13,14 +13,14 @@ import static net.mguenther.kafka.junit.ObserveKeyValues.on;
 import static net.mguenther.kafka.junit.SendKeyValues.to;
 
 @Testcontainers
-public class ExternalKafkaClusterTest {
+class ExternalKafkaClusterTest {
 
     @Container
-    public KafkaContainer kafkaContainer = new KafkaContainer();
+    private KafkaContainer kafkaContainer = new KafkaContainer();
 
     @Test
     @DisplayName("should be able to observe records written to an external Kafka cluster")
-    public void externalKafkaClusterShouldWorkWithExternalResources() throws Exception {
+    void externalKafkaClusterShouldWorkWithExternalResources() throws Exception {
 
         final ExternalKafkaCluster kafka = ExternalKafkaCluster.at(kafkaContainer.getBootstrapServers());
 

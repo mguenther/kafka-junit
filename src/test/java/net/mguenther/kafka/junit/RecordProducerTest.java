@@ -22,24 +22,24 @@ import static net.mguenther.kafka.junit.SendKeyValuesTransactional.inTransaction
 import static net.mguenther.kafka.junit.SendValues.to;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class RecordProducerTest {
+class RecordProducerTest {
 
-    public EmbeddedKafkaCluster kafka;
+    private EmbeddedKafkaCluster kafka;
 
     @BeforeEach
-    public void prepareEnvironment() {
+    void prepareEnvironment() {
         kafka = provisionWith(defaultClusterConfig());
         kafka.start();
     }
 
     @AfterEach
-    public void tearDownEnvironment() {
+    void tearDownEnvironment() {
         if (kafka != null) kafka.stop();
     }
 
     @Test
     @DisplayName("calling send with non-keyed records and default settings should write all given records to the target topic")
-    public void sendingUnkeyedRecordsWithDefaults() throws Exception {
+    void sendingUnkeyedRecordsWithDefaults() throws Exception {
 
         kafka.send(to("test-topic", "a", "b", "c"));
 
@@ -49,7 +49,7 @@ public class RecordProducerTest {
 
     @Test
     @DisplayName("calling send with keyed records and default settings should write all given records to the target topic")
-    public void sendingKeyedRecordsWithDefaults() throws Exception {
+    void sendingKeyedRecordsWithDefaults() throws Exception {
 
         final List<KeyValue<String, String>> records = new ArrayList<>();
 
@@ -65,7 +65,7 @@ public class RecordProducerTest {
 
     @Test
     @DisplayName("calling send with non-keyed records and altered producer settings should write all given records to the target topic")
-    public void sendingUnkeyedRecordsWithAlteredProducerSettings() throws Exception {
+    void sendingUnkeyedRecordsWithAlteredProducerSettings() throws Exception {
 
         final SendValues<String> sendRequest = to("test-topic", "a", "b", "c")
                 .with(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
@@ -80,7 +80,7 @@ public class RecordProducerTest {
 
     @Test
     @DisplayName("calling send with keyed records within a transaction should write all given records to the target topic")
-    public void sendingKeyedRecordsWithinTransaction() throws Exception {
+    void sendingKeyedRecordsWithinTransaction() throws Exception {
 
         final List<KeyValue<String, String>> records = new ArrayList<>();
 
@@ -94,7 +94,7 @@ public class RecordProducerTest {
 
     @Test
     @DisplayName("calling send with non-keyed records within a transaction should write all given records to the target topic")
-    public void sendingUnkeyedRecordsWithinTransaction() throws Exception {
+    void sendingUnkeyedRecordsWithinTransaction() throws Exception {
 
         kafka.send(SendValuesTransactional.inTransaction("test-topic", asList("a", "b", "c")));
         kafka.observeValues(on("test-topic", 3));
@@ -102,7 +102,7 @@ public class RecordProducerTest {
 
     @Test
     @DisplayName("calling send with non-keyed records for multiple topics should write all given records to the correct topic")
-    public void sendingUnkeyedRecordsToMultipleTopics() throws Exception {
+    void sendingUnkeyedRecordsToMultipleTopics() throws Exception {
 
         kafka.send(SendValuesTransactional
                 .inTransaction("test-topic-1", asList("a", "b"))
@@ -113,7 +113,7 @@ public class RecordProducerTest {
 
     @Test
     @DisplayName("record headers should be retained")
-    public void usingRecordHeaders() throws Exception {
+    void usingRecordHeaders() throws Exception {
 
         final KeyValue<String, String> record = new KeyValue<>("a", "b");
         record.addHeader("client", "kafka-junit-test".getBytes(StandardCharsets.UTF_8));
@@ -128,7 +128,7 @@ public class RecordProducerTest {
 
     @Test
     @DisplayName("non-keyed records written during a failed transaction should not be visible by a transactional consumer")
-    public void valuesOfAbortedTransactionsShouldNotBeVisibleByTransactionalConsumer() throws Exception {
+    void valuesOfAbortedTransactionsShouldNotBeVisibleByTransactionalConsumer() throws Exception {
 
         kafka.send(SendValuesTransactional
                 .inTransaction("test-topic", asList("a", "b"))
@@ -142,7 +142,7 @@ public class RecordProducerTest {
 
     @Test
     @DisplayName("keyed records written during a failed transaction should be not visible by a transactional consumer")
-    public void keyValuesOfAbortedTransactionsShouldNotBeVisibleByTransactionalConsumer() throws Exception {
+    void keyValuesOfAbortedTransactionsShouldNotBeVisibleByTransactionalConsumer() throws Exception {
 
         kafka.send(inTransaction("test-topic", singletonList(new KeyValue<>("a", "b"))).failTransaction());
 

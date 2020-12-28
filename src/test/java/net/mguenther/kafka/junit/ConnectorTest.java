@@ -13,7 +13,7 @@ import static net.mguenther.kafka.junit.EmbeddedConnectConfig.kafkaConnect;
 import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
 import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.newClusterConfig;
 
-public class ConnectorTest {
+class ConnectorTest {
 
     private final String topic = String.format("topic-%s", UUID.randomUUID().toString());
 
@@ -22,7 +22,7 @@ public class ConnectorTest {
     private EmbeddedKafkaCluster kafka;
 
     @BeforeEach
-    public void prepareEnvironment() {
+    void prepareEnvironment() {
         kafka = provisionWith(newClusterConfig()
                 .configure(kafkaConnect()
                         .deployConnector(connectorConfig(topic, key))));
@@ -36,7 +36,7 @@ public class ConnectorTest {
 
     @Test
     @DisplayName("A given Kafka Connect connector should be provisioned and able to emit records")
-    public void connectorShouldBeProvisionedAndEmitRecords() throws Exception {
+    void connectorShouldBeProvisionedAndEmitRecords() throws Exception {
 
         kafka.observe(ObserveKeyValues.on(topic, 1)
                 .filterOnKeys(k -> k.equalsIgnoreCase(key))

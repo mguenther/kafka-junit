@@ -12,11 +12,11 @@ import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SendKeyValuesTransactionalTest {
+class SendKeyValuesTransactionalTest {
 
     @Test
     @DisplayName("should preserve constructor arguments")
-    public void shouldPreserveConstructorArguments() {
+    void shouldPreserveConstructorArguments() {
 
         final SendKeyValuesTransactional<String, String> sendRequest = SendKeyValuesTransactional
                 .inTransaction("test-topic", Collections.singletonList(new KeyValue<>("k", "v")))
@@ -28,7 +28,7 @@ public class SendKeyValuesTransactionalTest {
 
     @Test
     @DisplayName("should be able to close over records for multiple topics")
-    public void shouldBeAbleToCloseOverRecordsForMultipleTopics() {
+    void shouldBeAbleToCloseOverRecordsForMultipleTopics() {
 
         final SendKeyValuesTransactional<String, String> sendRequest = SendKeyValuesTransactional
                 .inTransaction("test-topic", Collections.singletonList(new KeyValue<>("k", "v")))
@@ -41,7 +41,7 @@ public class SendKeyValuesTransactionalTest {
 
     @Test
     @DisplayName("should use defaults if not overridden")
-    public void shouldUseDefaultsIfNotOverridden() {
+    void shouldUseDefaultsIfNotOverridden() {
 
         final SendKeyValuesTransactional<String, String> sendRequest = SendKeyValuesTransactional
                 .inTransaction("test-topic", Collections.singletonList(new KeyValue<>("k", "v")))
@@ -55,7 +55,7 @@ public class SendKeyValuesTransactionalTest {
 
     @Test
     @DisplayName("should preserve fail transaction setting if overridden")
-    public void shouldPreserveFailTransactionSettingIfOverridden() {
+    void shouldPreserveFailTransactionSettingIfOverridden() {
 
         final SendKeyValuesTransactional<String, String> sendRequest = SendKeyValuesTransactional
                 .inTransaction("test-topic", Collections.singletonList(new KeyValue<>("k", "v")))
@@ -67,7 +67,7 @@ public class SendKeyValuesTransactionalTest {
 
     @Test
     @DisplayName("with should override the default setting of the given parameter with the given value")
-    public void withShouldOverrideDefaultSetting() {
+    void withShouldOverrideDefaultSetting() {
 
         final SendKeyValuesTransactional<String, Integer> sendRequest = SendKeyValuesTransactional
                 .inTransaction("test-topic", Collections.singletonList(new KeyValue<>("a", 1)))
@@ -80,7 +80,7 @@ public class SendKeyValuesTransactionalTest {
 
     @Test
     @DisplayName("withAll should override the default settings of the given parameters with the resp. values")
-    public void withAllShouldOverrideDefaultSettings() {
+    void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
         overrides.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class);

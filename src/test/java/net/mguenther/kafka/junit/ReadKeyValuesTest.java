@@ -11,11 +11,11 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ReadKeyValuesTest {
+class ReadKeyValuesTest {
 
     @Test
     @DisplayName("should preserve constructor arguments")
-    public void shouldPreserveConstructorArguments() {
+    void shouldPreserveConstructorArguments() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test").useDefaults();
 
@@ -26,7 +26,7 @@ public class ReadKeyValuesTest {
 
     @Test
     @DisplayName("should use defaults if not overridden")
-    public void shouldUseDefaultsIfNotOverridden() {
+    void shouldUseDefaultsIfNotOverridden() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test").useDefaults();
         final Properties props = readRequest.getConsumerProps();
@@ -43,7 +43,7 @@ public class ReadKeyValuesTest {
 
     @Test
     @DisplayName("unlimited should not restrict limit setting")
-    public void unlimitedShouldNotRestrictLimitSetting() {
+    void unlimitedShouldNotRestrictLimitSetting() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
                 .withLimit(1)
@@ -55,7 +55,7 @@ public class ReadKeyValuesTest {
 
     @Test
     @DisplayName("withLimit should restrict limit setting")
-    public void withLimitShouldRestrictLimitSetting() {
+    void withLimitShouldRestrictLimitSetting() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
                 .withLimit(1)
@@ -66,7 +66,7 @@ public class ReadKeyValuesTest {
 
     @Test
     @DisplayName("withMaxPollTime should override its default setting")
-    public void withMaxPollTimeShouldOverrideItsDefault() {
+    void withMaxPollTimeShouldOverrideItsDefault() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
                 .withMaxTotalPollTime(10, TimeUnit.SECONDS)
@@ -77,7 +77,7 @@ public class ReadKeyValuesTest {
 
     @Test
     @DisplayName("includeMetadata should override its default setting")
-    public void includeMetadataShouldOverrideItsDefaultSetting() {
+    void includeMetadataShouldOverrideItsDefaultSetting() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
                 .includeMetadata()
@@ -88,7 +88,7 @@ public class ReadKeyValuesTest {
 
     @Test
     @DisplayName("seekTo should preserve seek settings")
-    public void seekToShouldPreserveSeekSettings() {
+    void seekToShouldPreserveSeekSettings() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
                 .seekTo(0, 1L)
@@ -102,7 +102,7 @@ public class ReadKeyValuesTest {
 
     @Test
     @DisplayName("with should override the default setting of the given parameter with the given value")
-    public void withShouldOverrideDefaultSetting() {
+    void withShouldOverrideDefaultSetting() {
 
         final ReadKeyValues<String, String> readRequest = ReadKeyValues.from("test")
                 .with(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed")
@@ -113,7 +113,7 @@ public class ReadKeyValuesTest {
 
     @Test
     @DisplayName("withAll should override the default settings of the given parameters with the resp. values")
-    public void withAllShouldOverrideDefaultSettings() {
+    void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
         overrides.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");

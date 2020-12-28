@@ -12,11 +12,11 @@ import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SendKeyValuesTest {
+class SendKeyValuesTest {
 
     @Test
     @DisplayName("should preserve constructor arguments")
-    public void shouldPreserveConstructorArguments() {
+    void shouldPreserveConstructorArguments() {
 
         final Collection<KeyValue<String, String>> records = Collections.singletonList(new KeyValue<>("k", "v"));
         final SendKeyValues<String, String> sendRequest = SendKeyValues.to("test-topic", records).useDefaults();
@@ -28,7 +28,7 @@ public class SendKeyValuesTest {
 
     @Test
     @DisplayName("should use defaults if not overridden")
-    public void shouldUseDefaultsIfNotOverridden() {
+    void shouldUseDefaultsIfNotOverridden() {
 
         final Collection<KeyValue<String, String>> records = Collections.singletonList(new KeyValue<>("k", "v"));
         final SendKeyValues<String, String> sendRequest = SendKeyValues.to("test-topic", records).useDefaults();
@@ -40,7 +40,7 @@ public class SendKeyValuesTest {
 
     @Test
     @DisplayName("with should override the default setting of the given parameter with the given value")
-    public void withShouldOverrideDefaultSetting() {
+    void withShouldOverrideDefaultSetting() {
 
         final Collection<KeyValue<String, Integer>> records = Collections.singletonList(new KeyValue<>("k", 1));
         final SendKeyValues<String, Integer> sendRequest = SendKeyValues.to("test-topic", records)
@@ -53,7 +53,7 @@ public class SendKeyValuesTest {
 
     @Test
     @DisplayName("withAll should override the default settings of the given parameters with the resp. values")
-    public void withAllShouldOverrideDefaultSettings() {
+    void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
         overrides.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class);

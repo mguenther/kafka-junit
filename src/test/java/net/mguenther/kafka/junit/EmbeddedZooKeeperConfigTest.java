@@ -5,18 +5,18 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class EmbeddedZooKeeperConfigTest {
+class EmbeddedZooKeeperConfigTest {
 
     @Test
     @DisplayName("should use a randomly chosen port per default")
-    public void useDefaultsShouldUseRandomPort() {
+    void useDefaultsShouldUseRandomPort() {
         final EmbeddedZooKeeperConfig config = EmbeddedZooKeeperConfig.defaultZooKeeper();
         assertThat(config.getPort()).isEqualTo(EmbeddedZooKeeperConfig.USE_RANDOM_ZOOKEEPER_PORT);
     }
 
     @Test
     @DisplayName("withPort should override the default port")
-    public void withPortShouldOverrideDefaultPort() {
+    void withPortShouldOverrideDefaultPort() {
         final EmbeddedZooKeeperConfig config = EmbeddedZooKeeperConfig
                 .zooKeeper()
                 .withPort(8090)

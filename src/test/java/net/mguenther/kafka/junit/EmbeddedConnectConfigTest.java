@@ -9,11 +9,11 @@ import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class EmbeddedConnectConfigTest {
+class EmbeddedConnectConfigTest {
 
     @Test
     @DisplayName("should use defaults if not explicitly overriden")
-    public void shouldUseDefaultsIfNotOverridden() {
+    void shouldUseDefaultsIfNotOverridden() {
 
         final EmbeddedConnectConfig config = EmbeddedConnectConfig.useDefaults();
         final Properties props = config.getConnectProperties();
@@ -35,7 +35,7 @@ public class EmbeddedConnectConfigTest {
 
     @Test
     @DisplayName("with(param) should override the corresponding default setting")
-    public void withShouldOverrideDefaultSetting() {
+    void withShouldOverrideDefaultSetting() {
 
         final EmbeddedConnectConfig config = EmbeddedConnectConfig
                 .kafkaConnect()
@@ -48,7 +48,7 @@ public class EmbeddedConnectConfigTest {
 
     @Test
     @DisplayName("withAll(params) should override the corresponding default settings")
-    public void withAllShouldOverrideDefaultSettings() {
+    void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
         overrides.put(DistributedConfig.GROUP_ID_CONFIG, "test-group");
@@ -66,7 +66,7 @@ public class EmbeddedConnectConfigTest {
 
     @Test
     @DisplayName("deployConnector should retain the configuration of the connector")
-    public void deployConnectorShouldStoreConnectorConfig() {
+    void deployConnectorShouldStoreConnectorConfig() {
 
         final Properties connectorConfig = new Properties();
         final EmbeddedConnectConfig config = EmbeddedConnectConfig
@@ -80,7 +80,7 @@ public class EmbeddedConnectConfigTest {
 
     @Test
     @DisplayName("deployConnectors should retain all configurations for the given connectors")
-    public void deployConnectorsShouldStoreConnectorConfigs() {
+    void deployConnectorsShouldStoreConnectorConfigs() {
 
         final EmbeddedConnectConfig config = EmbeddedConnectConfig
                 .kafkaConnect()

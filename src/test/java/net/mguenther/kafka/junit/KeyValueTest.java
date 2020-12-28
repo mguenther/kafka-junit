@@ -9,11 +9,11 @@ import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class KeyValueTest {
+class KeyValueTest {
 
     @Test
     @DisplayName("should preserve added headers")
-    public void shouldPreserveAddedHeaders() {
+    void shouldPreserveAddedHeaders() {
 
         final KeyValue<String, String> keyValue = new KeyValue<>("k", "v");
         keyValue.addHeader("headerName", "headerValue", StandardCharsets.UTF_8);
@@ -23,7 +23,7 @@ public class KeyValueTest {
 
     @Test
     @DisplayName("should preserve headers given on construction")
-    public void shouldPreserveHeadersGivenOnConstruction() {
+    void shouldPreserveHeadersGivenOnConstruction() {
 
         final Headers headers = new RecordHeaders();
         headers.add("headerName", "headerValue".getBytes(StandardCharsets.UTF_8));

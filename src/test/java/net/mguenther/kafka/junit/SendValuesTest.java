@@ -10,11 +10,11 @@ import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SendValuesTest {
+class SendValuesTest {
 
     @Test
     @DisplayName("should preserve constructor arguments")
-    public void shouldPreserveConstructorArguments() {
+    void shouldPreserveConstructorArguments() {
 
         final SendValues<String> sendRequest = SendValues.to("test-topic", "a", "b").useDefaults();
 
@@ -26,7 +26,7 @@ public class SendValuesTest {
 
     @Test
     @DisplayName("should use defaults if not overridden")
-    public void shouldUseDefaultsIfNotOverridden() {
+    void shouldUseDefaultsIfNotOverridden() {
 
         final SendValues<String> sendRequest = SendValues.to("test-topic", "a", "b").useDefaults();
         final Properties props = sendRequest.getProducerProps();
@@ -37,7 +37,7 @@ public class SendValuesTest {
 
     @Test
     @DisplayName("with should override the default setting of the given parameter with the given value")
-    public void withShouldOverrideDefaultSetting() {
+    void withShouldOverrideDefaultSetting() {
 
         final SendValues<Integer> sendRequest = SendValues.to("test-topic", 1, 2, 3)
                 .with(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class)
@@ -49,7 +49,7 @@ public class SendValuesTest {
 
     @Test
     @DisplayName("withAll should override the default settings of the given parameters with the resp. values")
-    public void withAllShouldOverrideDefaultSettings() {
+    void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
         overrides.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class);
