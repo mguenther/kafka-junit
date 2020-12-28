@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/mguenther/kafka-junit.svg?branch=master)](https://travis-ci.org/mguenther/kafka-junit.svg) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.mguenther.kafka/kafka-junit/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.mguenther.kafka/kafka-junit)
 
-**Kafka for JUnit** provides JUnit 4.x rule implementations that enables developers to start and stop a complete Kafka cluster comprised of Kafka brokers and distributed Kafka Connect workers from within a JUnit test. It also provides a rich set of convenient accessors to interact with such an embedded Kafka cluster in a lean and non-obtrusive way.
+**Kafka for JUnit** enables developers to start and stop a complete Kafka cluster comprised of Kafka brokers and distributed Kafka Connect workers from within a JUnit test. It also provides a rich set of convenient accessors to interact with such an embedded Kafka cluster in a lean and non-obtrusive way.
 
 Kafka for JUnit can be used to both whitebox-test individual Kafka-based components of your application or to blackbox-test applications that offer an incoming and/or outgoing Kafka-based interface.
 
@@ -10,63 +10,37 @@ Kafka for JUnit can be used to both whitebox-test individual Kafka-based compone
 
 Kafka for JUnit provides the necessary infrastructure to exercise your Kafka-based components against an embeddable Kafka cluster. However, Kafka for JUnit got you covered as well if you are simply interested in using the convenient accessors against Kafka clusters that are already present in your infrastructure. Checkout sections "Working with an embedded Kafka cluster" and "Working with an external Kafka cluster" in the [user's guide](https://mguenther.github.io/kafka-junit) for more information.
 
-### Using JUnit 4 rules
-
 ```java
-public class KafkaTest {
-
-  @Rule
-  public EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig());
-
-  @Test
-  public void shouldWaitForRecordsToBePublished() throws Exception {
-    kafka.send(to("test-topic", "a", "b", "c"));
-    kafka.observe(on("test-topic", 4));
-  }
-}
-```
-
-The same applies for `@ClassRule`.
-
-### What about JUnit 5?
-
-You can use Kafka for JUnit with JUnit 5 of course. However, with its rule-based implementations, Kafka for JUnit is currently tailored for ease of use with JUnit 4. It implements no JUnit Jupiter extension for JUnit 5. There is an issue for that (cf. link:https://github.com/mguenther/kafka-junit/issues/4[ISSUE-004]), so the development wrt. a JUnit Jupiter extension is planned for a future release. PRs are welcome, though!
-As Junit 5 does not support rules, one approach is to start your cluster in a `@BeforeEach` method and it stop in an `@AfterEach` method. 
-
-```java
-public class JUnit5KafkaTest {
+class KafkaTest {
 
     private EmbeddedKafkaCluster kafka;
 
     @BeforeEach
-    public void setupKafka() {
+    void setupKafka() {
         kafka = provisionWith(defaultClusterConfig());
         kafka.start();
     }
 
     @AfterEach
-    public void tearDownKafka() {
+    void tearDownKafka() {
         kafka.stop();
     }
 
     @Test
-    public void shouldWaitForRecordsToBePublished() throws Exception {
+    void shouldWaitForRecordsToBePublished() throws Exception {
         kafka.send(to("test-topic", "a", "b", "c"));
         kafka.observe(on("test-topic", 4));
     }
-
 }
 ```
 
-### Alternative ways
-
-You do not have to use the JUnit 4 rules if you are not comfortable with them. `EmbeddedKafkaCluster` implements the `AutoCloseable` interface, so it is easy to manage it inside your tests yourself.
+Since `EmbeddedKafkaCluster` implements the `AutoCloseable` interface, you can achieve the same behavior using a `try-with-resources`-construct.
 
 ```java
-public class KafkaTest {
+class KafkaTest {
 
   @Test
-  public void shouldWaitForRecordsToBePublished() throws Exception {
+  void shouldWaitForRecordsToBePublished() throws Exception {
 
     try (EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig())) {
       kafka.start();
