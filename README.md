@@ -11,6 +11,13 @@ Kafka for JUnit can be used to both whitebox-test individual Kafka-based compone
 Kafka for JUnit provides the necessary infrastructure to exercise your Kafka-based components against an embeddable Kafka cluster. However, Kafka for JUnit got you covered as well if you are simply interested in using the convenient accessors against Kafka clusters that are already present in your infrastructure. Checkout sections *Working with an embedded Kafka cluster* and *Working with an external Kafka cluster* in the [user's guide](https://mguenther.github.io/kafka-junit) for more information.
 
 ```java
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
+import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.defaultClusterConfig;
+
 class KafkaTest {
 
     private EmbeddedKafkaCluster kafka;
@@ -34,9 +41,16 @@ class KafkaTest {
 }
 ```
 
+This starts an embedded Kafka cluster and submits three records to the topic named `test-topic`. The call to `kafka.observe(on("test-topic", 3))` watches that same topic for a configurable amount of time and checks if it observes the previously submitted records. If it doesn't, Kafka for JUnit raises an `AssertionError` which would fail the test. Surely, [Kafka for JUnit provides lots of more ways to interact with a Kafka cluster]((https://mguenther.github.io/kafka-junit)).
+
 Since `EmbeddedKafkaCluster` implements the `AutoCloseable` interface, you can achieve the same behavior using a `try-with-resources`-construct.
 
 ```java
+import org.junit.jupiter.api.Test;
+
+import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
+import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.defaultClusterConfig;
+
 class KafkaTest {
 
   @Test
