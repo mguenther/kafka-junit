@@ -53,8 +53,6 @@ class KafkaTest {
 }
 ----
 
-Of course, you can also test against existing clusters using `ExternalKafkaCluster` instead of `EmbeddableKafkaCluster`. See section <<section:external-kafka-cluster, Working with an external Kafka cluster>> for more information.
-
 === Supported versions of Apache Kafka
 
 |===

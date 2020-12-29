@@ -8,7 +8,7 @@ Kafka for JUnit can be used to both whitebox-test individual Kafka-based compone
 
 ## Using Kafka for JUnit in your tests
 
-Kafka for JUnit provides the necessary infrastructure to exercise your Kafka-based components against an embeddable Kafka cluster. However, Kafka for JUnit got you covered as well if you are simply interested in using the convenient accessors against Kafka clusters that are already present in your infrastructure. Checkout sections "Working with an embedded Kafka cluster" and "Working with an external Kafka cluster" in the [user's guide](https://mguenther.github.io/kafka-junit) for more information.
+Kafka for JUnit provides the necessary infrastructure to exercise your Kafka-based components against an embeddable Kafka cluster. However, Kafka for JUnit got you covered as well if you are simply interested in using the convenient accessors against Kafka clusters that are already present in your infrastructure. Checkout sections *Working with an embedded Kafka cluster* and *Working with an external Kafka cluster* in the [user's guide](https://mguenther.github.io/kafka-junit) for more information.
 
 ```java
 class KafkaTest {
@@ -50,8 +50,6 @@ class KafkaTest {
   }
 }
 ```
-
-Of course, you can also test against existing clusters using `ExternalKafkaCluster` instead of `EmbeddableKafkaCluster`. See section *Working with an external Kafka cluster* of the [user's guide](https://mguenther.github.io/kafka-junit) for more information.
 
 ### Supported versions of Apache Kafka
 
