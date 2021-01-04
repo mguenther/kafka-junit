@@ -16,8 +16,8 @@
 <h1>User Guide to Kafka for JUnit</h1>
 <div class="details">
 <span id="author" class="author">Markus Günther</span><br>
-<span id="revnumber">version 2.7.0,</span>
-<span id="revdate">2021-01-04</span>
+<span id="revnumber">version 2.4.0,</span>
+<span id="revdate">2020-02-07</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -25,7 +25,10 @@
 <li><a href="#section:introduction">1. Introduction</a></li>
 <li><a href="#_using_kafka_for_junit_in_your_tests">2. Using Kafka for JUnit in your tests</a>
 <ul class="sectlevel2">
-<li><a href="#_supported_versions_of_apache_kafka">2.1. Supported versions of Apache Kafka</a></li>
+<li><a href="#_using_junit_4_rules">2.1. Using JUnit 4 rules</a></li>
+<li><a href="#_what_about_junit_5">2.2. What about JUnit 5?</a></li>
+<li><a href="#_alternative_ways">2.3. Alternative ways</a></li>
+<li><a href="#_supported_versions_of_apache_kafka">2.4. Supported versions of Apache Kafka</a></li>
 </ul>
 </li>
 <li><a href="#section:embedded-kafka-cluster">3. Working with an embedded Kafka cluster</a>
@@ -81,7 +84,7 @@
 <h2 id="section:introduction">1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Kafka for JUnit enables developers to start and stop a complete Kafka cluster comprised of Kafka brokers and distributed Kafka Connect workers from within a JUnit test. It also provides a rich set of convenient accessors to interact with such an embedded Kafka cluster in a lean and non-obtrusive way.</p>
+<p>Kafka for JUnit provides JUnit 4.x rule implementations that enables developers to start and stop a complete Kafka cluster comprised of Kafka brokers and distributed Kafka Connect workers from within a JUnit test. It also provides a rich set of convenient accessors to interact with such an embedded Kafka cluster in a lean and non-obtrusive way.</p>
 </div>
 <div class="paragraph">
 <p>Kafka for JUnit can be used to both whitebox-test individual Kafka-based components of your application or to blackbox-test applications that offer an incoming and/or outgoing Kafka-based interface.</p>
@@ -94,67 +97,87 @@
 <div class="paragraph">
 <p>Kafka for JUnit provides the necessary infrastructure to exercise your Kafka-based components against an embeddable Kafka cluster (cf. <a href="#section:embedded-kafka-cluster">Working with an embedded Kafka cluster</a>). However, Kafka for JUnit got you covered as well if you are simply interested in using the convenient accessors against Kafka clusters that are already present in your infrastructure (cf. section <a href="#section:external-kafka-cluster">Working with an external Kafka cluster</a>).</p>
 </div>
+<div class="sect2">
+<h3 id="_using_junit_4_rules">2.1. Using JUnit 4 rules</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+<pre class="highlight"><code class="language-java" data-lang="java">public class KafkaTest {
 
-import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.defaultClusterConfig;
+  @Rule
+  public EmbeddedKafkaCluster cluster = provisionWith(useDefaults());
 
-class KafkaTest {
-
-    private EmbeddedKafkaCluster kafka;
-
-    @BeforeEach
-    void setupKafka() {
-        kafka = provisionWith(defaultClusterConfig());
-        kafka.start();
-    }
-
-    @AfterEach
-    void tearDownKafka() {
-        kafka.stop();
-    }
-
-    @Test
-    void shouldWaitForRecordsToBePublished() throws Exception {
-        kafka.send(to("test-topic", "a", "b", "c"));
-        kafka.observe(on("test-topic", 3));
-    }
+  @Test
+  public void shouldWaitForRecordsToBePublished() throws Exception {
+    cluster.send(to("test-topic", "a", "b", "c").useDefaults());
+    cluster.observe(on("test-topic", 4).useDefaults());
+  }
 }</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>This starts an embedded Kafka cluster and submits three records to the topic named <code>test-topic</code>. The call to <code>kafka.observe(on("test-topic", 3))</code> watches that same topic for a configurable amount of time and checks if it observes the previously submitted records. If it doesn&#8217;t, Kafka for JUnit raises an <code>AssertionError</code> which would fail the test. Surely, Kafka for JUnit provides lots of more ways to interact with a Kafka cluster.</p>
+<p>The same applies for <code>@ClassRule</code>.</p>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_what_about_junit_5">2.2. What about JUnit 5?</h3>
 <div class="paragraph">
-<p>Since <code>EmbeddedKafkaCluster</code> implements the <code>AutoCloseable</code> interface, you can achieve the same behavior using a <code>try-with-resources</code>-construct.</p>
+<p>You can use Kafka for JUnit with JUnit 5 of course. However, with its rule-based implementations, Kafka for JUnit is currently tailored for ease of use with JUnit 4. It implements no JUnit Jupiter extension for JUnit 5. There is an issue for that (cf. <a href="https://github.com/mguenther/kafka-junit/issues/4">ISSUE-004</a>), so the development wrt. a JUnit Jupiter extension is planned for a future release. PRs are welcome, though!
+As Junit 5 does not support rules, one approach is to start your cluster in a <code>@BeforeEach</code> method and it stop in an <code>@AfterEach</code> method.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">import org.junit.jupiter.api.Test;
+<pre class="highlight"><code class="language-java" data-lang="java">public class JUnit5KafkaTest {
 
-import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.defaultClusterConfig;
+    private EmbeddedKafkaCluster cluster;
 
-class KafkaTest {
+    @BeforeEach
+    public void setupKafka() {
+        cluster = provisionWith(useDefaults());
+        cluster.start();
+    }
+
+    @AfterEach
+    public void tearDownKafka() {
+        cluster.stop();
+    }
+
+    @Test
+    public void shouldWaitForRecordsToBePublished() throws Exception {
+        cluster.send(to("test-topic", "a", "b", "c").useDefaults());
+        cluster.observe(on("test-topic", 4).useDefaults());
+    }
+
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_alternative_ways">2.3. Alternative ways</h3>
+<div class="paragraph">
+<p>You do not have to use the JUnit 4 rules if you are not comfortable with them. <code>EmbeddedKafkaCluster</code> implements the <code>AutoCloseable</code> interface, so it is easy to manage it inside your tests yourself.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public class KafkaTest {
 
   @Test
-  void shouldWaitForRecordsToBePublished() throws Exception {
+  public void shouldWaitForRecordsToBePublished() throws Exception {
 
-    try (EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig())) {
-      kafka.start();
-      kafka.send(to("test-topic", "a", "b", "c"));
-      kafka.observe(on("test-topic", 3));
+    try (EmbeddedKafkaCluster cluster = provisionWith(useDefaults())) {
+      cluster.start();
+      cluster.send(to("test-topic", "a", "b", "c").useDefaults());
+      cluster.observe(on("test-topic", 3).useDefaults());
     }
   }
 }</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>Of course, you can also test against existing clusters using <code>ExternalKafkaCluster</code> instead of <code>EmbeddableKafkaCluster</code>. See section <a href="#section:external-kafka-cluster">Working with an external Kafka cluster</a> for more information.</p>
+</div>
+</div>
 <div class="sect2">
-<h3 id="_supported_versions_of_apache_kafka">2.1. Supported versions of Apache Kafka</h3>
+<h3 id="_supported_versions_of_apache_kafka">2.4. Supported versions of Apache Kafka</h3>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
 <col style="width: 50%;">
@@ -203,18 +226,6 @@ class KafkaTest {
 <td class="tableblock halign-left valign-top"><p class="tableblock">2.4.x</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 2.4.0</p></td>
 </tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">2.5.x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 2.5.1</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">2.6.x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 2.6.0</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">2.7.x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Apache Kafka 2.7.0</p></td>
-</tr>
 </tbody>
 </table>
 </div>
@@ -231,26 +242,31 @@ class KafkaTest {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+<pre class="highlight"><code class="language-java" data-lang="java">import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
+import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
 
-import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.defaultClusterConfig;
+public class MyTest {
 
-class KafkaTest {
+    @Rule
+    public EmbeddedKafkaCluster cluster = provisionWith(useDefaults());
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>EmbeddedKafkaCluster</code> is a JUnit rule (it is derived from <code>ExternalResource</code> to be precise). The <code>@Rule</code> annotation ties the lifecycle to the execution of the test method. The <code>@ClassRule</code> annotation ties the lifecycle of <code>EmbeddedKafkaCluster</code> to the execution of the test class. In both cases, all acquired resources are released automatically once the resp. lifecycle terminates.</p>
+</div>
+<div class="paragraph">
+<p>The example underneath demonstrates how to use <code>@ClassRule</code> instead of <code>@Rule</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
+import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
 
-    private EmbeddedKafkaCluster kafka;
+public class MyTest {
 
-    @BeforeEach
-    void setupKafka() {
-        kafka = provisionWith(defaultClusterConfig());
-        kafka.start();
-    }
-
-    @AfterEach
-    void tearDownKafka() {
-        kafka.stop();
-    }
+    @ClassRule
+    public static EmbeddedKafkaCluster cluster = provisionWith(useDefaults());
 }</code></pre>
 </div>
 </div>
@@ -259,9 +275,18 @@ class KafkaTest {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">EmbeddedKafkaCluster kafka = provisionWith(newClusterConfig()
-    .configure(kafkaConnect()
-    .with(KafkaConfig$.MODULE$.NumPartitionsProp(), "5")));</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
+
+public class MyTest {
+    @Rule
+    public EmbeddedKafkaCluster cluster = provisionWith(EmbeddedKafkaClusterConfig
+            .create()
+            .provisionWith(EmbeddedKafkaConfig
+                .create()
+                .with(KafkaConfig$.MODULE$.NumPartitionsProp(), "5")
+                .build())
+            .build());
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -272,43 +297,25 @@ class KafkaTest {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">EmbeddedKafkaCluster kafka = provisionWith(newClusterConfig()
-    .configure(brokers()
-        .withNumberOfBrokers(3)
-        .with(KafkaConfig$.MODULE$.NumPartitionsProp(), "5")
-        .with(KafkaConfig$.MODULE$.DefaultReplicationFactorProp(), "3")
-        .with(KafkaConfig$.MODULE$.MinInSyncReplicasProp(), "2")
-        .with(KafkaConfig$.MODULE$.OffsetsTopicReplicationFactorProp(), "3")
-        .with(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp(), "3")
-        .with(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp(), "2")));</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">public class MultipleBrokersTest {
+
+    @Rule
+    public EmbeddedKafkaCluster cluster = provisionWith(EmbeddedKafkaClusterConfig.create()
+            .provisionWith(EmbeddedKafkaConfig.create()
+                .withNumberOfBrokers(3)
+                .with(KafkaConfig$.MODULE$.NumPartitionsProp(), "5")
+                .with(KafkaConfig$.MODULE$.DefaultReplicationFactorProp(), "3")
+                .with(KafkaConfig$.MODULE$.MinInSyncReplicasProp(), "2")
+                .with(KafkaConfig$.MODULE$.OffsetsTopicReplicationFactorProp(), "3")
+                .with(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp(), "3")
+                .with(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp(), "2")
+                .build())
+            .build());
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>Using this configuration, we end up with a total of three brokers that form an embedded Kafka cluster, while the defaults for topic partitions and replicas have been adjusted to be consistent with the size of the cluster.</p>
-</div>
-<div class="paragraph">
-<p>Of course, you can also use the <code>try-with-resources</code>-pattern to fire up an embedded cluster. Have a look at the following test setup.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">import org.junit.jupiter.api.Test;
-
-import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.defaultClusterConfig;
-
-class KafkaTest {
-
-  @Test
-  void shouldWaitForRecordsToBePublished() throws Exception {
-
-    try (EmbeddedKafkaCluster kafka = provisionWith(defaultClusterConfig())) {
-      kafka.start();
-      kafka.send(to("test-topic", "a", "b", "c"));
-      kafka.observe(on("test-topic", 3));
-    }
-  }
-}</code></pre>
-</div>
 </div>
 <div class="paragraph">
 <p>See sections on <a href="#section:producing-records">Producing records</a>, <a href="#section:consuming-records">Consuming records</a> and <a href="#section:managing-topics">Managing topics</a> for further reference on how to interact with the cluster.</p>
@@ -353,13 +360,14 @@ If you do use this feature of Kafka for JUnit, then please give the embedded clu
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">kafka.createTopic(TopicConfig.withName("test-topic")
+<pre class="highlight"><code class="language-java" data-lang="java">cluster.createTopic(TopicConfig.forTopic("test-topic")
     .withNumberOfPartitions(5)
-    .withNumberOfReplicas(3));
+    .withNumberOfReplicas(3)
+    .build());
 
 delay(5);
 
-Set&lt;Integer&gt; leaders = kafka.fetchLeaderAndIsr("test-topic")
+Set&lt;Integer&gt; leaders = cluster.fetchLeaderAndIsr("test-topic")
     .values()
     .stream()
     .map(LeaderAndIsr::getLeader)
@@ -369,11 +377,11 @@ assertThat(leaders.contains(1)).isTrue();
 assertThat(leaders.contains(2)).isTrue();
 assertThat(leaders.contains(3)).isTrue();
 
-kafka.disconnect(1);
+cluster.disconnect(1);
 
 delay(5);
 
-Set&lt;Integer&gt; leadersAfterDisconnect = kafka.fetchLeaderAndIsr("test-topic")
+Set&lt;Integer&gt; leadersAfterDisconnect = cluster.fetchLeaderAndIsr("test-topic")
     .values()
     .stream()
     .map(LeaderAndIsr::getLeader)
@@ -383,11 +391,11 @@ assertThat(leadersAfterDisconnect.contains(1)).isFalse();
 assertThat(leadersAfterDisconnect.contains(2)).isTrue();
 assertThat(leadersAfterDisconnect.contains(3)).isTrue();
 
-kafka.connect(1);
+cluster.connect(1);
 
 delay(5);
 
-Set&lt;Integer&gt; leadersAfterReconnect = kafka.fetchLeaderAndIsr("test-topic")
+Set&lt;Integer&gt; leadersAfterReconnect = cluster.fetchLeaderAndIsr("test-topic")
     .values()
     .stream()
     .map(LeaderAndIsr::getLeader)
@@ -420,10 +428,11 @@ If you do use this feature of Kafka for JUnit, then please give the embedded clu
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">// Create a topic and configure the number of replicas as well as the size of the ISR
 
-kafka.createTopic(TopicConfig.withName("test-topic")
+cluster.createTopic(TopicConfig.forTopic("test-topic")
     .withNumberOfPartitions(5)
     .withNumberOfReplicas(3)
-    .with("min.insync.replicas", "2"));
+    .with("min.insync.replicas", "2")
+    .build());
 
 // Wait a bit to give the cluster a chance to properly assign topic-partitions to leaders
 
@@ -431,13 +440,13 @@ delay(5);
 
 // Disconnect until the remaining number of brokers fall below the minimum ISR size
 
-kafka.disconnectUntilIsrFallsBelowMinimumSize("test-topic");
+cluster.disconnectUntilIsrFallsBelowMinimumSize("test-topic");
 
 delay(5);
 
 // Submitting records to this topic will yield a NotEnoughReplicasException
 
-kafka.send(SendValues.to("test-topic", "A"));</code></pre>
+cluster.send(SendValues.to("test-topic", "A").useDefaults());</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -451,20 +460,21 @@ kafka.send(SendValues.to("test-topic", "A"));</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">kafka.createTopic(TopicConfig.withName("test-topic")
+<pre class="highlight"><code class="language-java" data-lang="java">cluster.createTopic(TopicConfig.forTopic("test-topic")
     .withNumberOfPartitions(5)
     .withNumberOfReplicas(3)
-    .with("min.insync.replicas", "2"));
+    .with("min.insync.replicas", "2")
+    .build());
 
 delay(5);
 
-Set&lt;Integer&gt; disconnectedBrokers = kafka.disconnectUntilIsrFallsBelowMinimumSize("test-topic");
+Set&lt;Integer&gt; disconnectedBrokers = cluster.disconnectUntilIsrFallsBelowMinimumSize("test-topic");
 
 delay(5);
 
 // Do some testing, trigger some operations, observe the behavior of your application
 
-kafka.connect(disconnectedBrokers);
+cluster.connect(disconnectedBrokers);
 
 // Give the cluster some time to assign leaders and reestablish the ISR
 
@@ -491,23 +501,19 @@ delay(5);
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Testcontainers
-class ExternalKafkaClusterTest {
+<pre class="highlight"><code class="language-java" data-lang="java">public class MyTest {
 
     // This is not part of Kafka for JUnit, but a sub-module provided
     // by Testcontainers (org.testcontainers:kafka)
-    @Container
-    private KafkaContainer kafkaContainer = new KafkaContainer();
+    @Rule
+    public KafkaContainer kafkaContainer = new KafkaContainer();
 
     @Test
-    @DisplayName("should be able to observe records written to an external Kafka cluster")
-    void externalKafkaClusterShouldWorkWithExternalResources() throws Exception {
+    public void externalKafkaClusterDemo() throws Exception {
 
-        ExternalKafkaCluster kafka = ExternalKafkaCluster.at(kafkaContainer.getBootstrapServers());
+        ExternalKafkaCluster cluster = ExternalKafkaCluster.at(kafkaContainer.getBootstrapServers());
 
         // use the accessors that cluster provides to interact with the Kafka container
-
-        [...]
     }
 }</code></pre>
 </div>
@@ -535,7 +541,7 @@ class ExternalKafkaClusterTest {
 </div>
 </div>
 <div class="paragraph">
-<p>Calling <code>send</code> using an instance of <code>SendValues</code> does just that: It produces non-keyed Kafka records that only feature a value. The key of a record that has been produced this way is simply <code>null</code>.  If you wish to associate a key, you can do so by passing an instance of <code>SendKeyValues</code> to the <code>send</code> method. Both <code>SendValues</code> and <code>SendKeyValues</code> use the <a href="https://en.wikipedia.org/wiki/Builder_pattern">Builder pattern</a> so that creating the resp. send parameterization is easy and does not pollute your test code with any kind of boilerplate.</p>
+<p>Calling <code>send</code> using an instance of <code>SendValues</code> does just that: It produces un-keyed Kafka records that only feature a value. The key of a record that has been produced this way is simply <code>null</code>.  If you wish to associate a key, you can do so by passing an instance of <code>SendKeyValues</code> to the <code>send</code> method. Both <code>SendValues</code> and <code>SendKeyValues</code> use the <a href="https://en.wikipedia.org/wiki/Builder_pattern">Builder pattern</a> so that creating the resp. send parameterization is easy and does not pollute your test code with any kind of boilerplate.</p>
 </div>
 <div class="paragraph">
 <p>Implementations of the <code>RecordProducer</code> interface use the high-level producer API that comes with Apache Kafka. Hence, the underlying producer is a <code>KafkaProducer</code>. This <code>KafkaProducer</code> is fully parameterizable via the builders of both <code>SendValues</code> and <code>SendKeyValues</code>.</p>
@@ -550,7 +556,8 @@ class ExternalKafkaClusterTest {
 <h3 id="_sending_non_keyed_values_using_defaults">5.1. Sending non-keyed values using defaults</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">kafka.send(SendValues.to("test-topic", "a", "b", "c"));</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">SendValues&lt;String&gt; sendRequest = SendValues.to("test-topic", "a", "b", "c").useDefaults();
+cluster.send(sendRequest);</code></pre>
 </div>
 </div>
 </div>
@@ -558,9 +565,12 @@ class ExternalKafkaClusterTest {
 <h3 id="_sending_non_keyed_values_using_overrides">5.2. Sending non-keyed values using overrides</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">kafka.send(SendValues.to("test-topic", "a", "b", "c")
-    .with(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
-    .with(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "1"));</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">SendValues&lt;String&gt; sendRequest = SendValues.to("test-topic", "a", "b", "c")
+        .with(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
+        .with(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "1")
+        .build();
+
+cluster.send(sendRequest);</code></pre>
 </div>
 </div>
 </div>
@@ -568,9 +578,11 @@ class ExternalKafkaClusterTest {
 <h3 id="_sending_non_keyed_values_transactionally">5.3. Sending non-keyed values transactionally</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">kafka
-    .send(SendValuesTransactional
-    .inTransaction("test-topic", Arrays.asList("a", "b", "c")));</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">SendValuesTransactional&lt;String&gt; sendRequest = SendValuesTransactional
+        .inTransaction("test-topic", Arrays.asList("a", "b", "c"))
+        .useDefaults()
+
+cluster.send(sendRequest);</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -587,7 +599,7 @@ The API of Kafka for JUnit has been designed with great care and readability in 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">kafka.send(inTransaction("test-topic", Arrays.asList("a", "b", "c")));</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">cluster.send(inTransaction("test-topic", Arrays.asList("a", "b", "c")).useDefaults());</code></pre>
 </div>
 </div>
 </div>
@@ -601,7 +613,9 @@ records.add(new KeyValue&lt;&gt;("aggregate", "a"));
 records.add(new KeyValue&lt;&gt;("aggregate", "b"));
 records.add(new KeyValue&lt;&gt;("aggregate", "c"));
 
-kafka.send(SendKeyValues.to("test-topic", records));</code></pre>
+SendKeyValues&lt;String, String&gt; sendRequest = SendKeyValues.to("test-topic", records).useDefaults();
+
+cluster.send(sendRequest);</code></pre>
 </div>
 </div>
 </div>
@@ -615,9 +629,12 @@ records.add(new KeyValue&lt;&gt;("aggregate", "a"));
 records.add(new KeyValue&lt;&gt;("aggregate", "b"));
 records.add(new KeyValue&lt;&gt;("aggregate", "c"));
 
-kafka.send(SendKeyValues.to("test-topic", records)
-    .with(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
-    .with(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "1"));</code></pre>
+SendKeyValues&lt;String, String&gt; sendRequest = SendKeyValues.to("test-topic", records)
+        .with(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
+        .with(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "1")
+        .build();
+
+cluster.send(sendRequest);</code></pre>
 </div>
 </div>
 </div>
@@ -631,7 +648,7 @@ records.add(new KeyValue&lt;&gt;("aggregate", "a"));
 records.add(new KeyValue&lt;&gt;("aggregate", "b"));
 records.add(new KeyValue&lt;&gt;("aggregate", "c"));
 
-kafka.send(inTransaction("test-topic", records));</code></pre>
+cluster.send(inTransaction("test-topic", records).useDefaults());</code></pre>
 </div>
 </div>
 </div>
@@ -639,9 +656,12 @@ kafka.send(inTransaction("test-topic", records));</code></pre>
 <h3 id="_sending_records_or_values_transactionally_to_multiple_topics">5.7. Sending records or values transactionally to multiple topics</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">kafka.send(SendValuesTransactional
-    .inTransaction("test-topic-1", Arrays.asList("a", "b"))
-    .inTransaction("test-topic-2", Arrays.asList("c", "d")));</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">SendValuesTransactional&lt;String&gt; sendRequest = SendValuesTransactional
+        .inTransaction("test-topic-1", Arrays.asList("a", "b"))
+        .inTransaction("test-topic-2", Arrays.asList("c", "d"))
+        .useDefaults();
+
+cluster.send(sendRequest);</code></pre>
 </div>
 </div>
 </div>
@@ -649,9 +669,12 @@ kafka.send(inTransaction("test-topic", records));</code></pre>
 <h3 id="_failing_a_transaction_on_purpose">5.8. Failing a transaction on purpose</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">kafka.send(SendValuesTransactional
-    .inTransaction("test-topic", Arrays.asList("a", "b"))
-    .failTransaction());</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">SendValuesTransactional&lt;String&gt; sendRequest = SendValuesTransactional
+        .inTransaction("test-topic", Arrays.asList("a", "b"))
+        .failTransaction()
+        .build();
+
+cluster.send(sendRequest);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -677,8 +700,11 @@ This works for <code>SendKeyValuesTransactional</code> as well.
 <pre class="highlight"><code class="language-java" data-lang="java">KeyValue&lt;String, String&gt; record = new KeyValue&lt;&gt;("a", "b");
 record.addHeader("client", "kafka-junit-test".getBytes("utf-8"));
 
-kafka.send(SendKeyValues
-    .to("test-topic", Collections.singletonList(record)));</code></pre>
+SendKeyValues&lt;String, String&gt; sendRequest = SendKeyValues
+        .to("test-topic", Collections.singletonList(record))
+        .useDefaults();
+
+cluster.send(sendRequest);</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -714,7 +740,7 @@ You can also pre-construct an instance of <code>Headers</code> and pass it along
 </div>
 </div>
 <div class="paragraph">
-<p>Implementations of the <code>RecordConsumer</code> interface use the high-level consumer API that comes with Apache Kafka. Hence, the underlying consumer is a <code>KafkaConsumer</code>. This <code>KafkaConsumer</code> is fully parameterizable via both <code>ReadKeyValues</code> and <code>ObserveKeyValues</code> by means of the provided builders.</p>
+<p>Implementations of the <code>RecordConsumer</code> interface use the high-level consumer API that comes with Apache Kafka. Hence, the underlying consumer is a <code>KafkaConsumer</code>. This <code>KafkaConsumer</code> is fully parameterizable via both <code>ReadKeyValues</code> and <code>ObserveKeyValues</code> by means of <code>kafka.consumer.ConsumerConfig</code>.</p>
 </div>
 <div class="paragraph">
 <p>All operations are executed <strong>synchronously</strong>.</p>
@@ -726,7 +752,9 @@ You can also pre-construct an instance of <code>Headers</code> and pass it along
 <h3 id="_consuming_values_using_defaults">6.1. Consuming values using defaults</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">List&lt;String&gt; values = kafka.readValues(ReadKeyValues.from("test-topic"));</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">ReadKeyValues&lt;String, String&gt; readRequest = ReadKeyValues.from("test-topic").useDefaults();
+
+List&lt;String&gt; values = cluster.readValues(readRequest);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -737,7 +765,9 @@ You can also pre-construct an instance of <code>Headers</code> and pass it along
 <h3 id="_consuming_key_value_based_records_using_defaults">6.2. Consuming key-value based records using defaults</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">List&lt;KeyValue&lt;String, String&gt;&gt; consumedRecords = kafka.read(ReadKeyValues.from("test-topic"));</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">ReadKeyValues&lt;String, String&gt; readRequest = ReadKeyValues.from("test-topic").useDefaults();
+
+List&lt;KeyValue&lt;String, String&gt;&gt; consumedRecords = cluster.read(readRequest);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -748,9 +778,11 @@ You can also pre-construct an instance of <code>Headers</code> and pass it along
 <h3 id="_consuming_key_value_based_records_using_overrides">6.3. Consuming key-value based records using overrides</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">List&lt;KeyValue&lt;String Long&gt;&gt; consumedRecords = kafka.read(ReadKeyValues
-    .from("test-topic-value-types", Long.class)
-    .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class));</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">ReadKeyValues&lt;String, Long&gt; readRequest = ReadKeyValues.from("test-topic-value-types", Long.class)
+        .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class)
+        .build();
+
+List&lt;KeyValue&lt;String, Long&gt;&gt; consumedRecords = cluster.read(readRequest);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -761,7 +793,7 @@ You can also pre-construct an instance of <code>Headers</code> and pass it along
 <h3 id="_working_with_attached_headers">6.4. Working with attached headers</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">Headers headersOfFirstRecord = kafka.read(ReadKeyValues.from("test-topic"))
+<pre class="highlight"><code class="language-java" data-lang="java">Headers headersOfFirstRecord = cluster.read(ReadKeyValues.from("test-topic").useDefaults())
         .stream()
         .findFirst()
         .map(KeyValue::getHeaders)
@@ -776,9 +808,11 @@ You can also pre-construct an instance of <code>Headers</code> and pass it along
 <h3 id="_consuming_values_or_records_transactionally">6.5. Consuming values or records transactionally</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">List&lt;String&gt; consumedValues = kafka.readValues(ReadKeyValues
-    .from("test-topic")
-    .with(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed"));</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">ReadKeyValues&lt;String, String&gt; readRequest = ReadKeyValues.from("test-topic")
+    .with(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed")
+    .build();
+
+List&lt;String&gt; consumedValues = cluster.readValues(readRequest);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -789,7 +823,9 @@ You can also pre-construct an instance of <code>Headers</code> and pass it along
 <h3 id="_observing_a_topic_until_code_n_code_values_have_been_consumed">6.6. Observing a topic until <code>N</code> values have been consumed</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">List&lt;String&gt; observedValues = kafka.observeValues(ObserveKeyValues.on("test-topic", 3));</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">ObserveKeyValues&lt;String, String&gt; observeRequest = ObserveKeyValues.on("test-topic", 3).useDefaults();
+
+List&lt;String&gt; observedValues = cluster.observeValues(observeRequest);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -803,7 +839,7 @@ You can also pre-construct an instance of <code>Headers</code> and pass it along
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">kafka.observeValues(ObserveKeyValues.on("test-topic", 3));</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">cluster.observeValues(observeRequest);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -817,7 +853,9 @@ You can also pre-construct an instance of <code>Headers</code> and pass it along
 <h3 id="_observing_a_topic_until_code_n_code_records_have_been_consumed">6.7. Observing a topic until <code>N</code> records have been consumed</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">List&lt;KeyValue&lt;String, String&gt;&gt; observedValues = kafka.observe(ObserveKeyValues.on("test-topic", 3));</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">ObserveKeyValues&lt;String, String&gt; observeRequest = ObserveKeyValues.on("test-topic", 3).useDefaults();
+
+List&lt;KeyValue&lt;String, String&gt;&gt; observedValues = cluster.observe(observeRequest);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -830,10 +868,12 @@ You can also pre-construct an instance of <code>Headers</code> and pass it along
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">Predicate&lt;String&gt; keyFilter = k -&gt; Integer.parseInt(k) % 2 == 0;
 
-List&lt;KeyValue&lt;String, Integer&gt;&gt; consumedRecords = kafka.read(ReadKeyValues
-    .from("test-topic", Integer.class)
-    .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
-    .filterOnKeys(keyFilter));</code></pre>
+ReadKeyValues&lt;String, Integer&gt; readRequest = ReadKeyValues.from("test-topic", Integer.class)
+        .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
+        .filterOnKeys(keyFilter)
+        .build();
+
+List&lt;KeyValue&lt;String, Integer&gt;&gt; consumedRecords = cluster.read(readRequest);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -873,10 +913,12 @@ Combining key, value and header filters is possible. Please note that in this ca
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">Predicate&lt;Integer&gt; valueFilter = v -&gt; v &gt; 2;
 
-List&lt;KeyValue&lt;String, Integer&gt;&gt; consumedRecords = kafka.read(ReadKeyValues
-    .from("test-topic", Integer.class)
-    .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
-    .filterOnValues(valueFilter));</code></pre>
+ReadKeyValues&lt;String, Integer&gt; readRequest = ReadKeyValues.from("test-topic", Integer.class)
+        .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
+        .filterOnValues(valueFilter)
+        .build();
+
+List&lt;KeyValue&lt;String, Integer&gt;&gt; consumedRecords = cluster.read(readRequest);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -916,10 +958,12 @@ Combining key, value and header filters is possible. Please note that in this ca
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">Predicate&lt;Headers&gt; headersFilter = headers -&gt; new String(headers.lastHeader("aggregate").value()).equals("a");
 
-List&lt;KeyValue&lt;String, Integer&gt;&gt; consumedRecords = kafka.read(ReadKeyValues
-    .from("test-topic-header-filter", Integer.class)
-    .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
-    .filterOnHeaders(headersFilter));</code></pre>
+ReadKeyValues&lt;String, Integer&gt; readRequest = ReadKeyValues.from("test-topic-header-filter", Integer.class)
+        .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class)
+        .filterOnHeaders(headersFilter)
+        .build();
+
+List&lt;KeyValue&lt;String, Integer&gt;&gt; consumedRecords = cluster.read(readRequest);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -960,9 +1004,11 @@ Combining key, value and header filters is possible. Please note that in this ca
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">List&lt;KeyValue&lt;String, String&gt;&gt; records = kafka.observe(ObserveKeyValues
-    .on("test-topic", 3)
-    .includeMetadata());</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">ObserveKeyValues&lt;String, String&gt; observeRequest = ObserveKeyValues.on("test-topic", 3)
+        .includeMetadata()
+        .build();
+
+List&lt;KeyValue&lt;String, String&gt;&gt; records = cluster.observe(observeRequest);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -976,9 +1022,9 @@ Combining key, value and header filters is possible. Please note that in this ca
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">List&lt;KeyValue&lt;String, String&gt;&gt; records = kafka.read(ReadKeyValues
-    .from("test-topic")
-    .seekTo(0, 2));</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">ReadKeyValues&lt;String, String&gt; readRequest = ReadKeyValues.from("test-topic").seekTo(0, 2).build();
+
+List&lt;KeyValue&lt;String, String&gt;&gt; records = cluster.read(readRequest);</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -1014,7 +1060,7 @@ Seeking is also a feature of <code>ObserveKeyValues</code> which means, that see
 </div>
 </div>
 <div class="paragraph">
-<p>Implementations of the <code>TopicManager</code> interface currently use the <code>AdminClient</code> implementation of the Kafka Client library for topic management.</p>
+<p>Implementations of the <code>TopicCreator</code> interface currently use the <code>zkclient</code> library for topic management.</p>
 </div>
 <div class="paragraph">
 <p>All operations are executed <strong>synchronously</strong>.</p>
@@ -1023,7 +1069,7 @@ Seeking is also a feature of <code>ObserveKeyValues</code> which means, that see
 <h3 id="_creating_a_topic">7.1. Creating a topic</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">kafka.createTopic(TopicConfig.withName("test-topic"));</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">cluster.createTopic(TopicConfig.forTopic("test-topic").useDefaults());</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -1043,7 +1089,7 @@ By default, Kafka for JUnit enables the automatic creation of topics at the brok
 <h3 id="_deleting_a_topic">7.2. Deleting a topic</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">kafka.deleteTopic("test-topic");</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">cluster.deleteTopic("test-topic");</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -1063,7 +1109,7 @@ Deleting a topic will only set a deletion marker for that topic. The topic may n
 <h3 id="_determine_whether_a_topic_exists">7.3. Determine whether a topic exists</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">kafka.exists("test-topic");</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">cluster.exists("test-topic");</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -1086,7 +1132,7 @@ Returns <code>true</code> even if the topic is marked for deletion.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">Map&lt;Integer, LeaderAndIsr&gt; leaderAndIsr = kafka.fetchLeaderAndIsr("test-topic");</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">Map&lt;Integer, LeaderAndIsr&gt; leaderAndIsr = cluster.fetchLeaderAndIsr("test-topic");</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1100,7 +1146,7 @@ Returns <code>true</code> even if the topic is marked for deletion.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">Properties topicConfig = kafka.fetchTopicConfig("test-topic");</code></pre>
+<pre class="highlight"><code class="language-java" data-lang="java">Properties topicConfig = cluster.fetchTopicConfig("test-topic");</code></pre>
 </div>
 </div>
 </div>
@@ -1117,8 +1163,8 @@ Returns <code>true</code> even if the topic is marked for deletion.
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 2.7.0<br>
- 2021-01-04 14:04:31 CET
+Version 2.4.0<br>
+ 2020-02-07 20:02:00 CET
 </div>
 </div>
 </body>
