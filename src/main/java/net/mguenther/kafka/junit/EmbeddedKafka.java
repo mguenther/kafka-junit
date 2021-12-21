@@ -59,7 +59,8 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
             log.info("Embedded Kafka broker with ID {} is starting.", brokerId);
 
             if (boundPort != UNDEFINED_BOUND_PORT) {
-                this.brokerConfig.put(KafkaConfig$.MODULE$.PortProp(), String.valueOf(boundPort));
+                this.brokerConfig.put(KafkaConfig$.MODULE$.AdvertisedListenersProp(), String.format("localhost:%s", boundPort));
+                //this.brokerConfig.put(KafkaConfig$.MODULE$.PortProp(), String.valueOf(boundPort));
             }
 
             final KafkaConfig config = new KafkaConfig(brokerConfig, true);
@@ -124,7 +125,7 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
     }
 
     public String getBrokerList() {
-        return String.format("%s:%s", kafka.config().hostName(), kafka.boundPort(forSecurityProtocol(SecurityProtocol.PLAINTEXT)));
+        return String.format("localhost:%s", kafka.boundPort(forSecurityProtocol(SecurityProtocol.PLAINTEXT)));
     }
 
     public String getClusterId() {

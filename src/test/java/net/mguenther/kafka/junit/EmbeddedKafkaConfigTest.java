@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class EmbeddedKafkaConfigTest {
 
@@ -19,7 +20,6 @@ class EmbeddedKafkaConfigTest {
 
         assertThat(props.get(KafkaConfig$.MODULE$.ZkSessionTimeoutMsProp())).isEqualTo("8000");
         assertThat(props.get(KafkaConfig$.MODULE$.ZkConnectionTimeoutMsProp())).isEqualTo("10000");
-        assertThat(props.get(KafkaConfig$.MODULE$.PortProp())).isEqualTo("0");
         assertThat(props.get(KafkaConfig$.MODULE$.NumPartitionsProp())).isEqualTo("1");
         assertThat(props.get(KafkaConfig$.MODULE$.AutoCreateTopicsEnableProp())).isEqualTo("true");
         assertThat(props.get(KafkaConfig$.MODULE$.MessageMaxBytesProp())).isEqualTo("1000000");
@@ -28,7 +28,6 @@ class EmbeddedKafkaConfigTest {
         assertThat(props.get(KafkaConfig$.MODULE$.GroupInitialRebalanceDelayMsProp())).isEqualTo(0);
         assertThat(props.get(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp())).isEqualTo("1");
         assertThat(props.get(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp())).isEqualTo("1");
-        assertThat(props.get(KafkaConfig$.MODULE$.HostNameProp())).isEqualTo("localhost");
     }
 
     @Test
@@ -37,11 +36,11 @@ class EmbeddedKafkaConfigTest {
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig
                 .brokers()
-                .with(KafkaConfig$.MODULE$.PortProp(), "9092")
+                .with(KafkaConfig$.MODULE$.AdvertisedListenersProp(), "localhost:9092")
                 .build();
         final Properties props = config.getBrokerProperties();
 
-        assertThat(props.get(KafkaConfig$.MODULE$.PortProp())).isEqualTo("9092");
+        assertThat(props.get(KafkaConfig$.MODULE$.AdvertisedListenersProp())).isEqualTo("localhost:9092");
     }
 
     @Test
@@ -49,7 +48,7 @@ class EmbeddedKafkaConfigTest {
     void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
-        overrides.put(KafkaConfig$.MODULE$.PortProp(), "9092");
+        overrides.put(KafkaConfig$.MODULE$.AdvertisedListenersProp(), "localhost:9092");
         overrides.put(KafkaConfig$.MODULE$.NumPartitionsProp(), "2");
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig
@@ -58,7 +57,7 @@ class EmbeddedKafkaConfigTest {
                 .build();
         final Properties props = config.getBrokerProperties();
 
-        assertThat(props.get(KafkaConfig$.MODULE$.PortProp())).isEqualTo("9092");
+        assertThat(props.get(KafkaConfig$.MODULE$.AdvertisedListenersProp())).isEqualTo("localhost:9092");
         assertThat(props.get(KafkaConfig$.MODULE$.NumPartitionsProp())).isEqualTo("2");
     }
 
@@ -68,11 +67,11 @@ class EmbeddedKafkaConfigTest {
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig
                 .brokers()
-                .with(KafkaConfig$.MODULE$.PortProp(), "9092")
+                .with(KafkaConfig$.MODULE$.AdvertisedListenersProp(), "localhost:9092")
                 .withNumberOfBrokers(3)
                 .build();
         final Properties props = config.getBrokerProperties();
 
-        assertThat(props.get(KafkaConfig$.MODULE$.PortProp())).isEqualTo("0");
+        assertFalse(props.containsKey(KafkaConfig$.MODULE$.AdvertisedListenersProp()));
     }
 }

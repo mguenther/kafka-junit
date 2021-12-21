@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.mguenther.kafka.junit.provider.DefaultRecordConsumer;
 import net.mguenther.kafka.junit.provider.DefaultRecordProducer;
 import net.mguenther.kafka.junit.provider.DefaultTopicManager;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 import java.util.Collections;
@@ -84,11 +83,10 @@ public class EmbeddedKafkaCluster implements EmbeddedLifecycle, RecordProducer, 
      * the bootstrap servers parameter of Kafka producers and consumers.
      */
     public String getBrokerList() {
-        final List<String> brokerAddresses = brokers.values().stream()
-            .filter(EmbeddedKafka::isActive)
-            .map(EmbeddedKafka::getBrokerList)
-            .collect(Collectors.toList());
-        return StringUtils.join(brokerAddresses, ",");
+        return brokers.values().stream()
+                .filter(EmbeddedKafka::isActive)
+                .map(EmbeddedKafka::getBrokerList)
+                .collect(Collectors.joining(", "));
     }
 
     /**
@@ -96,9 +94,9 @@ public class EmbeddedKafkaCluster implements EmbeddedLifecycle, RecordProducer, 
      */
     public String getClusterId() {
         return brokers.values().stream()
-            .map(EmbeddedKafka::getClusterId)
-            .findFirst()
-            .orElse(StringUtils.EMPTY);
+                .map(EmbeddedKafka::getClusterId)
+                .findFirst()
+                .orElse("");
     }
 
     /**
@@ -160,15 +158,16 @@ public class EmbeddedKafkaCluster implements EmbeddedLifecycle, RecordProducer, 
      */
     public Set<Integer> disconnectUntilIsrFallsBelowMinimumSize(final String topic) {
         final Properties topicConfig = topicManagerDelegate.fetchTopicConfig(topic);
-        final int minimumIsrSize = Integer.valueOf(topicConfig.getProperty(KafkaConfig$.MODULE$.MinInSyncReplicasProp(), "1"));
+        final int minimumIsrSize = Integer.parseInt(topicConfig.getProperty(KafkaConfig$.MODULE$.MinInSyncReplicasProp(), "1"));
         log.info("Attempting to drop the number of brokers in the ISR for topic {} below {}.", topic, minimumIsrSize);
         final Set<Integer> disconnectedBrokers = new HashSet<>();
         final Set<Integer> leaders = topicManagerDelegate.fetchLeaderAndIsr(topic)
-            .values()
-            .stream()
-            .map(LeaderAndIsr::getLeader)
-            .collect(Collectors.toSet());
-        log.info("Active brokers ({}) in the ISR for topic {} are: {}", leaders.size(), topic, StringUtils.join(leaders, ", "));
+                .values()
+                .stream()
+                .map(LeaderAndIsr::getLeader)
+                .collect(Collectors.toSet());
+        final String joinedSetOfLeaders = leaders.stream().map(String::valueOf).collect(Collectors.joining(", "));
+        log.info("Active brokers ({}) in the ISR for topic {} are: {}", leaders.size(), topic, joinedSetOfLeaders);
         int currentSizeOfIsr = leaders.size();
         while (currentSizeOfIsr >= minimumIsrSize) {
             final Integer brokerId = leaders.stream().limit(1).findFirst().get(); // safe get, otherwise loop condition would fail
@@ -254,10 +253,8 @@ public class EmbeddedKafkaCluster implements EmbeddedLifecycle, RecordProducer, 
     /**
      * Uses an {@link EmbeddedKafkaClusterConfig} to provision an {@link EmbeddedKafkaCluster}.
      *
-     * @param config
-     *      represents the configuration of the embedded Kafka cluster
-     * @return
-     *      instance of {@link EmbeddedKafkaCluster}
+     * @param config represents the configuration of the embedded Kafka cluster
+     * @return instance of {@link EmbeddedKafkaCluster}
      */
     public static EmbeddedKafkaCluster provisionWith(final EmbeddedKafkaClusterConfig config) {
         return new EmbeddedKafkaCluster(config);
@@ -267,10 +264,8 @@ public class EmbeddedKafkaCluster implements EmbeddedLifecycle, RecordProducer, 
      * Accepts an {@link EmbeddedKafkaClusterConfig.EmbeddedKafkaClusterConfigBuilder} to construct
      * a {@link EmbeddedKafkaClusterConfig} from it which is used to provision a {@link EmbeddedKafkaCluster}.
      *
-     * @param builder
-     *      the configuration builder for the embedded Kafka cluster
-     * @return
-     *      instance of {@link EmbeddedKafkaCluster}
+     * @param builder the configuration builder for the embedded Kafka cluster
+     * @return instance of {@link EmbeddedKafkaCluster}
      */
     public static EmbeddedKafkaCluster provisionWith(final EmbeddedKafkaClusterConfig.EmbeddedKafkaClusterConfigBuilder builder) {
         return provisionWith(builder.build());

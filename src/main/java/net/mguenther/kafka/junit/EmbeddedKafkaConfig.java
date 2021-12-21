@@ -23,7 +23,7 @@ public class EmbeddedKafkaConfig {
         private int numberOfBrokers = DEFAULT_NUMBER_OF_BROKERS;
 
         private EmbeddedKafkaConfigBuilder() {
-            properties.put(KafkaConfig$.MODULE$.PortProp(), "0");
+            //properties.put(KafkaConfig$.MODULE$.PortProp(), "0");
         }
 
         public EmbeddedKafkaConfigBuilder withNumberOfBrokers(final int numberOfBrokers) {
@@ -49,17 +49,17 @@ public class EmbeddedKafkaConfig {
         public EmbeddedKafkaConfig build() {
 
             if (numberOfBrokers > 1 && defaultPortHasBeenOverridden()) {
-                final int desiredPort = Integer.parseInt(properties.getProperty(KafkaConfig$.MODULE$.PortProp()));
-                final String message = "You configured %s broker instances and try to bind them to the dedicated " +
-                        "port %s. This will not work. The broker configuration has been adjusted to use ephemeral " +
-                        "ports instead.";
-                log.warn(String.format(message, numberOfBrokers, desiredPort));
-                properties.put(KafkaConfig$.MODULE$.PortProp(), "0");
+                final String advertisedListeners = properties.getProperty(KafkaConfig$.MODULE$.AdvertisedListenersProp());
+                final String message = "You configured %s broker instances on a local machine and tried to advertise " +
+                        "them using the following custom configuration: %s. This will likely fail. Thus, the broker " +
+                        "configuration has been adjusted to use ephemeral connection settings for this multi-broker " +
+                        "setup.";
+                log.warn(String.format(message, numberOfBrokers, advertisedListeners));
+                properties.remove(KafkaConfig$.MODULE$.AdvertisedListenersProp());
             }
 
             ifNonExisting(KafkaConfig$.MODULE$.ZkSessionTimeoutMsProp(), "8000");
             ifNonExisting(KafkaConfig$.MODULE$.ZkConnectionTimeoutMsProp(), "10000");
-            ifNonExisting(KafkaConfig$.MODULE$.HostNameProp(), "localhost");
             ifNonExisting(KafkaConfig$.MODULE$.NumPartitionsProp(), "1");
             ifNonExisting(KafkaConfig$.MODULE$.DefaultReplicationFactorProp(), "1");
             ifNonExisting(KafkaConfig$.MODULE$.MinInSyncReplicasProp(), "1");
@@ -80,7 +80,7 @@ public class EmbeddedKafkaConfig {
         }
 
         private boolean defaultPortHasBeenOverridden() {
-            return !properties.getProperty(KafkaConfig$.MODULE$.PortProp()).equals("0");
+            return properties.containsKey(KafkaConfig$.MODULE$.AdvertisedListenersProp());
         }
     }
 
