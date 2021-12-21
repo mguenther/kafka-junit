@@ -107,7 +107,7 @@ public class EmbeddedKafkaConfig {
         }
 
         private int generateRandomEphemeralPort() {
-            return Math.max((int) (Math.random() * 65535) + 1024, 65535);
+            return Math.min((int) (Math.random() * 65535) + 1024, 65535);
         }
     }
 
