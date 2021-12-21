@@ -66,7 +66,6 @@ public class EmbeddedKafkaConfig {
                         .stream()
                         .map(port -> String.format("PLAINTEXT://localhost:%s", port))
                         .collect(Collectors.toList()));
-                properties.put(KafkaConfig$.MODULE$.ListenersProp(), listeners);
             } else {
                 listeners.add("PLAINTEXT://localhost:9092");
             }

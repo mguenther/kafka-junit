@@ -59,4 +59,27 @@ class EmbeddedKafkaConfigTest {
         assertThat(props.get(KafkaConfig$.MODULE$.AdvertisedListenersProp())).isEqualTo("localhost:9092");
         assertThat(props.get(KafkaConfig$.MODULE$.NumPartitionsProp())).isEqualTo("2");
     }
+
+    @Test
+    @DisplayName("should yield listeners for multiple brokers")
+    void shouldYieldListenersForMultipleBrokers() {
+
+        final EmbeddedKafkaConfig config = EmbeddedKafkaConfig
+                .brokers()
+                .withNumberOfBrokers(3)
+                .build();
+
+        assertThat(config.listenerFor(0)).startsWith("PLAINTEXT://localhost");
+        assertThat(config.listenerFor(1)).startsWith("PLAINTEXT://localhost");
+        assertThat(config.listenerFor(2)).startsWith("PLAINTEXT://localhost");
+    }
+
+    @Test
+    @DisplayName("should yield default listener for single broker")
+    void shouldYieldDefaultListenerForSingleBroker() {
+
+        final EmbeddedKafkaConfig config = EmbeddedKafkaConfig.defaultBrokers();
+
+        assertThat(config.listenerFor(0)).isEqualTo("PLAINTEXT://localhost:9092");
+    }
 }
