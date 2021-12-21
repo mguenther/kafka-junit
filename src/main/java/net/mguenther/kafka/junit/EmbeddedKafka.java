@@ -34,10 +34,11 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
 
     private int boundPort = UNDEFINED_BOUND_PORT;
 
-    public EmbeddedKafka(final int brokerId, final EmbeddedKafkaConfig config, final String zooKeeperConnectUrl) throws IOException {
+    public EmbeddedKafka(final int brokerId, final String listener, final EmbeddedKafkaConfig config, final String zooKeeperConnectUrl) throws IOException {
         this.brokerId = brokerId;
         this.brokerConfig = new Properties();
         this.brokerConfig.putAll(config.getBrokerProperties());
+        this.brokerConfig.put(KafkaConfig$.MODULE$.ListenersProp(), listener);
         this.brokerConfig.put(KafkaConfig$.MODULE$.ZkConnectProp(), zooKeeperConnectUrl);
         this.logDirectory = Files.createTempDirectory("kafka-junit");
         this.brokerConfig.put(KafkaConfig$.MODULE$.BrokerIdProp(), brokerId);

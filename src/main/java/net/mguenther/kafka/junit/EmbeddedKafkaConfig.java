@@ -12,7 +12,6 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Getter
 @ToString
 @RequiredArgsConstructor
 public class EmbeddedKafkaConfig {
@@ -58,15 +57,19 @@ public class EmbeddedKafkaConfig {
                         "setup.";
                 log.warn(String.format(message, numberOfBrokers, listeners));
                 properties.remove(KafkaConfig$.MODULE$.ListenersProp());
-            }
+            }*/
+
+            final List<String> listeners = new ArrayList<>(numberOfBrokers);
 
             if (numberOfBrokers > 1) {
-                final String listeners = getUniqueEphemeralPorts(numberOfBrokers)
+                listeners.addAll(getUniqueEphemeralPorts(numberOfBrokers)
                         .stream()
                         .map(port -> String.format("PLAINTEXT://localhost:%s", port))
-                        .collect(Collectors.joining(","));
+                        .collect(Collectors.toList()));
                 properties.put(KafkaConfig$.MODULE$.ListenersProp(), listeners);
-            }*/
+            } else {
+                listeners.add("PLAINTEXT://localhost:9092");
+            }
 
             ifNonExisting(KafkaConfig$.MODULE$.ZkSessionTimeoutMsProp(), "8000");
             ifNonExisting(KafkaConfig$.MODULE$.ZkConnectionTimeoutMsProp(), "10000");
@@ -86,12 +89,12 @@ public class EmbeddedKafkaConfig {
             ifNonExisting(KafkaConfig$.MODULE$.LeaderImbalanceCheckIntervalSecondsProp(), 5);
             ifNonExisting(KafkaConfig$.MODULE$.LeaderImbalancePerBrokerPercentageProp(), 1);
             ifNonExisting(KafkaConfig$.MODULE$.UncleanLeaderElectionEnableProp(), "false");
-            return new EmbeddedKafkaConfig(numberOfBrokers, properties);
+            return new EmbeddedKafkaConfig(numberOfBrokers, listeners, properties);
         }
 
         /*private boolean defaultPortHasBeenOverridden() {
             return properties.containsKey(KafkaConfig$.MODULE$.AdvertisedListenersProp());
-        }
+        }*/
 
         private List<Integer> getUniqueEphemeralPorts(final int howMany) {
             final List<Integer> ephemeralPorts = new ArrayList<>(howMany);
@@ -106,12 +109,24 @@ public class EmbeddedKafkaConfig {
 
         private int generateRandomEphemeralPort() {
             return Math.max((int) (Math.random() * 65535) + 1024, 65535);
-        }*/
+        }
     }
 
+    @Getter
     private final int numberOfBrokers;
 
+    private final List<String> uniqueListeners;
+
+    @Getter
     private final Properties brokerProperties;
+
+    public String listenerFor(final int brokerIndex) {
+        if (brokerProperties.containsKey(KafkaConfig$.MODULE$.ListenersProp())) {
+            return brokerProperties.getProperty(KafkaConfig$.MODULE$.ListenersProp());
+        } else {
+            return uniqueListeners.get(brokerIndex);
+        }
+    }
 
     public static EmbeddedKafkaConfigBuilder brokers() {
         return new EmbeddedKafkaConfigBuilder();

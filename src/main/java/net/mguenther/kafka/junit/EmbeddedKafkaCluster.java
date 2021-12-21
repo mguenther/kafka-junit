@@ -8,6 +8,7 @@ import net.mguenther.kafka.junit.provider.DefaultRecordProducer;
 import net.mguenther.kafka.junit.provider.DefaultTopicManager;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,7 +48,7 @@ public class EmbeddedKafkaCluster implements EmbeddedLifecycle, RecordProducer, 
 
             for (int i = 0; i < config.getKafkaConfig().getNumberOfBrokers(); i++) {
                 final int brokerId = i + 1;
-                final EmbeddedKafka broker = new EmbeddedKafka(brokerId, config.getKafkaConfig(), zooKeeper.getConnectString());
+                final EmbeddedKafka broker = new EmbeddedKafka(brokerId, config.getKafkaConfig().listenerFor(i), config.getKafkaConfig(), zooKeeper.getConnectString());
                 broker.start();
                 brokers.put(broker.getBrokerId(), broker);
             }
