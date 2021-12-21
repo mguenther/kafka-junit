@@ -17,7 +17,10 @@ import java.util.stream.Collectors;
 public class EmbeddedKafkaConfig {
 
     public static final int DEFAULT_NUMBER_OF_BROKERS = 1;
-    public static final int USE_RANDOM_ZOOKEEPER_PORT = 0;
+
+    public static final String DEFAULT_LISTENER = "PLAINTEXT://localhost:9092";
+
+    private static final String LISTENER_TEMPLATE = "PLAINTEXT://localhost:%s";
 
     public static class EmbeddedKafkaConfigBuilder {
 
@@ -49,25 +52,15 @@ public class EmbeddedKafkaConfig {
 
         public EmbeddedKafkaConfig build() {
 
-            /*if (numberOfBrokers > 1 && defaultPortHasBeenOverridden()) {
-                final String listeners = properties.getProperty(KafkaConfig$.MODULE$.ListenersProp());
-                final String message = "You configured %s broker instances on a local machine and tried to listen on " +
-                        "them using the following custom configuration: %s. This will likely fail. Thus, the broker " +
-                        "configuration has been adjusted to use ephemeral connection settings for this multi-broker " +
-                        "setup.";
-                log.warn(String.format(message, numberOfBrokers, listeners));
-                properties.remove(KafkaConfig$.MODULE$.ListenersProp());
-            }*/
-
             final List<String> listeners = new ArrayList<>(numberOfBrokers);
 
             if (numberOfBrokers > 1) {
                 listeners.addAll(getUniqueEphemeralPorts(numberOfBrokers)
                         .stream()
-                        .map(port -> String.format("PLAINTEXT://localhost:%s", port))
+                        .map(port -> String.format(LISTENER_TEMPLATE, port))
                         .collect(Collectors.toList()));
             } else {
-                listeners.add("PLAINTEXT://localhost:9092");
+                listeners.add(DEFAULT_LISTENER);
             }
 
             ifNonExisting(KafkaConfig$.MODULE$.ZkSessionTimeoutMsProp(), "8000");
@@ -90,10 +83,6 @@ public class EmbeddedKafkaConfig {
             ifNonExisting(KafkaConfig$.MODULE$.UncleanLeaderElectionEnableProp(), "false");
             return new EmbeddedKafkaConfig(numberOfBrokers, listeners, properties);
         }
-
-        /*private boolean defaultPortHasBeenOverridden() {
-            return properties.containsKey(KafkaConfig$.MODULE$.AdvertisedListenersProp());
-        }*/
 
         private List<Integer> getUniqueEphemeralPorts(final int howMany) {
             final List<Integer> ephemeralPorts = new ArrayList<>(howMany);

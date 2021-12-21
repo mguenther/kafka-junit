@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class EmbeddedKafkaConfigTest {
 
     @Test
-    @DisplayName("should use defaults if not explicitly overriden")
+    @DisplayName("should use defaults if not explicitly overridden")
     void shouldUseDefaultsIfNotOverridden() {
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig.defaultBrokers();
