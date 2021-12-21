@@ -5,6 +5,7 @@ import kafka.server.KafkaConfig$;
 import kafka.server.KafkaServer;
 import kafka.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.network.ListenerName;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.apache.kafka.common.utils.Time;
 
@@ -33,10 +34,11 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
 
     private int boundPort = UNDEFINED_BOUND_PORT;
 
-    public EmbeddedKafka(final int brokerId, final EmbeddedKafkaConfig config, final String zooKeeperConnectUrl) throws IOException {
+    public EmbeddedKafka(final int brokerId, final String listener, final EmbeddedKafkaConfig config, final String zooKeeperConnectUrl) throws IOException {
         this.brokerId = brokerId;
         this.brokerConfig = new Properties();
         this.brokerConfig.putAll(config.getBrokerProperties());
+        this.brokerConfig.put(KafkaConfig$.MODULE$.ListenersProp(), listener);
         this.brokerConfig.put(KafkaConfig$.MODULE$.ZkConnectProp(), zooKeeperConnectUrl);
         this.logDirectory = Files.createTempDirectory("kafka-junit");
         this.brokerConfig.put(KafkaConfig$.MODULE$.BrokerIdProp(), brokerId);
@@ -59,7 +61,7 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
             log.info("Embedded Kafka broker with ID {} is starting.", brokerId);
 
             if (boundPort != UNDEFINED_BOUND_PORT) {
-                this.brokerConfig.put(KafkaConfig$.MODULE$.PortProp(), String.valueOf(boundPort));
+                this.brokerConfig.put(KafkaConfig$.MODULE$.ListenersProp(), String.format("PLAINTEXT://localhost:%s", boundPort));
             }
 
             final KafkaConfig config = new KafkaConfig(brokerConfig, true);
@@ -117,6 +119,7 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
 
     public void deactivate() {
         if (kafka == null) return;
+        boundPort = kafka.boundPort(ListenerName.forSecurityProtocol(SecurityProtocol.PLAINTEXT));
         log.info("The embedded Kafka broker with ID {} is stopping.", brokerId);
         kafka.shutdown();
         kafka.awaitShutdown();
@@ -124,7 +127,7 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
     }
 
     public String getBrokerList() {
-        return String.format("%s:%s", kafka.config().hostName(), kafka.boundPort(forSecurityProtocol(SecurityProtocol.PLAINTEXT)));
+        return String.format("localhost:%s", kafka.boundPort(forSecurityProtocol(SecurityProtocol.PLAINTEXT)));
     }
 
     public String getClusterId() {
