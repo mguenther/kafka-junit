@@ -65,7 +65,7 @@ class TopicManagerTest {
     }
 
     @Test
-    @DisplayName("fetchToppiConfig should retrieve the proper config")
+    @DisplayName("fetchTopicConfig should retrieve the proper config")
     void fetchTopicConfigShouldRetrieveTheProperConfig() throws Exception {
 
         kafka.createTopic(withName("test-topic")
