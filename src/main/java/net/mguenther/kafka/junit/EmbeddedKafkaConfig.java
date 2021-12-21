@@ -6,7 +6,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
@@ -23,7 +26,6 @@ public class EmbeddedKafkaConfig {
         private int numberOfBrokers = DEFAULT_NUMBER_OF_BROKERS;
 
         private EmbeddedKafkaConfigBuilder() {
-            //properties.put(KafkaConfig$.MODULE$.PortProp(), "0");
         }
 
         public EmbeddedKafkaConfigBuilder withNumberOfBrokers(final int numberOfBrokers) {
@@ -48,15 +50,23 @@ public class EmbeddedKafkaConfig {
 
         public EmbeddedKafkaConfig build() {
 
-            if (numberOfBrokers > 1 && defaultPortHasBeenOverridden()) {
-                final String advertisedListeners = properties.getProperty(KafkaConfig$.MODULE$.AdvertisedListenersProp());
-                final String message = "You configured %s broker instances on a local machine and tried to advertise " +
+            /*if (numberOfBrokers > 1 && defaultPortHasBeenOverridden()) {
+                final String listeners = properties.getProperty(KafkaConfig$.MODULE$.ListenersProp());
+                final String message = "You configured %s broker instances on a local machine and tried to listen on " +
                         "them using the following custom configuration: %s. This will likely fail. Thus, the broker " +
                         "configuration has been adjusted to use ephemeral connection settings for this multi-broker " +
                         "setup.";
-                log.warn(String.format(message, numberOfBrokers, advertisedListeners));
-                properties.remove(KafkaConfig$.MODULE$.AdvertisedListenersProp());
+                log.warn(String.format(message, numberOfBrokers, listeners));
+                properties.remove(KafkaConfig$.MODULE$.ListenersProp());
             }
+
+            if (numberOfBrokers > 1) {
+                final String listeners = getUniqueEphemeralPorts(numberOfBrokers)
+                        .stream()
+                        .map(port -> String.format("PLAINTEXT://localhost:%s", port))
+                        .collect(Collectors.joining(","));
+                properties.put(KafkaConfig$.MODULE$.ListenersProp(), listeners);
+            }*/
 
             ifNonExisting(KafkaConfig$.MODULE$.ZkSessionTimeoutMsProp(), "8000");
             ifNonExisting(KafkaConfig$.MODULE$.ZkConnectionTimeoutMsProp(), "10000");
@@ -79,9 +89,24 @@ public class EmbeddedKafkaConfig {
             return new EmbeddedKafkaConfig(numberOfBrokers, properties);
         }
 
-        private boolean defaultPortHasBeenOverridden() {
+        /*private boolean defaultPortHasBeenOverridden() {
             return properties.containsKey(KafkaConfig$.MODULE$.AdvertisedListenersProp());
         }
+
+        private List<Integer> getUniqueEphemeralPorts(final int howMany) {
+            final List<Integer> ephemeralPorts = new ArrayList<>(howMany);
+            while (ephemeralPorts.size() < howMany) {
+                final int port = generateRandomEphemeralPort();
+                if (!ephemeralPorts.contains(port)) {
+                    ephemeralPorts.add(port);
+                }
+            }
+            return ephemeralPorts;
+        }
+
+        private int generateRandomEphemeralPort() {
+            return Math.max((int) (Math.random() * 65535) + 1024, 65535);
+        }*/
     }
 
     private final int numberOfBrokers;
@@ -93,11 +118,9 @@ public class EmbeddedKafkaConfig {
     }
 
     /**
-     * @return
-     *      instance of {@link EmbeddedKafkaConfigBuilder}
-     * @deprecated
-     *      This method is deprecated since 2.7.0. Expect it to be removed in a future release.
-     *      Use {@link #brokers()} instead.
+     * @return instance of {@link EmbeddedKafkaConfigBuilder}
+     * @deprecated This method is deprecated since 2.7.0. Expect it to be removed in a future release.
+     * Use {@link #brokers()} instead.
      */
     @Deprecated
     public static EmbeddedKafkaConfigBuilder create() {
@@ -109,12 +132,10 @@ public class EmbeddedKafkaConfig {
     }
 
     /**
-     * @return
-     *      instance of {@link EmbeddedKafkaConfig} that contains the default configuration
-     *      for all brokers in an embedded Kafka cluster
-     * @deprecated
-     *      This method is deprecated since 2.7.0. Expect it to be removed in a future release.
-     *      Use {@link #defaultBrokers()} instead.
+     * @return instance of {@link EmbeddedKafkaConfig} that contains the default configuration
+     * for all brokers in an embedded Kafka cluster
+     * @deprecated This method is deprecated since 2.7.0. Expect it to be removed in a future release.
+     * Use {@link #defaultBrokers()} instead.
      */
     @Deprecated
     public static EmbeddedKafkaConfig useDefaults() {

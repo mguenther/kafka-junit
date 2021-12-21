@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class EmbeddedKafkaConfigTest {
 
@@ -59,19 +58,5 @@ class EmbeddedKafkaConfigTest {
 
         assertThat(props.get(KafkaConfig$.MODULE$.AdvertisedListenersProp())).isEqualTo("localhost:9092");
         assertThat(props.get(KafkaConfig$.MODULE$.NumPartitionsProp())).isEqualTo("2");
-    }
-
-    @Test
-    @DisplayName("should adjust the configured dedicated port to any ephemeral port if using multiple brokers")
-    void shouldAdjustConfiguredDedicatedPortToAnyEphemeralPortIfUsingMultipleBrokers() {
-
-        final EmbeddedKafkaConfig config = EmbeddedKafkaConfig
-                .brokers()
-                .with(KafkaConfig$.MODULE$.AdvertisedListenersProp(), "localhost:9092")
-                .withNumberOfBrokers(3)
-                .build();
-        final Properties props = config.getBrokerProperties();
-
-        assertFalse(props.containsKey(KafkaConfig$.MODULE$.AdvertisedListenersProp()));
     }
 }

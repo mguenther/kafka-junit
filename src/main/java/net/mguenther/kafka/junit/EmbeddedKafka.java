@@ -5,6 +5,7 @@ import kafka.server.KafkaConfig$;
 import kafka.server.KafkaServer;
 import kafka.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.network.ListenerName;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.apache.kafka.common.utils.Time;
 
@@ -59,8 +60,7 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
             log.info("Embedded Kafka broker with ID {} is starting.", brokerId);
 
             if (boundPort != UNDEFINED_BOUND_PORT) {
-                this.brokerConfig.put(KafkaConfig$.MODULE$.AdvertisedListenersProp(), String.format("localhost:%s", boundPort));
-                //this.brokerConfig.put(KafkaConfig$.MODULE$.PortProp(), String.valueOf(boundPort));
+                this.brokerConfig.put(KafkaConfig$.MODULE$.ListenersProp(), String.format("PLAINTEXT://localhost:%s", boundPort));
             }
 
             final KafkaConfig config = new KafkaConfig(brokerConfig, true);
@@ -118,6 +118,7 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
 
     public void deactivate() {
         if (kafka == null) return;
+        boundPort = kafka.boundPort(ListenerName.forSecurityProtocol(SecurityProtocol.PLAINTEXT));
         log.info("The embedded Kafka broker with ID {} is stopping.", brokerId);
         kafka.shutdown();
         kafka.awaitShutdown();
