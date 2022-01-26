@@ -83,6 +83,7 @@ class KafkaTest {
 | 2.7.x                      | Apache Kafka 2.7.0 |
 | 2.8.0                      | Apache Kafka 2.8.0 |
 | 3.0.0                      | Apache Kafka 3.0.0 |
+| 3.1.0                      | Apache Kafka 3.1.0 |
 
 ## Interacting with the Kafka cluster
 
