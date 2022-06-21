@@ -117,4 +117,7 @@ class KafkaTest {
 | 3.1.x
 | Apache Kafka 3.1.0
 
+| 3.2.x
+| Apache Kafka 3.2.0
+
 |===
