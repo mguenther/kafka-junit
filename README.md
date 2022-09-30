@@ -85,6 +85,7 @@ class KafkaTest {
 | 3.0.0                      | Apache Kafka 3.0.0 |
 | 3.1.0                      | Apache Kafka 3.1.0 |
 | 3.2.0                      | Apache Kafka 3.2.0 |
+| 3.2.3                      | Apache Kafka 3.2.3 |
 
 ## Interacting with the Kafka cluster
 
