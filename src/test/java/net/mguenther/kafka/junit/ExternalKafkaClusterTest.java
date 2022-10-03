@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +17,7 @@ import static net.mguenther.kafka.junit.SendKeyValues.to;
 class ExternalKafkaClusterTest {
 
     @Container
-    private KafkaContainer kafkaContainer = new KafkaContainer();
+    private final KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"));
 
     @Test
     @DisplayName("should be able to observe records written to an external Kafka cluster")
