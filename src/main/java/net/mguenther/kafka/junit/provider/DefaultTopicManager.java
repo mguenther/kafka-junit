@@ -138,7 +138,7 @@ public class DefaultTopicManager implements TopicManager {
         try (AdminClient client = AdminClient.create(props)) {
             final DescribeTopicsResult result = client.describeTopics(Collections.singletonList(topic));
             final TopicDescription topicDescription = result
-                .all()
+                .allTopicNames()
                 .get(TIMEOUT_IN_MILLIS, TimeUnit.MILLISECONDS)
                 .get(topic);
             for (TopicPartitionInfo topicPartitionInfo : topicDescription.partitions()) {
