@@ -19,15 +19,18 @@ import org.apache.kafka.connect.storage.KafkaOffsetBackingStore;
 import org.apache.kafka.connect.storage.KafkaStatusBackingStore;
 import org.apache.kafka.connect.storage.StatusBackingStore;
 import org.apache.kafka.connect.util.FutureCallback;
+import org.apache.kafka.connect.util.TopicAdmin;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 @Slf4j
 public class EmbeddedConnect implements EmbeddedLifecycle {
@@ -50,16 +53,21 @@ public class EmbeddedConnect implements EmbeddedLifecycle {
 
     private final DistributedHerder herder;
 
+    private static Supplier<TopicAdmin> getTopicAdminSupplier(String brokerList) {
+        return () -> new TopicAdmin(Map.of(WorkerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerList));
+    }
+
     public EmbeddedConnect(final EmbeddedConnectConfig connectConfig, final String brokerList, final String clusterId) {
         final AllConnectorClientConfigOverridePolicy policy = new AllConnectorClientConfigOverridePolicy();
         final Properties effectiveWorkerConfig = connectConfig.getConnectProperties();
         effectiveWorkerConfig.put(WorkerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerList);
         this.connectorConfigs = connectConfig.getConnectors();
         this.config = new DistributedConfig(Utils.propsToStringMap(effectiveWorkerConfig));
-        this.offsetBackingStore = new KafkaOffsetBackingStore();
+        this.offsetBackingStore = new KafkaOffsetBackingStore(getTopicAdminSupplier(brokerList));
         this.worker = new Worker(connectConfig.getWorkerId(), Time.SYSTEM, new Plugins(new HashMap<>()), config, offsetBackingStore, policy);
-        this.statusBackingStore = new KafkaStatusBackingStore(Time.SYSTEM, worker.getInternalValueConverter());
-        this.configBackingStore = new KafkaConfigBackingStore(worker.getInternalValueConverter(), config, new WorkerConfigTransformer(worker, Collections.emptyMap()));
+        this.statusBackingStore = new KafkaStatusBackingStore(Time.SYSTEM, worker.getInternalValueConverter(), getTopicAdminSupplier(brokerList));
+        this.configBackingStore = new KafkaConfigBackingStore(worker.getInternalValueConverter(), config, new WorkerConfigTransformer(worker, Collections.emptyMap()),
+            getTopicAdminSupplier(brokerList));
         this.herder = new DistributedHerder(config, Time.SYSTEM, worker, clusterId, statusBackingStore, configBackingStore, "", policy);
     }
 
