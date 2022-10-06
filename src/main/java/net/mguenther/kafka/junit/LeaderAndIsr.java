@@ -13,12 +13,4 @@ public class LeaderAndIsr {
 
     private final Integer leader;
     private final Set<Integer> isr;
-
-    /**
-     * @deprecated This method will be removed in a future release. Please use {@code LeaderAndIsr#getLeader()} instead.
-     */
-    @Deprecated
-    public Integer leader() {
-        return leader;
-    }
 }
