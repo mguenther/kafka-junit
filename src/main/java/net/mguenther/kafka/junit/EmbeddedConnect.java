@@ -53,10 +53,6 @@ public class EmbeddedConnect implements EmbeddedLifecycle {
 
     private final DistributedHerder herder;
 
-    private static Supplier<TopicAdmin> getTopicAdminSupplier(String brokerList) {
-        return () -> new TopicAdmin(Map.of(WorkerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerList));
-    }
-
     public EmbeddedConnect(final EmbeddedConnectConfig connectConfig, final String brokerList, final String clusterId) {
         final AllConnectorClientConfigOverridePolicy policy = new AllConnectorClientConfigOverridePolicy();
         final Properties effectiveWorkerConfig = connectConfig.getConnectProperties();
@@ -67,7 +63,7 @@ public class EmbeddedConnect implements EmbeddedLifecycle {
         this.worker = new Worker(connectConfig.getWorkerId(), Time.SYSTEM, new Plugins(new HashMap<>()), config, offsetBackingStore, policy);
         this.statusBackingStore = new KafkaStatusBackingStore(Time.SYSTEM, worker.getInternalValueConverter(), getTopicAdminSupplier(brokerList));
         this.configBackingStore = new KafkaConfigBackingStore(worker.getInternalValueConverter(), config, new WorkerConfigTransformer(worker, Collections.emptyMap()),
-            getTopicAdminSupplier(brokerList));
+                getTopicAdminSupplier(brokerList));
         this.herder = new DistributedHerder(config, Time.SYSTEM, worker, clusterId, statusBackingStore, configBackingStore, "", policy);
     }
 
@@ -117,5 +113,11 @@ public class EmbeddedConnect implements EmbeddedLifecycle {
         } catch (Exception e) {
             throw new RuntimeException("Unable to stop Embedded Kafka Connect.", e);
         }
+    }
+
+    private static Supplier<TopicAdmin> getTopicAdminSupplier(final String brokerList) {
+        final Map<String, Object> config = new HashMap<>();
+        config.put(WorkerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerList);
+        return () -> new TopicAdmin(config);
     }
 }
