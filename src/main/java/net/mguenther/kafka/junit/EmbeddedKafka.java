@@ -34,7 +34,7 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
 
     private int boundPort = UNDEFINED_BOUND_PORT;
 
-    public EmbeddedKafka(final int brokerId, final String listener, final EmbeddedKafkaConfig config, final String zooKeeperConnectUrl) throws IOException {
+    public EmbeddedKafka(final int brokerId, final String listener, final EmbeddedKafkaConfig config, final String zooKeeperConnectUrl, final boolean usesConnect) throws IOException {
         this.brokerId = brokerId;
         this.brokerConfig = new Properties();
         this.brokerConfig.putAll(config.getBrokerProperties());
@@ -43,6 +43,10 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
         this.logDirectory = Files.createTempDirectory("kafka-junit");
         this.brokerConfig.put(KafkaConfig$.MODULE$.BrokerIdProp(), brokerId);
         this.brokerConfig.put(KafkaConfig$.MODULE$.LogDirProp(), logDirectory.toFile().getAbsolutePath());
+        if (usesConnect) {
+            log.info("Enforcing 'log.cleanup.policy=compact', due to the presence of a Kafka Connect deployment.");
+            this.brokerConfig.put(KafkaConfig$.MODULE$.LogCleanupPolicyProp(), "compact");
+        }
     }
 
     @Override
