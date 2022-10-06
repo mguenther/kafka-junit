@@ -48,7 +48,7 @@ public class EmbeddedKafkaCluster implements EmbeddedLifecycle, RecordProducer, 
 
             for (int i = 0; i < config.getKafkaConfig().getNumberOfBrokers(); i++) {
                 final int brokerId = i + 1;
-                final EmbeddedKafka broker = new EmbeddedKafka(brokerId, config.getKafkaConfig().listenerFor(i), config.getKafkaConfig(), zooKeeper.getConnectString());
+                final EmbeddedKafka broker = new EmbeddedKafka(brokerId, config.getKafkaConfig().listenerFor(i), config.getKafkaConfig(), zooKeeper.getConnectString(), config.usesConnect());
                 broker.start();
                 brokers.put(broker.getBrokerId(), broker);
             }
