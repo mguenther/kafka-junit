@@ -77,32 +77,10 @@ public class EmbeddedConnectConfig {
 
     private final List<Properties> connectors;
 
+    /**
+     * @return instance of {@link EmbeddedConnectConfigBuilder}
+     */
     public static EmbeddedConnectConfigBuilder kafkaConnect() {
         return new EmbeddedConnectConfigBuilder();
-    }
-
-    /**
-     * @return
-     *      instance of {@link EmbeddedConnectConfigBuilder}
-     * @deprecated
-     *      This method is deprecated since 2.7.0. Expect it to be removed in a future release.
-     *      Use {@link #kafkaConnect()} instead.
-     */
-    @Deprecated
-    public static EmbeddedConnectConfigBuilder create() {
-        return kafkaConnect();
-    }
-
-    /**
-     * @return
-     *      instance of {@link EmbeddedConnectConfig} that contains the default configuration for an
-     *      embedded Kafka Connect setup
-     * @deprecated
-     *      This method is deprecated since 2.7.0. Expect it to be removed in a future release.
-     *      Use {@link #kafkaConnect()} instead.
-     */
-    @Deprecated
-    public static EmbeddedConnectConfig useDefaults() {
-        return kafkaConnect().build();
     }
 }

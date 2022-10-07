@@ -25,6 +25,7 @@ public class EmbeddedKafkaConfig {
     public static class EmbeddedKafkaConfigBuilder {
 
         private final Properties properties = new Properties();
+
         private int numberOfBrokers = DEFAULT_NUMBER_OF_BROKERS;
 
         private EmbeddedKafkaConfigBuilder() {
@@ -56,9 +57,9 @@ public class EmbeddedKafkaConfig {
 
             if (numberOfBrokers > 1) {
                 listeners.addAll(getUniqueEphemeralPorts(numberOfBrokers)
-                        .stream()
-                        .map(port -> String.format(LISTENER_TEMPLATE, port))
-                        .collect(Collectors.toList()));
+                    .stream()
+                    .map(port -> String.format(LISTENER_TEMPLATE, port))
+                    .collect(Collectors.toList()));
             } else {
                 listeners.add(DEFAULT_LISTENER);
             }
@@ -116,32 +117,18 @@ public class EmbeddedKafkaConfig {
         }
     }
 
+    /**
+     * @return instance of {@link EmbeddedKafkaConfigBuilder}
+     */
     public static EmbeddedKafkaConfigBuilder brokers() {
         return new EmbeddedKafkaConfigBuilder();
     }
 
     /**
-     * @return instance of {@link EmbeddedKafkaConfigBuilder}
-     * @deprecated This method is deprecated since 2.7.0. Expect it to be removed in a future release.
-     * Use {@link #brokers()} instead.
-     */
-    @Deprecated
-    public static EmbeddedKafkaConfigBuilder create() {
-        return brokers();
-    }
-
-    public static EmbeddedKafkaConfig defaultBrokers() {
-        return brokers().build();
-    }
-
-    /**
      * @return instance of {@link EmbeddedKafkaConfig} that contains the default configuration
      * for all brokers in an embedded Kafka cluster
-     * @deprecated This method is deprecated since 2.7.0. Expect it to be removed in a future release.
-     * Use {@link #defaultBrokers()} instead.
      */
-    @Deprecated
-    public static EmbeddedKafkaConfig useDefaults() {
-        return defaultBrokers();
+    public static EmbeddedKafkaConfig defaultBrokers() {
+        return brokers().build();
     }
 }

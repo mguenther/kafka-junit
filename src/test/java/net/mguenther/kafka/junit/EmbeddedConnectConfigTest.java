@@ -15,7 +15,7 @@ class EmbeddedConnectConfigTest {
     @DisplayName("should use defaults if not explicitly overriden")
     void shouldUseDefaultsIfNotOverridden() {
 
-        final EmbeddedConnectConfig config = EmbeddedConnectConfig.useDefaults();
+        final EmbeddedConnectConfig config = EmbeddedConnectConfig.kafkaConnect().build();
         final Properties props = config.getConnectProperties();
 
         assertThat(props.get(WorkerConfig.KEY_CONVERTER_CLASS_CONFIG)).isEqualTo("org.apache.kafka.connect.storage.StringConverter");
