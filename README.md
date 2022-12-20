@@ -36,7 +36,7 @@ class KafkaTest {
     @Test
     void shouldWaitForRecordsToBePublished() throws Exception {
         kafka.send(to("test-topic", "a", "b", "c"));
-        kafka.observe(on("test-topic", 4));
+        kafka.observe(on("test-topic", 3));
     }
 }
 ```
