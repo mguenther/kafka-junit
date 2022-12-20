@@ -14,6 +14,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.Headers;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -47,17 +48,31 @@ public class DefaultRecordConsumer implements RecordConsumer {
         int totalPollTimeMillis = 0;
         boolean assignmentsReady = false;
         while (totalPollTimeMillis < readRequest.getMaxTotalPollTimeMillis() && continueConsuming(consumedRecords.size(), limit)) {
-            final ConsumerRecords<K, V> records = consumer.poll(pollIntervalMillis);
+            final ConsumerRecords<K, V> records = consumer.poll(Duration.ofMillis(pollIntervalMillis));
             // Kafka exchanges partition assignments and revocations between broker and consumers via the
-            // poll mechanism. So, if we attempt to seek to an dedicated offset for a topic-partition for
+            // poll mechanism. So, if we attempt to seek to a dedicated offset for a topic-partition for
             // which the consumer has not been notified of its assignment yet (there was no previous call
             // to poll for instance), then the seek operation will fail. Hence, we call poll and then check
             // if we have to seek. If did indeed seek, we omit the records returned by the first poll and
-            // do it over. If we did not seek then everything is back to normal and we process the already
+            // do it over. If we did not seek then everything is back to normal, and we process the already
             // obtained records regularly.
-            if (!assignmentsReady) {
-                assignmentsReady = true;
-                if (seekIfNecessary(readRequest, consumer)) continue;
+            try {
+                if (!assignmentsReady) {
+                    assignmentsReady = true;
+                    if (seekIfNecessary(readRequest, consumer)) continue;
+                }
+            } catch (IllegalStateException e) {
+                // KafkaConsumer#poll(long timeoutMs) has been deprecated some time ago. This method blocked until
+                // assignments were ready, thereby effectively ignoring the given timeout if assignments were not
+                // ready yet. We have to switch over to KafkaConsumer#poll(Duration timeout) due to the deprecation
+                // of this method. This changes semantics though: KafkaConsumer#poll(Duration timeout) no longer blocks
+                // past the given timeout, even if assignments have not yet been received. This is not a problem for
+                // regular Kafka clients, but for the seekTo operation that Kafka for JUnit provides, it is a bit
+                // different. A subsequent KafkaConsumer.seek prior to partition assignment will throw an
+                // IllegalStateException. We catch that exception in this client and reset assignmentsReady to false,
+                // thereby retrying again and again until assignments are ready.
+                assignmentsReady = false;
+                continue;
             }
             for (ConsumerRecord<K, V> record : records) {
                 if (filterOnKeys.test(record.key()) && filterOnValues.test(record.value()) && filterOnHeaders.test(record.headers())) {
