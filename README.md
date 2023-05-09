@@ -69,6 +69,7 @@ class KafkaTest {
 
 | Version of Kafka for JUnit | Supports (up to)   |
 |----------------------------|--------------------|
+| 3.4.0                      | Apache Kafka 3.4.0 |
 | 3.3.0                      | Apache Kafka 3.3.1 |
 | 3.2.2                      | Apache Kafka 3.2.3 |
 | 3.1.1                      | Apache Kafka 3.1.0 |
