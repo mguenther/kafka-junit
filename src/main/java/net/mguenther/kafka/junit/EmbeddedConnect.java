@@ -12,6 +12,7 @@ import org.apache.kafka.connect.runtime.WorkerConfigTransformer;
 import org.apache.kafka.connect.runtime.distributed.DistributedConfig;
 import org.apache.kafka.connect.runtime.distributed.DistributedHerder;
 import org.apache.kafka.connect.runtime.isolation.Plugins;
+import org.apache.kafka.connect.runtime.rest.RestClient;
 import org.apache.kafka.connect.runtime.rest.entities.ConnectorInfo;
 import org.apache.kafka.connect.storage.ConfigBackingStore;
 import org.apache.kafka.connect.storage.KafkaConfigBackingStore;
@@ -26,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -54,17 +56,19 @@ public class EmbeddedConnect implements EmbeddedLifecycle {
     private final DistributedHerder herder;
 
     public EmbeddedConnect(final EmbeddedConnectConfig connectConfig, final String brokerList, final String clusterId) {
+        // once created, this supplier will always answer with a constant client ID
+        final Supplier<String> clientIdGenerator = constantClientIdBase();
         final AllConnectorClientConfigOverridePolicy policy = new AllConnectorClientConfigOverridePolicy();
         final Properties effectiveWorkerConfig = connectConfig.getConnectProperties();
         effectiveWorkerConfig.put(WorkerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerList);
         this.connectorConfigs = connectConfig.getConnectors();
         this.config = new DistributedConfig(Utils.propsToStringMap(effectiveWorkerConfig));
-        this.offsetBackingStore = new KafkaOffsetBackingStore(getTopicAdminSupplier(brokerList));
+        this.offsetBackingStore = new KafkaOffsetBackingStore(getTopicAdminSupplier(brokerList), clientIdGenerator);
         this.worker = new Worker(connectConfig.getWorkerId(), Time.SYSTEM, new Plugins(new HashMap<>()), config, offsetBackingStore, policy);
-        this.statusBackingStore = new KafkaStatusBackingStore(Time.SYSTEM, worker.getInternalValueConverter(), getTopicAdminSupplier(brokerList));
+        this.statusBackingStore = new KafkaStatusBackingStore(Time.SYSTEM, worker.getInternalValueConverter(), getTopicAdminSupplier(brokerList), clientIdGenerator.get());
         this.configBackingStore = new KafkaConfigBackingStore(worker.getInternalValueConverter(), config, new WorkerConfigTransformer(worker, Collections.emptyMap()),
-                getTopicAdminSupplier(brokerList));
-        this.herder = new DistributedHerder(config, Time.SYSTEM, worker, clusterId, statusBackingStore, configBackingStore, "", policy);
+                getTopicAdminSupplier(brokerList), clientIdGenerator.get());
+        this.herder = new DistributedHerder(config, Time.SYSTEM, worker, clusterId, statusBackingStore, configBackingStore, "", new RestClient(new DistributedConfig(toMap(effectiveWorkerConfig))), policy);
     }
 
     @Override
@@ -119,5 +123,19 @@ public class EmbeddedConnect implements EmbeddedLifecycle {
         final Map<String, Object> config = new HashMap<>();
         config.put(WorkerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerList);
         return () -> new TopicAdmin(config);
+    }
+
+    private static Supplier<String> constantClientIdBase() {
+        final String randomSuffix = UUID.randomUUID().toString().substring(0, 7);
+        return () -> String.format("kafka-junit-%s", randomSuffix);
+    }
+
+    private static Map<String, String> toMap(final Properties props) {
+        final Map<String, String> propertyMap = new HashMap<>();
+        for (String propertyName : props.stringPropertyNames()) {
+            String propertyValue = props.getProperty(propertyName);
+            propertyMap.put(propertyName, propertyValue);
+        }
+        return Collections.unmodifiableMap(propertyMap);
     }
 }

@@ -54,7 +54,6 @@ public class EmbeddedConnectConfig {
         }
 
         public EmbeddedConnectConfig build() {
-
             ifNonExisting(WorkerConfig.KEY_CONVERTER_CLASS_CONFIG, "org.apache.kafka.connect.storage.StringConverter");
             ifNonExisting(WorkerConfig.VALUE_CONVERTER_CLASS_CONFIG, "org.apache.kafka.connect.storage.StringConverter");
             ifNonExisting(WorkerConfig.CONNECTOR_CLIENT_POLICY_CLASS_CONFIG, "All");
