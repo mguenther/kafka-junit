@@ -19,6 +19,7 @@ import org.apache.kafka.connect.storage.KafkaConfigBackingStore;
 import org.apache.kafka.connect.storage.KafkaOffsetBackingStore;
 import org.apache.kafka.connect.storage.KafkaStatusBackingStore;
 import org.apache.kafka.connect.storage.StatusBackingStore;
+import org.apache.kafka.connect.storage.StringConverter;
 import org.apache.kafka.connect.util.FutureCallback;
 import org.apache.kafka.connect.util.TopicAdmin;
 
@@ -63,12 +64,22 @@ public class EmbeddedConnect implements EmbeddedLifecycle {
         effectiveWorkerConfig.put(WorkerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerList);
         this.connectorConfigs = connectConfig.getConnectors();
         this.config = new DistributedConfig(Utils.propsToStringMap(effectiveWorkerConfig));
-        this.offsetBackingStore = new KafkaOffsetBackingStore(getTopicAdminSupplier(brokerList), clientIdGenerator);
+        this.offsetBackingStore = new KafkaOffsetBackingStore(getTopicAdminSupplier(brokerList), clientIdGenerator, new StringConverter());
         this.worker = new Worker(connectConfig.getWorkerId(), Time.SYSTEM, new Plugins(new HashMap<>()), config, offsetBackingStore, policy);
         this.statusBackingStore = new KafkaStatusBackingStore(Time.SYSTEM, worker.getInternalValueConverter(), getTopicAdminSupplier(brokerList), clientIdGenerator.get());
         this.configBackingStore = new KafkaConfigBackingStore(worker.getInternalValueConverter(), config, new WorkerConfigTransformer(worker, Collections.emptyMap()),
                 getTopicAdminSupplier(brokerList), clientIdGenerator.get());
-        this.herder = new DistributedHerder(config, Time.SYSTEM, worker, clusterId, statusBackingStore, configBackingStore, "", new RestClient(new DistributedConfig(toMap(effectiveWorkerConfig))), policy);
+        this.herder = new DistributedHerder(
+                config,
+                Time.SYSTEM,
+                worker,
+                clusterId,
+                statusBackingStore,
+                configBackingStore,
+                "",
+                new RestClient(new DistributedConfig(toMap(effectiveWorkerConfig))),
+                policy,
+                Collections.emptyList());
     }
 
     @Override
