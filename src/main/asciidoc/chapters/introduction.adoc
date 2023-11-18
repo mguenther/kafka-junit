@@ -72,7 +72,7 @@ class KafkaTest {
 |===
 | Version of Kafka for JUnit | Supports
 
-| 3.5.0
+| 3.5.1
 | Apache Kafka 3.5.1
 
 | 3.4.0
