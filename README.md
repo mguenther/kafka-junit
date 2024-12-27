@@ -3,7 +3,7 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.mguenther.kafka/kafka-junit/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.mguenther.kafka/kafka-junit)
 
 > [!IMPORTANT]
-> Kafka for JUnit will not be updated regularly any longer. Unfortunately, I do not have the time to allocate my attention to this project in a sustainable fashion. Updates **may** still happen (support for new versions, ...), but if they do, it will be solely based on my personal requirements. Thank you for your understanding.
+> Kafka for JUnit will not be updated regularly any longer. Unfortunately, I do not have the time to allocate my attention to this project in a sustainable fashion. Updates and bugfixes **may** still happen (support for new versions, ...), but if they do, it will be solely based on my personal requirements. Thank you for your understanding.
 
 Kafka for JUnit enables developers to start and stop a complete Kafka cluster comprised of Kafka brokers and distributed Kafka Connect workers from within a JUnit test. It also provides a rich set of convenient accessors to interact with such an embedded Kafka cluster in a lean and non-obtrusive way.
 
