@@ -1,6 +1,6 @@
 # Kafka for JUnit
 
-[![Build Status](https://travis-ci.org/mguenther/kafka-junit.svg?branch=master)](https://travis-ci.org/mguenther/kafka-junit.svg) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.mguenther.kafka/kafka-junit/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.mguenther.kafka/kafka-junit)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.mguenther.kafka/kafka-junit/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.mguenther.kafka/kafka-junit)
 
 > [!IMPORTANT]
 > Kafka for JUnit will not be updated regularly any longer. Unfortunately, I do not have the time to allocate my attention to this project in a sustainable fashion. Updates **may** still happen (support for new versions, ...), but if they do, it will be solely based on my personal requirements. Thank you for your understanding.
