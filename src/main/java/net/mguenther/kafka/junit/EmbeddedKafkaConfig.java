@@ -6,6 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -86,18 +89,26 @@ public class EmbeddedKafkaConfig {
         }
 
         private List<Integer> getUniqueEphemeralPorts(final int howMany) {
+            final List<ServerSocket> sockets = new ArrayList<>(howMany);
             final List<Integer> ephemeralPorts = new ArrayList<>(howMany);
-            while (ephemeralPorts.size() < howMany) {
-                final int port = generateRandomEphemeralPort();
-                if (!ephemeralPorts.contains(port)) {
-                    ephemeralPorts.add(port);
+            try {
+                for (int i = 0; i < howMany; i++) {
+                    ServerSocket socket = new ServerSocket(0);
+                    sockets.add(socket);
+                    ephemeralPorts.add(socket.getLocalPort());
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            } finally {
+                for (ServerSocket socket : sockets) {
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        // ignore, close all remaining sockets
+                    }
                 }
             }
             return ephemeralPorts;
-        }
-
-        private int generateRandomEphemeralPort() {
-            return Math.min((int) (Math.random() * 65535) + 1024, 65535);
         }
     }
 
