@@ -22,7 +22,7 @@ class SingleBrokerTest {
         kafka = provisionWith(newClusterConfig()
                 .configure(brokers()
                         .withNumberOfBrokers(1)
-                        .with(KafkaConfig$.MODULE$.ListenersProp(), "PLAINTEXT://localhost:9093")));
+                        .with(KafkaConfigConstants.LISTENERS, "PLAINTEXT://localhost:9093")));
         kafka.start();
     }
 

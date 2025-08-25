@@ -159,7 +159,7 @@ public class EmbeddedKafkaCluster implements EmbeddedLifecycle, RecordProducer, 
      */
     public Set<Integer> disconnectUntilIsrFallsBelowMinimumSize(final String topic) {
         final Properties topicConfig = topicManagerDelegate.fetchTopicConfig(topic);
-        final int minimumIsrSize = Integer.parseInt(topicConfig.getProperty(KafkaConfig$.MODULE$.MinInSyncReplicasProp(), "1"));
+        final int minimumIsrSize = Integer.parseInt(topicConfig.getProperty(KafkaConfigConstants.MIN_INSYNC_REPLICAS, "1"));
         log.info("Attempting to drop the number of brokers in the ISR for topic {} below {}.", topic, minimumIsrSize);
         final Set<Integer> disconnectedBrokers = new HashSet<>();
         final Set<Integer> leaders = topicManagerDelegate.fetchLeaderAndIsr(topic)

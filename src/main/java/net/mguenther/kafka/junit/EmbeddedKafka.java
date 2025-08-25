@@ -38,14 +38,14 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
         this.brokerId = brokerId;
         this.brokerConfig = new Properties();
         this.brokerConfig.putAll(config.getBrokerProperties());
-        this.brokerConfig.put(KafkaConfig$.MODULE$.ListenersProp(), listener);
-        this.brokerConfig.put(KafkaConfig$.MODULE$.ZkConnectProp(), zooKeeperConnectUrl);
+        this.brokerConfig.put(KafkaConfigConstants.LISTENERS, listener);
+        this.brokerConfig.put(KafkaConfigConstants.ZOOKEEPER_CONNECT, zooKeeperConnectUrl);
         this.logDirectory = Files.createTempDirectory("kafka-junit");
-        this.brokerConfig.put(KafkaConfig$.MODULE$.BrokerIdProp(), brokerId);
-        this.brokerConfig.put(KafkaConfig$.MODULE$.LogDirProp(), logDirectory.toFile().getAbsolutePath());
+        this.brokerConfig.put(KafkaConfigConstants.BROKER_ID, brokerId);
+        this.brokerConfig.put(KafkaConfigConstants.LOG_DIR, logDirectory.toFile().getAbsolutePath());
         if (usesConnect) {
             log.info("Enforcing 'log.cleanup.policy=compact', due to the presence of a Kafka Connect deployment.");
-            this.brokerConfig.put(KafkaConfig$.MODULE$.LogCleanupPolicyProp(), "compact");
+            this.brokerConfig.put(KafkaConfigConstants.LOG_CLEANUP_POLICY, "compact");
         }
     }
 
@@ -65,12 +65,13 @@ public class EmbeddedKafka implements EmbeddedLifecycle {
             log.info("Embedded Kafka broker with ID {} is starting.", brokerId);
 
             if (boundPort != UNDEFINED_BOUND_PORT) {
-                this.brokerConfig.put(KafkaConfig$.MODULE$.ListenersProp(), String.format("PLAINTEXT://localhost:%s", boundPort));
+                this.brokerConfig.put(KafkaConfigConstants.LISTENERS, String.format("PLAINTEXT://localhost:%s", boundPort));
             }
 
             final KafkaConfig config = new KafkaConfig(brokerConfig, true);
+            String interBrokerListenerName = brokerConfig.getProperty(KafkaConfigConstants.INTER_BROKER_LISTENER_NAME, "PLAINTEXT");
             kafka = TestUtils.createServer(config, Time.SYSTEM);
-            boundPort = kafka.boundPort(config.interBrokerListenerName());
+            boundPort = kafka.boundPort(ListenerName.forSecurityProtocol(SecurityProtocol.valueOf(interBrokerListenerName)));
 
             log.info("The embedded Kafka broker with ID {} has been started. Its logs can be found at {}.", brokerId, logDirectory);
         } catch (Exception e) {

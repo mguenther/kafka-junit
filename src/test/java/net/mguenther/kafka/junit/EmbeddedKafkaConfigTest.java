@@ -17,16 +17,16 @@ class EmbeddedKafkaConfigTest {
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig.defaultBrokers();
         final Properties props = config.getBrokerProperties();
 
-        assertThat(props.get(KafkaConfig$.MODULE$.ZkSessionTimeoutMsProp())).isEqualTo("8000");
-        assertThat(props.get(KafkaConfig$.MODULE$.ZkConnectionTimeoutMsProp())).isEqualTo("10000");
-        assertThat(props.get(KafkaConfig$.MODULE$.NumPartitionsProp())).isEqualTo("1");
-        assertThat(props.get(KafkaConfig$.MODULE$.AutoCreateTopicsEnableProp())).isEqualTo("true");
-        assertThat(props.get(KafkaConfig$.MODULE$.MessageMaxBytesProp())).isEqualTo("1000000");
-        assertThat(props.get(KafkaConfig$.MODULE$.ControlledShutdownEnableProp())).isEqualTo("true");
-        assertThat(props.get(KafkaConfig$.MODULE$.OffsetsTopicReplicationFactorProp())).isEqualTo("1");
-        assertThat(props.get(KafkaConfig$.MODULE$.GroupInitialRebalanceDelayMsProp())).isEqualTo(0);
-        assertThat(props.get(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp())).isEqualTo("1");
-        assertThat(props.get(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp())).isEqualTo("1");
+        assertThat(props.get(KafkaConfigConstants.ZOOKEEPER_SESSION_TIMEOUT_MS)).isEqualTo("8000");
+        assertThat(props.get(KafkaConfigConstants.ZOOKEEPER_CONNECTION_TIMEOUT_MS)).isEqualTo("10000");
+        assertThat(props.get(KafkaConfigConstants.NUM_PARTITIONS)).isEqualTo("1");
+        assertThat(props.get(KafkaConfigConstants.AUTO_CREATE_TOPICS_ENABLE)).isEqualTo("true");
+        assertThat(props.get(KafkaConfigConstants.MESSAGE_MAX_BYTES)).isEqualTo("1000000");
+        assertThat(props.get(KafkaConfigConstants.CONTROLLED_SHUTDOWN_ENABLE)).isEqualTo("true");
+        assertThat(props.get(KafkaConfigConstants.OFFSETS_TOPIC_REPLICATION_FACTOR)).isEqualTo("1");
+        assertThat(props.get(KafkaConfigConstants.GROUP_INITIAL_REBALANCE_DELAY_MS)).isEqualTo(0);
+        assertThat(props.get(KafkaConfigConstants.TRANSACTION_STATE_LOG_REPLICATION_FACTOR)).isEqualTo("1");
+        assertThat(props.get(KafkaConfigConstants.TRANSACTION_STATE_LOG_MIN_ISR)).isEqualTo("1");
     }
 
     @Test
@@ -35,11 +35,11 @@ class EmbeddedKafkaConfigTest {
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig
                 .brokers()
-                .with(KafkaConfig$.MODULE$.AdvertisedListenersProp(), "localhost:9092")
+                .with(KafkaConfigConstants.ADVERTISED_LISTENERS, "localhost:9092")
                 .build();
         final Properties props = config.getBrokerProperties();
 
-        assertThat(props.get(KafkaConfig$.MODULE$.AdvertisedListenersProp())).isEqualTo("localhost:9092");
+        assertThat(props.get(KafkaConfigConstants.ADVERTISED_LISTENERS)).isEqualTo("localhost:9092");
     }
 
     @Test
@@ -47,8 +47,8 @@ class EmbeddedKafkaConfigTest {
     void withAllShouldOverrideDefaultSettings() {
 
         final Properties overrides = new Properties();
-        overrides.put(KafkaConfig$.MODULE$.AdvertisedListenersProp(), "localhost:9092");
-        overrides.put(KafkaConfig$.MODULE$.NumPartitionsProp(), "2");
+        overrides.put(KafkaConfigConstants.ADVERTISED_LISTENERS, "localhost:9092");
+        overrides.put(KafkaConfigConstants.NUM_PARTITIONS, "2");
 
         final EmbeddedKafkaConfig config = EmbeddedKafkaConfig
                 .brokers()
@@ -56,8 +56,8 @@ class EmbeddedKafkaConfigTest {
                 .build();
         final Properties props = config.getBrokerProperties();
 
-        assertThat(props.get(KafkaConfig$.MODULE$.AdvertisedListenersProp())).isEqualTo("localhost:9092");
-        assertThat(props.get(KafkaConfig$.MODULE$.NumPartitionsProp())).isEqualTo("2");
+        assertThat(props.get(KafkaConfigConstants.ADVERTISED_LISTENERS)).isEqualTo("localhost:9092");
+        assertThat(props.get(KafkaConfigConstants.NUM_PARTITIONS)).isEqualTo("2");
     }
 
     @Test

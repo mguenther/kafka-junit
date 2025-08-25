@@ -64,24 +64,23 @@ public class EmbeddedKafkaConfig {
                 listeners.add(DEFAULT_LISTENER);
             }
 
-            ifNonExisting(KafkaConfig$.MODULE$.ZkSessionTimeoutMsProp(), "8000");
-            ifNonExisting(KafkaConfig$.MODULE$.ZkConnectionTimeoutMsProp(), "10000");
-            ifNonExisting(KafkaConfig$.MODULE$.NumPartitionsProp(), "1");
-            ifNonExisting(KafkaConfig$.MODULE$.DefaultReplicationFactorProp(), "1");
-            ifNonExisting(KafkaConfig$.MODULE$.MinInSyncReplicasProp(), "1");
-            ifNonExisting(KafkaConfig$.MODULE$.AutoCreateTopicsEnableProp(), "true");
-            ifNonExisting(KafkaConfig$.MODULE$.MessageMaxBytesProp(), "1000000");
-            ifNonExisting(KafkaConfig$.MODULE$.ControlledShutdownEnableProp(), "true");
-            ifNonExisting(KafkaConfig$.MODULE$.OffsetsTopicReplicationFactorProp(), "1");
-            ifNonExisting(KafkaConfig$.MODULE$.GroupInitialRebalanceDelayMsProp(), 0);
-            ifNonExisting(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp(), "1");
-            ifNonExisting(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp(), "1");
-            ifNonExisting(KafkaConfig$.MODULE$.SslClientAuthProp(), "none");
-            ifNonExisting(KafkaConfig$.MODULE$.AutoLeaderRebalanceEnableProp(), "true");
-            ifNonExisting(KafkaConfig$.MODULE$.ControlledShutdownEnableProp(), "true");
-            ifNonExisting(KafkaConfig$.MODULE$.LeaderImbalanceCheckIntervalSecondsProp(), 5);
-            ifNonExisting(KafkaConfig$.MODULE$.LeaderImbalancePerBrokerPercentageProp(), 1);
-            ifNonExisting(KafkaConfig$.MODULE$.UncleanLeaderElectionEnableProp(), "false");
+            ifNonExisting(KafkaConfigConstants.ZOOKEEPER_SESSION_TIMEOUT_MS, "8000");
+            ifNonExisting(KafkaConfigConstants.ZOOKEEPER_CONNECTION_TIMEOUT_MS, "10000");
+            ifNonExisting(KafkaConfigConstants.NUM_PARTITIONS, "1");
+            ifNonExisting(KafkaConfigConstants.DEFAULT_REPLICATION_FACTOR, "1");
+            ifNonExisting(KafkaConfigConstants.MIN_INSYNC_REPLICAS, "1");
+            ifNonExisting(KafkaConfigConstants.AUTO_CREATE_TOPICS_ENABLE, "true");
+            ifNonExisting(KafkaConfigConstants.MESSAGE_MAX_BYTES, "1000000");
+            ifNonExisting(KafkaConfigConstants.CONTROLLED_SHUTDOWN_ENABLE, "true");
+            ifNonExisting(KafkaConfigConstants.OFFSETS_TOPIC_REPLICATION_FACTOR, "1");
+            ifNonExisting(KafkaConfigConstants.GROUP_INITIAL_REBALANCE_DELAY_MS, 0);
+            ifNonExisting(KafkaConfigConstants.TRANSACTION_STATE_LOG_REPLICATION_FACTOR, "1");
+            ifNonExisting(KafkaConfigConstants.TRANSACTION_STATE_LOG_MIN_ISR, "1");
+            ifNonExisting(KafkaConfigConstants.SSL_CLIENT_AUTH, "none");
+            ifNonExisting(KafkaConfigConstants.AUTO_LEADER_REBALANCE_ENABLE, "true");
+            ifNonExisting(KafkaConfigConstants.LEADER_IMBALANCE_CHECK_INTERVAL_SECONDS, 5);
+            ifNonExisting(KafkaConfigConstants.LEADER_IMBALANCE_PER_BROKER_PERCENTAGE, 1);
+            ifNonExisting(KafkaConfigConstants.UNCLEAN_LEADER_ELECTION_ENABLE, "false");
             return new EmbeddedKafkaConfig(numberOfBrokers, listeners, properties);
         }
 
@@ -110,8 +109,8 @@ public class EmbeddedKafkaConfig {
     private final Properties brokerProperties;
 
     public String listenerFor(final int brokerIndex) {
-        if (brokerProperties.containsKey(KafkaConfig$.MODULE$.ListenersProp())) {
-            return brokerProperties.getProperty(KafkaConfig$.MODULE$.ListenersProp());
+        if (brokerProperties.containsKey(KafkaConfigConstants.LISTENERS)) {
+            return brokerProperties.getProperty(KafkaConfigConstants.LISTENERS);
         } else {
             return uniqueListeners.get(brokerIndex);
         }

@@ -38,8 +38,8 @@ class MultipleBrokersTest {
         kafka = provisionWith(newClusterConfig()
                 .configure(brokers()
                         .withNumberOfBrokers(3)
-                        .with(KafkaConfig$.MODULE$.TransactionsTopicReplicationFactorProp(), "1")
-                        .with(KafkaConfig$.MODULE$.TransactionsTopicMinISRProp(), "1")));
+                        .with(KafkaConfigConstants.TRANSACTION_STATE_LOG_REPLICATION_FACTOR, "1")
+                        .with(KafkaConfigConstants.TRANSACTION_STATE_LOG_MIN_ISR, "1")));
         kafka.start();
     }
 
