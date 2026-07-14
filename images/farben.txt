@@ -1,0 +1,12 @@
+Akzentfarbe: #6666cc
+Schriftfarbe 1 (über Akzentfarbe): #ffffff
+Schriftfarbe 2 (signifkant): #000000
+Schriftfarbe 3 (Textfelder, ...): #999999
+Schriftfarbe 4 (Akzent): #6666cc
+Hintergrund (Applikation): #333333
+Hintergrund (Navigationsleiste): #444444
+Hintergrund (Plugin-Header): #666666
+Hintergrund, Hell, Auswahl: #e7e7e7
+Hintergrund, Well: #fefefe
+
+Akzentfarbe ist zulässig für Schriftfarbe und Hintergrundfarbe.
