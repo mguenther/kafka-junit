@@ -1,0 +1,464 @@
+/*
+ * Kafka Topic Browser - Dark Theme Stylesheet
+ *
+ * Color scheme (from farben.txt):
+ * Accent:            #6666cc
+ * Font on accent:    #ffffff
+ * Significant font:  #000000
+ * Text fields:       #999999
+ * Accent font:       #6666cc
+ * App background:    #333333
+ * Nav bar BG:        #444444
+ * Plugin header BG:  #666666
+ * Light/selection:   #e7e7e7
+ * Well BG:           #fefefe
+ */
+
+/* === Root & Main Layout === */
+.root {
+    -fx-font-family: "System";
+    -fx-font-size: 13px;
+}
+
+.main-layout {
+    -fx-background-color: #333333;
+}
+
+/* === Header Bar === */
+.header-bar {
+    -fx-background-color: transparent;
+    -fx-spacing: 0;
+}
+
+.header-workspace {
+    -fx-background-color: #6666cc;
+    -fx-padding: 8 20;
+    -fx-cursor: hand;
+}
+
+.header-workspace-label {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.header-environment {
+    -fx-background-color: #e7e7e7;
+    -fx-padding: 8 20;
+    -fx-cursor: hand;
+}
+
+.header-environment-label {
+    -fx-text-fill: #000000;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+/* === Icon Sidebar === */
+.icon-sidebar {
+    -fx-background-color: #444444;
+}
+
+.icon-sidebar-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 18px;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-padding: 5;
+}
+
+.icon-sidebar-button:hover {
+    -fx-background-color: #555555;
+    -fx-background-radius: 4;
+}
+
+/* === Content Area === */
+.content-area {
+    -fx-background-color: #333333;
+}
+
+.split-content {
+    -fx-background-color: transparent;
+}
+
+/* === Empty State === */
+.empty-state {
+    -fx-background-color: #333333;
+}
+
+.empty-state-card {
+    -fx-background-color: #fefefe;
+    -fx-background-radius: 4;
+    -fx-padding: 20 40;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 0, 2);
+}
+
+.empty-state-message {
+    -fx-text-fill: #000000;
+    -fx-font-size: 16px;
+}
+
+/* === Topic List Panel === */
+.topic-list-panel {
+    -fx-background-color: #e7e7e7;
+}
+
+.topic-count-label {
+    -fx-text-fill: #000000;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+.refresh-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #333333;
+    -fx-font-size: 20px;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.refresh-button:hover {
+    -fx-text-fill: #6666cc;
+}
+
+.filter-label {
+    -fx-text-fill: #999999;
+    -fx-font-size: 12px;
+}
+
+.filter-field {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #999999 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-text-fill: #000000;
+    -fx-prompt-text-fill: #999999;
+    -fx-padding: 5 0;
+}
+
+.topic-list-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.topic-list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 8 10;
+    -fx-border-color: transparent;
+}
+
+.topic-list-view .list-cell:selected {
+    -fx-background-color: #d0d0d0;
+}
+
+.topic-list-view .list-cell:hover {
+    -fx-background-color: #dcdcdc;
+}
+
+.topic-name {
+    -fx-text-fill: #000000;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+.topic-meta {
+    -fx-text-fill: #999999;
+    -fx-font-size: 11px;
+}
+
+.topic-format-badge {
+    -fx-background-color: #6666cc;
+    -fx-text-fill: #ffffff;
+    -fx-padding: 4 12;
+    -fx-background-radius: 4;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-min-width: 50;
+    -fx-alignment: center;
+}
+
+.topic-format-badge-avro {
+    -fx-background-color: #6666cc;
+}
+
+.topic-format-badge-json {
+    -fx-background-color: #6666cc;
+}
+
+/* === Record Detail Panel === */
+.record-detail-panel {
+    -fx-background-color: #333333;
+}
+
+.record-header {
+    -fx-padding: 0 0 10 0;
+}
+
+.record-topic-header {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+.settings-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 18px;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.settings-button:hover {
+    -fx-text-fill: #6666cc;
+}
+
+/* === Record Table View === */
+.record-table-view {
+    -fx-background-color: #333333;
+}
+
+.record-filter-field {
+    -fx-background-color: #fefefe;
+    -fx-border-color: #999999;
+    -fx-border-radius: 2;
+    -fx-background-radius: 2;
+    -fx-prompt-text-fill: #999999;
+}
+
+.partition-selector {
+    -fx-background-color: #fefefe;
+    -fx-border-color: #999999;
+    -fx-border-radius: 2;
+    -fx-background-radius: 2;
+}
+
+.seek-field {
+    -fx-background-color: #fefefe;
+    -fx-border-color: #999999;
+    -fx-border-radius: 2;
+    -fx-background-radius: 2;
+    -fx-prompt-text-fill: #999999;
+}
+
+.seek-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.seek-button:hover {
+    -fx-text-fill: #6666cc;
+}
+
+.showing-label {
+    -fx-text-fill: #6666cc;
+    -fx-font-size: 11px;
+    -fx-font-style: italic;
+}
+
+.record-table {
+    -fx-background-color: #fefefe;
+    -fx-border-color: transparent;
+}
+
+.record-table .column-header {
+    -fx-background-color: #e7e7e7;
+    -fx-border-color: transparent transparent #cccccc transparent;
+}
+
+.record-table .column-header .label {
+    -fx-text-fill: #000000;
+    -fx-font-weight: bold;
+}
+
+.record-table .table-row-cell {
+    -fx-background-color: #fefefe;
+    -fx-border-color: transparent transparent #e7e7e7 transparent;
+}
+
+.record-table .table-row-cell:selected {
+    -fx-background-color: #e7e7e7;
+}
+
+.record-table .table-cell {
+    -fx-text-fill: #000000;
+    -fx-padding: 8 10;
+}
+
+/* === Pagination Buttons === */
+.pagination-button {
+    -fx-background-color: #6666cc;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 14px;
+    -fx-padding: 8 16;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.pagination-button:hover {
+    -fx-background-color: #5555bb;
+}
+
+.produce-button {
+    -fx-background-color: #6666cc;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 20;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.produce-button:hover {
+    -fx-background-color: #5555bb;
+}
+
+/* === Record Search View === */
+.record-search-view {
+    -fx-background-color: #333333;
+}
+
+.search-field {
+    -fx-background-color: #fefefe;
+    -fx-border-color: #999999;
+    -fx-border-radius: 2;
+    -fx-background-radius: 2;
+    -fx-prompt-text-fill: #999999;
+    -fx-pref-height: 32;
+}
+
+.search-button {
+    -fx-background-color: #6666cc;
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+    -fx-padding: 6 20;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.search-button:hover {
+    -fx-background-color: #5555bb;
+}
+
+.search-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.search-scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+.search-results-container {
+    -fx-background-color: transparent;
+}
+
+/* === Search Result Card === */
+.search-result-card {
+    -fx-background-color: #fefefe;
+    -fx-background-radius: 4;
+    -fx-border-color: #e7e7e7;
+    -fx-border-radius: 4;
+}
+
+.expand-triangle {
+    -fx-text-fill: #333333;
+    -fx-font-size: 10px;
+    -fx-cursor: hand;
+}
+
+.result-field-label {
+    -fx-text-fill: #6666cc;
+    -fx-font-size: 13px;
+}
+
+.result-field-value {
+    -fx-text-fill: #999999;
+    -fx-font-size: 13px;
+}
+
+.result-field-expanded {
+    -fx-text-fill: #000000;
+    -fx-font-size: 12px;
+    -fx-padding: 5 0 5 30;
+}
+
+.result-meta-label {
+    -fx-text-fill: #999999;
+    -fx-font-size: 11px;
+}
+
+/* === Dialogs === */
+.dialog-field-label {
+    -fx-text-fill: #000000;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+.dialog-text-field {
+    -fx-background-color: #fefefe;
+    -fx-border-color: #999999;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-padding: 6 10;
+}
+
+.dialog-text-area {
+    -fx-background-color: #fefefe;
+    -fx-border-color: #999999;
+    -fx-border-radius: 3;
+}
+
+.dialog-cancel-button {
+    -fx-background-color: #fefefe;
+    -fx-text-fill: #000000;
+    -fx-border-color: #999999;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-padding: 6 20;
+    -fx-cursor: hand;
+}
+
+.dialog-cancel-button:hover {
+    -fx-background-color: #e7e7e7;
+}
+
+.dialog-save-button {
+    -fx-background-color: #6666cc;
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+    -fx-border-color: transparent;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-padding: 6 20;
+    -fx-cursor: hand;
+}
+
+.dialog-save-button:hover {
+    -fx-background-color: #5555bb;
+}
+
+.remove-param-button {
+    -fx-background-color: #6666cc;
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+    -fx-padding: 4 12;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+}
+
+.remove-param-button:hover {
+    -fx-background-color: #5555bb;
+}
+
+/* === Menu Section Headers === */
+.menu-section-header {
+    -fx-text-fill: #999999;
+    -fx-font-size: 11px;
+}
