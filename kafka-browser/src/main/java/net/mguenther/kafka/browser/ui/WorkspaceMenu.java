@@ -1,109 +1,144 @@
 package net.mguenther.kafka.browser.ui;
 
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SeparatorMenuItem;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Popup;
 import net.mguenther.kafka.browser.model.BrowserConfig;
 import net.mguenther.kafka.browser.model.ConfigPersistence;
 import net.mguenther.kafka.browser.model.Environment;
 import net.mguenther.kafka.browser.model.Workspace;
 
-import java.util.Optional;
+import java.util.HashMap;
 
 /**
- * Context menu shown when clicking the workspace selector. Structure:
- * - Current workspace name (header)
- *   - Workspace Settings
- * - Switch Workspace (section)
- *   - List of other workspaces
- *   - New Workspace
- * - Manage Workspaces (section)
- *   - Edit Configuration
- * - General (section)
- *   - Preferences
- *   - Import / Export
+ * Custom styled dropdown menu for the workspace selector.
+ * Renders as a Popup with a VBox styled to match the application theme,
+ * positioned directly below the workspace header area.
+ * Opens overlay dialogs within the provided overlay container.
  */
-public class WorkspaceMenu extends ContextMenu {
+public class WorkspaceMenu extends Popup {
 
     private final BrowserConfig config;
     private final ConfigPersistence persistence;
     private final Runnable onChanged;
+    private final StackPane overlayContainer;
 
-    public WorkspaceMenu(BrowserConfig config, ConfigPersistence persistence, Runnable onChanged) {
+    public WorkspaceMenu(BrowserConfig config, ConfigPersistence persistence,
+                         StackPane overlayContainer, Runnable onChanged) {
         this.config = config;
         this.persistence = persistence;
+        this.overlayContainer = overlayContainer;
         this.onChanged = onChanged;
 
-        buildMenu();
+        setAutoHide(true);
+        setAutoFix(true);
+
+        VBox content = buildContent();
+        getContent().add(content);
     }
 
-    private void buildMenu() {
+    private VBox buildContent() {
+        VBox box = new VBox();
+        box.getStyleClass().add("dropdown-menu");
+        box.setPadding(new Insets(8, 0, 8, 0));
+        box.setMinWidth(220);
+
         Workspace active = config.getActiveWorkspace();
 
         // Current workspace section
         if (active != null) {
-            MenuItem header = new MenuItem(active.getName());
-            header.setDisable(true);
-            header.getStyleClass().add("menu-section-header");
-            getItems().add(header);
+            Label header = createSectionHeader(active.getName());
+            box.getChildren().add(header);
 
-            MenuItem settingsItem = new MenuItem("Workspace Settings");
-            settingsItem.setOnAction(e -> editWorkspace(active));
-            getItems().add(settingsItem);
+            Label settingsItem = createMenuItem("Workspace Settings");
+            settingsItem.setOnMouseClicked(e -> { hide(); editWorkspace(active); });
+            box.getChildren().add(settingsItem);
 
-            getItems().add(new SeparatorMenuItem());
+            box.getChildren().add(createSeparator());
         }
 
         // Switch Workspace section
-        MenuItem switchHeader = new MenuItem("Switch Workspace");
-        switchHeader.setDisable(true);
-        switchHeader.getStyleClass().add("menu-section-header");
-        getItems().add(switchHeader);
+        Label switchHeader = createSectionHeader("Switch Workspace");
+        box.getChildren().add(switchHeader);
 
         for (Workspace ws : config.getWorkspaces()) {
             if (active != null && ws.getName().equals(active.getName())) continue;
-            MenuItem wsItem = new MenuItem("To " + ws.getName());
-            wsItem.setOnAction(e -> switchToWorkspace(ws));
-            getItems().add(wsItem);
+            Label wsItem = createMenuItem("To " + ws.getName());
+            wsItem.setOnMouseClicked(e -> { hide(); switchToWorkspace(ws); });
+            box.getChildren().add(wsItem);
         }
 
-        MenuItem newWsItem = new MenuItem("New Workspace");
-        newWsItem.setOnAction(e -> createNewWorkspace());
-        getItems().add(newWsItem);
+        Label newWsItem = createMenuItem("New Workspace");
+        newWsItem.setOnMouseClicked(e -> { hide(); createNewWorkspace(); });
+        box.getChildren().add(newWsItem);
 
-        getItems().add(new SeparatorMenuItem());
+        box.getChildren().add(createSeparator());
 
         // Manage Workspaces section
-        MenuItem manageHeader = new MenuItem("Manage Workspaces");
-        manageHeader.setDisable(true);
-        manageHeader.getStyleClass().add("menu-section-header");
-        getItems().add(manageHeader);
+        Label manageHeader = createSectionHeader("Manage Workspaces");
+        box.getChildren().add(manageHeader);
 
-        MenuItem editConfigItem = new MenuItem("Edit Configuration");
-        editConfigItem.setOnAction(e -> editConfiguration());
-        getItems().add(editConfigItem);
+        Label editConfigItem = createMenuItem("Edit Configuration");
+        editConfigItem.setOnMouseClicked(e -> { hide(); showManageWorkspaces(); });
+        box.getChildren().add(editConfigItem);
 
-        getItems().add(new SeparatorMenuItem());
+        box.getChildren().add(createSeparator());
 
         // General section
-        MenuItem generalHeader = new MenuItem("General");
-        generalHeader.setDisable(true);
-        generalHeader.getStyleClass().add("menu-section-header");
-        getItems().add(generalHeader);
+        Label generalHeader = createSectionHeader("General");
+        box.getChildren().add(generalHeader);
 
-        MenuItem prefsItem = new MenuItem("Preferences");
-        prefsItem.setOnAction(e -> {/* TODO: preferences */});
-        getItems().add(prefsItem);
+        Label prefsItem = createMenuItem("Preferences");
+        prefsItem.setOnMouseClicked(e -> { hide(); showPreferences(); });
+        box.getChildren().add(prefsItem);
 
-        MenuItem importExportItem = new MenuItem("Import / Export");
-        importExportItem.setOnAction(e -> {/* TODO: import/export */});
-        getItems().add(importExportItem);
+        Label importExportItem = createMenuItem("Import / Export");
+        importExportItem.setOnMouseClicked(e -> { hide(); showImportExport(); });
+        box.getChildren().add(importExportItem);
+
+        return box;
+    }
+
+    private Label createSectionHeader(String text) {
+        Label label = new Label(text);
+        label.getStyleClass().add("dropdown-section-header");
+        label.setPadding(new Insets(6, 16, 2, 16));
+        label.setMaxWidth(Double.MAX_VALUE);
+        return label;
+    }
+
+    private Label createMenuItem(String text) {
+        Label label = new Label(text);
+        label.getStyleClass().add("dropdown-menu-item");
+        label.setPadding(new Insets(6, 16, 6, 16));
+        label.setMaxWidth(Double.MAX_VALUE);
+        label.setCursor(javafx.scene.Cursor.HAND);
+        return label;
+    }
+
+    private Separator createSeparator() {
+        Separator sep = new Separator();
+        sep.getStyleClass().add("dropdown-separator");
+        VBox.setMargin(sep, new Insets(4, 0, 4, 0));
+        return sep;
+    }
+
+    public void showBelow(Node anchor) {
+        Bounds bounds = anchor.localToScreen(anchor.getBoundsInLocal());
+        if (bounds != null) {
+            show(anchor, bounds.getMinX(), bounds.getMaxY());
+        }
     }
 
     private void switchToWorkspace(Workspace ws) {
         config.setActiveWorkspaceName(ws.getName());
-        // Default to first environment or null
         if (!ws.getEnvironments().isEmpty()) {
             config.setActiveEnvironmentName(ws.getEnvironments().get(0).getName());
         } else {
@@ -115,36 +150,64 @@ public class WorkspaceMenu extends ContextMenu {
 
     private void createNewWorkspace() {
         CreateWorkspaceDialog dialog = new CreateWorkspaceDialog();
-        Optional<Workspace> result = dialog.showAndWait();
-        result.ifPresent(ws -> {
-            // Add a default "Global" environment
-            ws.addEnvironment(new Environment("Global"));
-            config.addWorkspace(ws);
-            config.setActiveWorkspaceName(ws.getName());
-            config.setActiveEnvironmentName("Global");
-            persistence.save(config);
-            onChanged.run();
+        dialog.setOnResult(ws -> {
+            if (ws != null) {
+                ws.addEnvironment(new Environment("Global"));
+                config.addWorkspace(ws);
+                config.setActiveWorkspaceName(ws.getName());
+                config.setActiveEnvironmentName("Global");
+                persistence.save(config);
+                onChanged.run();
+            }
         });
+        dialog.showIn(overlayContainer);
     }
 
     private void editWorkspace(Workspace active) {
         CreateWorkspaceDialog dialog = new CreateWorkspaceDialog(active);
-        Optional<Workspace> result = dialog.showAndWait();
-        result.ifPresent(updated -> {
-            active.setName(updated.getName());
-            active.setBootstrapServers(updated.getBootstrapServers());
-            active.setZookeeperConnectUrl(updated.getZookeeperConnectUrl());
-            active.setKafkaVersion(updated.getKafkaVersion());
-            config.setActiveWorkspaceName(active.getName());
+        dialog.setOnResult(updated -> {
+            if (updated != null) {
+                active.setName(updated.getName());
+                active.setBootstrapServers(updated.getBootstrapServers());
+                active.setZookeeperConnectUrl(updated.getZookeeperConnectUrl());
+                active.setKafkaVersion(updated.getKafkaVersion());
+                config.setActiveWorkspaceName(active.getName());
+                persistence.save(config);
+                onChanged.run();
+            }
+        });
+        dialog.showIn(overlayContainer);
+    }
+
+    private void showManageWorkspaces() {
+        ManageWorkspacesDialog dialog = new ManageWorkspacesDialog(config, () -> {
             persistence.save(config);
             onChanged.run();
         });
+        dialog.showIn(overlayContainer);
     }
 
-    private void editConfiguration() {
-        Workspace active = config.getActiveWorkspace();
-        if (active != null) {
-            editWorkspace(active);
+    private void showPreferences() {
+        PreferencesDialog dialog = new PreferencesDialog(new HashMap<>());
+        dialog.setOnResult(prefs -> {
+            if (prefs != null) {
+                // TODO: persist preferences
+            }
+        });
+        dialog.showIn(overlayContainer);
+    }
+
+    private void showImportExport() {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.enable(SerializationFeature.INDENT_OUTPUT);
+            String json = mapper.writeValueAsString(config);
+            ImportExportDialog dialog = new ImportExportDialog(ImportExportDialog.Mode.EXPORT, json);
+            dialog.showIn(overlayContainer);
+        } catch (Exception ex) {
+            // Fallback: show empty
+            ImportExportDialog dialog = new ImportExportDialog(ImportExportDialog.Mode.EXPORT, "{}");
+            dialog.showIn(overlayContainer);
         }
     }
 }

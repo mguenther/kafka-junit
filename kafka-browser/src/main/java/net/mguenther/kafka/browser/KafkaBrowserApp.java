@@ -2,6 +2,7 @@ package net.mguenther.kafka.browser;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import net.mguenther.kafka.browser.model.BrowserConfig;
 import net.mguenther.kafka.browser.model.ConfigPersistence;
@@ -17,6 +18,10 @@ public class KafkaBrowserApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        // Load bundled JetBrains Mono font
+        Font.loadFont(getClass().getResourceAsStream("/fonts/JetBrainsMono-Regular.ttf"), 12);
+        Font.loadFont(getClass().getResourceAsStream("/fonts/JetBrainsMono-Bold.ttf"), 12);
+
         persistence = new ConfigPersistence();
         config = persistence.load();
 

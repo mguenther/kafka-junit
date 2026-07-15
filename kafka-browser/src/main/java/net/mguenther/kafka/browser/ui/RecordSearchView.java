@@ -67,6 +67,7 @@ public class RecordSearchView extends VBox {
         Button searchBtn = new Button("Search");
         searchBtn.getStyleClass().add("search-button");
         searchBtn.setOnAction(e -> performSearch());
+        searchBtn.disableProperty().bind(searchField.textProperty().isEmpty());
 
         searchRow.getChildren().addAll(searchField, searchBtn);
 
@@ -109,7 +110,7 @@ public class RecordSearchView extends VBox {
             // Get total count for info display
             int totalFound = results.size();
             Platform.runLater(() -> {
-                resultCountLabel.setText("Showing " + totalFound + " out of " + totalFound + " records.");
+                resultCountLabel.setText("Showing " + totalFound + " out of " + totalFound + (totalFound == 1 ? " record." : " records."));
                 for (KeyValue<String, String> kv : results) {
                     resultsContainer.getChildren().add(new SearchResultCard(kv));
                 }

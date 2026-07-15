@@ -34,7 +34,7 @@ public class TopicListCell extends ListCell<TopicInfo> {
             nameLabel.getStyleClass().add("topic-name");
 
             Label metaLabel = new Label(
-                    item.getPartitions() + (item.getPartitions() == 1 ? " Partition" : " Partitions")
+                    item.getPartitions() + (item.getPartitions() == 1 ? " partition" : " partitions")
                             + " x " + item.getReplicas() + (item.getReplicas() == 1 ? " replica" : " replicas"));
             metaLabel.getStyleClass().add("topic-meta");
 
@@ -56,6 +56,6 @@ public class TopicListCell extends ListCell<TopicInfo> {
     private String getBadgeText(String format) {
         if ("avro".equals(format)) return "avro";
         if ("json".equals(format)) return "json";
-        return "\u2026";
+        return "unknown";
     }
 }

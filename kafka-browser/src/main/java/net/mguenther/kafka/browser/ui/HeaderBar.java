@@ -4,6 +4,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import net.mguenther.kafka.browser.model.BrowserConfig;
 import net.mguenther.kafka.browser.model.ConfigPersistence;
 import net.mguenther.kafka.browser.model.Environment;
@@ -20,9 +21,12 @@ public class HeaderBar extends HBox {
     private final ConfigPersistence persistence;
     private final Runnable onWorkspaceChanged;
     private final Runnable onEnvironmentChanged;
+    private StackPane overlayContainer;
 
     private Label workspaceLabel;
     private Label environmentLabel;
+    private HBox workspaceBox;
+    private HBox environmentBox;
 
     public HeaderBar(BrowserConfig config, ConfigPersistence persistence,
                      Runnable onWorkspaceChanged, Runnable onEnvironmentChanged) {
@@ -39,9 +43,17 @@ public class HeaderBar extends HBox {
         buildUI();
     }
 
+    /**
+     * Sets the overlay container used to display in-app dialogs.
+     * Must be called after construction and before user interaction.
+     */
+    public void setOverlayContainer(StackPane overlayContainer) {
+        this.overlayContainer = overlayContainer;
+    }
+
     private void buildUI() {
         // Workspace selector (left half)
-        HBox workspaceBox = new HBox();
+        workspaceBox = new HBox();
         workspaceBox.getStyleClass().add("header-workspace");
         workspaceBox.setAlignment(Pos.CENTER);
         HBox.setHgrow(workspaceBox, Priority.ALWAYS);
@@ -56,7 +68,7 @@ public class HeaderBar extends HBox {
         workspaceBox.setOnMouseClicked(e -> showWorkspaceMenu());
 
         // Environment selector (right half)
-        HBox environmentBox = new HBox();
+        environmentBox = new HBox();
         environmentBox.getStyleClass().add("header-environment");
         environmentBox.setAlignment(Pos.CENTER);
         HBox.setHgrow(environmentBox, Priority.ALWAYS);
@@ -84,20 +96,20 @@ public class HeaderBar extends HBox {
     }
 
     private void showWorkspaceMenu() {
-        WorkspaceMenu menu = new WorkspaceMenu(config, persistence, () -> {
+        WorkspaceMenu menu = new WorkspaceMenu(config, persistence, overlayContainer, () -> {
             workspaceLabel.setText(getWorkspaceDisplayName());
             environmentLabel.setText(getEnvironmentDisplayName());
             onWorkspaceChanged.run();
         });
-        menu.show(this, getLayoutX(), getLayoutY() + getHeight());
+        menu.showBelow(workspaceBox);
     }
 
     private void showEnvironmentMenu() {
-        EnvironmentMenu menu = new EnvironmentMenu(config, persistence, () -> {
+        EnvironmentMenu menu = new EnvironmentMenu(config, persistence, overlayContainer, () -> {
             environmentLabel.setText(getEnvironmentDisplayName());
             onEnvironmentChanged.run();
         });
-        menu.show(this, getLayoutX() + getWidth() / 2, getLayoutY() + getHeight());
+        menu.showBelow(environmentBox);
     }
 
     public void refresh() {

@@ -1,26 +1,25 @@
 package net.mguenther.kafka.browser.ui;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import net.mguenther.kafka.browser.model.Workspace;
 
 /**
- * Dialog for creating a new workspace. Fields:
+ * In-app overlay dialog for creating or editing a workspace.
+ * Renders as a centered panel within the content area matching the mockup style.
+ * Fields:
  * - Workspace Name
  * - Kafka Bootstrap Servers
  * - Kafka Version selector (determines if ZooKeeper field is shown)
  * - ZooKeeper Connect URL (visible for older versions)
  */
-public class CreateWorkspaceDialog extends Dialog<Workspace> {
+public class CreateWorkspaceDialog extends OverlayDialog<Workspace> {
 
     private TextField nameField;
     private TextField bootstrapField;
@@ -33,12 +32,11 @@ public class CreateWorkspaceDialog extends Dialog<Workspace> {
     }
 
     public CreateWorkspaceDialog(Workspace existing) {
-        setTitle(existing == null ? "Create Workspace" : "Edit Workspace");
-        setHeaderText(null);
+        super();
 
-        VBox content = new VBox(15);
-        content.setPadding(new Insets(20));
-        content.setPrefWidth(550);
+        // Title
+        Label title = new Label(existing == null ? "Create Workspace" : "Edit Workspace");
+        title.getStyleClass().add("overlay-dialog-title");
 
         // Workspace Name
         Label nameLabel = new Label("Workspace Name");
@@ -58,9 +56,10 @@ public class CreateWorkspaceDialog extends Dialog<Workspace> {
         Label versionLabel = new Label("Kafka Version");
         versionLabel.getStyleClass().add("dialog-field-label");
         versionSelector = new ComboBox<>();
-        versionSelector.getItems().addAll("3.x (KRaft)", "2.x (ZooKeeper)", "1.x (ZooKeeper)");
+        versionSelector.getItems().addAll("3.x (KRaft)", "3.x (ZooKeeper)", "2.x (ZooKeeper)", "1.x (ZooKeeper)");
         versionSelector.getSelectionModel().selectFirst();
         versionSelector.setMaxWidth(Double.MAX_VALUE);
+        versionSelector.getStyleClass().add("dialog-combo-box");
         versionSelector.setOnAction(e -> updateZookeeperVisibility());
 
         // ZooKeeper Connect URL
@@ -86,24 +85,14 @@ public class CreateWorkspaceDialog extends Dialog<Workspace> {
             updateZookeeperVisibility();
         }
 
-        content.getChildren().addAll(
-                nameLabel, nameField,
-                bootstrapLabel, bootstrapField,
-                versionLabel, versionSelector,
-                zookeeperRow
-        );
-
         // Buttons
         HBox buttonRow = new HBox(10);
+        buttonRow.setAlignment(Pos.CENTER_RIGHT);
         buttonRow.setPadding(new Insets(15, 0, 0, 0));
-        buttonRow.setStyle("-fx-alignment: center-right;");
 
         Button cancelBtn = new Button("Cancel");
         cancelBtn.getStyleClass().add("dialog-cancel-button");
-        cancelBtn.setOnAction(e -> {
-            setResult(null);
-            close();
-        });
+        cancelBtn.setOnAction(e -> close(null));
 
         Button saveBtn = new Button("Save");
         saveBtn.getStyleClass().add("dialog-save-button");
@@ -114,25 +103,25 @@ public class CreateWorkspaceDialog extends Dialog<Workspace> {
                     zookeeperField.getText().trim(),
                     versionSelector.getValue()
             );
-            setResult(ws);
-            close();
+            close(ws);
         });
 
         buttonRow.getChildren().addAll(cancelBtn, saveBtn);
-        content.getChildren().add(buttonRow);
 
-        getDialogPane().setContent(content);
-        // Hidden ButtonType to allow programmatic close
-        getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-        getDialogPane().lookupButton(ButtonType.CLOSE).setVisible(false);
-        getDialogPane().lookupButton(ButtonType.CLOSE).setManaged(false);
-
-        setResultConverter(bt -> null);
+        dialogPane.setSpacing(10);
+        dialogPane.getChildren().addAll(
+                title,
+                nameLabel, nameField,
+                bootstrapLabel, bootstrapField,
+                versionLabel, versionSelector,
+                zookeeperRow,
+                buttonRow
+        );
     }
 
     private void updateZookeeperVisibility() {
         String version = versionSelector.getValue();
-        boolean showZk = version != null && (version.contains("2.x") || version.contains("1.x"));
+        boolean showZk = version != null && version.contains("ZooKeeper");
         zookeeperRow.setVisible(showZk);
         zookeeperRow.setManaged(showZk);
     }

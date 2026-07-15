@@ -3,12 +3,9 @@ package net.mguenther.kafka.browser.ui;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import net.mguenther.kafka.browser.model.Environment;
 
@@ -18,28 +15,30 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Dialog for customizing an environment's key-value parameters.
+ * In-app overlay dialog for customizing an environment's key-value parameters.
  * Shows a dynamic table with Parameter/Value columns and remove buttons,
  * plus an empty row for adding new parameters.
  */
-public class CustomizeEnvironmentDialog extends Dialog<Environment> {
+public class CustomizeEnvironmentDialog extends OverlayDialog<Environment> {
 
     private final Environment environment;
     private VBox rowsContainer;
-    private List<ParameterRow> parameterRows = new ArrayList<>();
+    private final List<ParameterRow> parameterRows = new ArrayList<>();
 
     public CustomizeEnvironmentDialog(Environment environment) {
+        super();
         this.environment = environment;
-        setTitle("Customize Environment " + environment.getName());
-        setHeaderText(null);
 
-        VBox content = new VBox(10);
-        content.setPadding(new Insets(20));
-        content.setPrefWidth(650);
+        dialogPane.setMaxWidth(700);
+
+        // Title
+        Label title = new Label("Customize Environment " + environment.getName());
+        title.getStyleClass().add("overlay-dialog-title");
 
         // Column headers
         HBox headerRow = new HBox(10);
         headerRow.setAlignment(Pos.CENTER_LEFT);
+        headerRow.setPadding(new Insets(10, 0, 0, 0));
 
         Label paramHeader = new Label("Parameter");
         paramHeader.getStyleClass().add("dialog-field-label");
@@ -64,15 +63,12 @@ public class CustomizeEnvironmentDialog extends Dialog<Environment> {
 
         // Buttons
         HBox buttonRow = new HBox(10);
+        buttonRow.setAlignment(Pos.CENTER_RIGHT);
         buttonRow.setPadding(new Insets(15, 0, 0, 0));
-        buttonRow.setStyle("-fx-alignment: center-right;");
 
         Button cancelBtn = new Button("Cancel");
         cancelBtn.getStyleClass().add("dialog-cancel-button");
-        cancelBtn.setOnAction(e -> {
-            setResult(null);
-            close();
-        });
+        cancelBtn.setOnAction(e -> close(null));
 
         Button saveBtn = new Button("Save");
         saveBtn.getStyleClass().add("dialog-save-button");
@@ -85,21 +81,13 @@ public class CustomizeEnvironmentDialog extends Dialog<Environment> {
                     params.put(key, value);
                 }
             }
-            Environment result = new Environment(environment.getName(), params);
-            setResult(result);
-            close();
+            close(new Environment(environment.getName(), params));
         });
 
         buttonRow.getChildren().addAll(cancelBtn, saveBtn);
 
-        content.getChildren().addAll(headerRow, rowsContainer, buttonRow);
-
-        getDialogPane().setContent(content);
-        getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-        getDialogPane().lookupButton(ButtonType.CLOSE).setVisible(false);
-        getDialogPane().lookupButton(ButtonType.CLOSE).setManaged(false);
-
-        setResultConverter(bt -> null);
+        dialogPane.setSpacing(8);
+        dialogPane.getChildren().addAll(title, headerRow, rowsContainer, buttonRow);
     }
 
     private void addParameterRow(String key, String value) {
@@ -112,8 +100,6 @@ public class CustomizeEnvironmentDialog extends Dialog<Environment> {
         ParameterRow row = new ParameterRow("", "", false);
         rowsContainer.getChildren().add(row.container);
 
-        // When user starts typing in the empty row, add it to the tracked list
-        // and create a new empty row
         row.keyField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.isEmpty() && !parameterRows.contains(row)) {
                 parameterRows.add(row);

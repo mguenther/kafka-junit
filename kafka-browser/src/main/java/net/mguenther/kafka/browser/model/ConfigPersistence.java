@@ -26,6 +26,7 @@ public class ConfigPersistence {
     public ConfigPersistence() {
         this.objectMapper = new ObjectMapper();
         this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        this.objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         Path homeDir = Paths.get(System.getProperty("user.home"));
         this.configPath = homeDir.resolve(CONFIG_DIR).resolve(CONFIG_FILE);
     }

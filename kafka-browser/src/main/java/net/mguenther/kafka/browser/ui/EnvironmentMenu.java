@@ -1,73 +1,116 @@
 package net.mguenther.kafka.browser.ui;
 
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SeparatorMenuItem;
+import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Popup;
 import net.mguenther.kafka.browser.model.BrowserConfig;
 import net.mguenther.kafka.browser.model.ConfigPersistence;
 import net.mguenther.kafka.browser.model.Environment;
 import net.mguenther.kafka.browser.model.Workspace;
 
-import java.util.Optional;
-
 /**
- * Context menu shown when clicking the environment selector. Structure:
- * - Activate Environment (section)
- *   - List of available environments (e.g., "Use Localhost", "Use Integration")
- *   - No Environment
- * - Manage Environments (section)
- *   - Edit Configuration
+ * Custom styled dropdown menu for the environment selector.
+ * Renders as a Popup with a VBox styled to match the application theme,
+ * positioned directly below the environment header area.
+ * Opens overlay dialogs within the provided overlay container.
  */
-public class EnvironmentMenu extends ContextMenu {
+public class EnvironmentMenu extends Popup {
 
     private final BrowserConfig config;
     private final ConfigPersistence persistence;
     private final Runnable onChanged;
+    private final StackPane overlayContainer;
 
-    public EnvironmentMenu(BrowserConfig config, ConfigPersistence persistence, Runnable onChanged) {
+    public EnvironmentMenu(BrowserConfig config, ConfigPersistence persistence,
+                           StackPane overlayContainer, Runnable onChanged) {
         this.config = config;
         this.persistence = persistence;
+        this.overlayContainer = overlayContainer;
         this.onChanged = onChanged;
 
-        buildMenu();
+        setAutoHide(true);
+        setAutoFix(true);
+
+        VBox content = buildContent();
+        getContent().add(content);
     }
 
-    private void buildMenu() {
+    private VBox buildContent() {
+        VBox box = new VBox();
+        box.getStyleClass().add("dropdown-menu");
+        box.setPadding(new Insets(8, 0, 8, 0));
+        box.setMinWidth(200);
+
         Workspace active = config.getActiveWorkspace();
 
         // Activate Environment section
-        MenuItem activateHeader = new MenuItem("Activate Environment");
-        activateHeader.setDisable(true);
-        activateHeader.getStyleClass().add("menu-section-header");
-        getItems().add(activateHeader);
+        Label activateHeader = createSectionHeader("Activate Environment");
+        box.getChildren().add(activateHeader);
 
         if (active != null) {
             for (Environment env : active.getEnvironments()) {
-                MenuItem envItem = new MenuItem("Use " + env.getName());
-                envItem.setOnAction(e -> activateEnvironment(env));
-                getItems().add(envItem);
+                Label envItem = createMenuItem("Use " + env.getName());
+                envItem.setOnMouseClicked(e -> { hide(); activateEnvironment(env); });
+                box.getChildren().add(envItem);
             }
         }
 
-        MenuItem noEnvItem = new MenuItem("No Environment");
-        noEnvItem.setOnAction(e -> {
+        Label noEnvItem = createMenuItem("No Environment");
+        noEnvItem.setOnMouseClicked(e -> {
+            hide();
             config.setActiveEnvironmentName(null);
             persistence.save(config);
             onChanged.run();
         });
-        getItems().add(noEnvItem);
+        box.getChildren().add(noEnvItem);
 
-        getItems().add(new SeparatorMenuItem());
+        box.getChildren().add(createSeparator());
 
         // Manage Environments section
-        MenuItem manageHeader = new MenuItem("Manage Environments");
-        manageHeader.setDisable(true);
-        manageHeader.getStyleClass().add("menu-section-header");
-        getItems().add(manageHeader);
+        Label manageHeader = createSectionHeader("Manage Environments");
+        box.getChildren().add(manageHeader);
 
-        MenuItem editConfigItem = new MenuItem("Edit Configuration");
-        editConfigItem.setOnAction(e -> editEnvironmentConfig());
-        getItems().add(editConfigItem);
+        Label editConfigItem = createMenuItem("Edit Configuration");
+        editConfigItem.setOnMouseClicked(e -> { hide(); editEnvironmentConfig(); });
+        box.getChildren().add(editConfigItem);
+
+        return box;
+    }
+
+    private Label createSectionHeader(String text) {
+        Label label = new Label(text);
+        label.getStyleClass().add("dropdown-section-header");
+        label.setPadding(new Insets(6, 16, 2, 16));
+        label.setMaxWidth(Double.MAX_VALUE);
+        return label;
+    }
+
+    private Label createMenuItem(String text) {
+        Label label = new Label(text);
+        label.getStyleClass().add("dropdown-menu-item");
+        label.setPadding(new Insets(6, 16, 6, 16));
+        label.setMaxWidth(Double.MAX_VALUE);
+        label.setCursor(javafx.scene.Cursor.HAND);
+        return label;
+    }
+
+    private Separator createSeparator() {
+        Separator sep = new Separator();
+        sep.getStyleClass().add("dropdown-separator");
+        VBox.setMargin(sep, new Insets(4, 0, 4, 0));
+        return sep;
+    }
+
+    public void showBelow(Node anchor) {
+        Bounds bounds = anchor.localToScreen(anchor.getBoundsInLocal());
+        if (bounds != null) {
+            show(anchor, bounds.getMinX(), bounds.getMaxY());
+        }
     }
 
     private void activateEnvironment(Environment env) {
@@ -79,7 +122,6 @@ public class EnvironmentMenu extends ContextMenu {
     private void editEnvironmentConfig() {
         Environment active = config.getActiveEnvironment();
         if (active == null) {
-            // Create a default environment if none exists
             Workspace ws = config.getActiveWorkspace();
             if (ws == null) return;
             active = new Environment("Global");
@@ -87,19 +129,21 @@ public class EnvironmentMenu extends ContextMenu {
             config.setActiveEnvironmentName("Global");
         }
 
-        CustomizeEnvironmentDialog dialog = new CustomizeEnvironmentDialog(active);
-        Optional<Environment> result = dialog.showAndWait();
-        result.ifPresent(updated -> {
-            Workspace ws = config.getActiveWorkspace();
-            if (ws != null) {
-                // Replace the environment in the workspace
-                ws.getEnvironments().stream()
-                        .filter(e -> e.getName().equals(updated.getName()))
-                        .findFirst()
-                        .ifPresent(existing -> existing.setParameters(updated.getParameters()));
-                persistence.save(config);
-                onChanged.run();
+        final Environment envToEdit = active;
+        CustomizeEnvironmentDialog dialog = new CustomizeEnvironmentDialog(envToEdit);
+        dialog.setOnResult(updated -> {
+            if (updated != null) {
+                Workspace ws = config.getActiveWorkspace();
+                if (ws != null) {
+                    ws.getEnvironments().stream()
+                            .filter(e -> e.getName().equals(updated.getName()))
+                            .findFirst()
+                            .ifPresent(existing -> existing.setParameters(updated.getParameters()));
+                    persistence.save(config);
+                    onChanged.run();
+                }
             }
         });
+        dialog.showIn(overlayContainer);
     }
 }

@@ -17,7 +17,7 @@ import net.mguenther.kafka.browser.service.KafkaBrowserService;
  * - Top: Header bar (workspace selector left, environment selector right)
  * - Left: Icon sidebar (narrow navigation rail)
  * - Center-Left: Topic list panel
- * - Center-Right: Record detail panel (table or search view)
+ * - Center-Right: Record detail panel (table or search view) or Info panel
  */
 public class MainLayout extends BorderPane {
 
@@ -28,9 +28,12 @@ public class MainLayout extends BorderPane {
     private IconSidebar iconSidebar;
     private TopicListPanel topicListPanel;
     private RecordDetailPanel recordDetailPanel;
+    private InfoPanel infoPanel;
+    private HBox splitContent;
     private StackPane contentArea;
 
     private KafkaBrowserService service;
+    private String selectedTopic;
 
     public MainLayout(BrowserConfig config, ConfigPersistence persistence) {
         this.config = config;
@@ -62,17 +65,23 @@ public class MainLayout extends BorderPane {
         contentArea = new StackPane();
         contentArea.getStyleClass().add("content-area");
 
+        // Wire overlay container for in-app dialogs
+        headerBar.setOverlayContainer(contentArea);
+
         if (service != null) {
             buildContentPanels();
+            iconSidebar.setButtonsDisabled(false);
+            topicListPanel.refresh();
         } else {
             showEmptyState();
+            iconSidebar.setButtonsDisabled(true);
         }
 
         setCenter(contentArea);
     }
 
     private void buildContentPanels() {
-        HBox splitContent = new HBox();
+        splitContent = new HBox();
         splitContent.getStyleClass().add("split-content");
 
         topicListPanel = new TopicListPanel(service, this::onTopicSelected);
@@ -82,7 +91,12 @@ public class MainLayout extends BorderPane {
         recordDetailPanel = new RecordDetailPanel(service);
         HBox.setHgrow(recordDetailPanel, Priority.ALWAYS);
 
-        splitContent.getChildren().addAll(topicListPanel, recordDetailPanel);
+        infoPanel = new InfoPanel(service, config);
+        HBox.setHgrow(infoPanel, Priority.ALWAYS);
+        infoPanel.setVisible(false);
+        infoPanel.setManaged(false);
+
+        splitContent.getChildren().addAll(topicListPanel, recordDetailPanel, infoPanel);
         contentArea.getChildren().setAll(splitContent);
     }
 
@@ -110,8 +124,11 @@ public class MainLayout extends BorderPane {
         if (service != null) {
             buildContentPanels();
             topicListPanel.refresh();
+            iconSidebar.setButtonsDisabled(false);
+            iconSidebar.activateBrowse();
         } else {
             showEmptyState();
+            iconSidebar.setButtonsDisabled(true);
         }
     }
 
@@ -125,24 +142,64 @@ public class MainLayout extends BorderPane {
     }
 
     private void onTopicSelected(String topicName) {
+        this.selectedTopic = topicName;
         if (recordDetailPanel != null) {
             recordDetailPanel.showTopic(topicName);
         }
     }
 
     private void onSearchClicked() {
+        showBrowseLayout();
         if (recordDetailPanel != null) {
             recordDetailPanel.showSearchView();
+        }
+        if (topicListPanel != null) {
+            topicListPanel.refresh();
         }
     }
 
     private void onBrowseClicked() {
+        showBrowseLayout();
         if (recordDetailPanel != null) {
             recordDetailPanel.showTableView();
+        }
+        if (topicListPanel != null) {
+            topicListPanel.refresh();
         }
     }
 
     private void onInfoClicked() {
-        // Placeholder for info/about panel
+        showInfoLayout();
+        if (infoPanel != null) {
+            infoPanel.loadInfo();
+        }
+    }
+
+    /**
+     * Shows the browse/search layout (topic list + record detail panel).
+     */
+    private void showBrowseLayout() {
+        if (recordDetailPanel == null) return;
+        topicListPanel.setVisible(true);
+        topicListPanel.setManaged(true);
+        recordDetailPanel.setVisible(true);
+        recordDetailPanel.setManaged(true);
+        if (infoPanel != null) {
+            infoPanel.setVisible(false);
+            infoPanel.setManaged(false);
+        }
+    }
+
+    /**
+     * Shows the info layout (full width, no topic list).
+     */
+    private void showInfoLayout() {
+        if (infoPanel == null) return;
+        topicListPanel.setVisible(false);
+        topicListPanel.setManaged(false);
+        recordDetailPanel.setVisible(false);
+        recordDetailPanel.setManaged(false);
+        infoPanel.setVisible(true);
+        infoPanel.setManaged(true);
     }
 }

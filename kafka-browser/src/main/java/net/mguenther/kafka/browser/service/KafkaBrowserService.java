@@ -98,20 +98,58 @@ public class KafkaBrowserService {
      * Returns up to {@code limit} records.
      */
     public List<KeyValue<String, String>> readRecords(String topic, int partition, long offset, int limit) {
+        return readRecords(topic, partition, offset, limit, null, null);
+    }
+
+    /**
+     * Reads records from a specific topic and partition with custom deserializers.
+     */
+    @SuppressWarnings("unchecked")
+    public List<KeyValue<String, String>> readRecords(String topic, int partition, long offset, int limit,
+                                                      String keyDeserializer, String valueDeserializer) {
         try {
-            ReadKeyValues<String, String> request = ReadKeyValues.from(topic)
+            ReadKeyValues<Object, Object> request = ReadKeyValues.from(topic, Object.class, Object.class)
                     .seekTo(partition, offset)
                     .withLimit(limit)
                     .includeMetadata()
                     .with(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+                    .with(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, deserializerClassName(keyDeserializer))
+                    .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, deserializerClassName(valueDeserializer))
                     .withMaxTotalPollTime(5, TimeUnit.SECONDS)
                     .build();
-            return consumer.read(request);
+
+            List<KeyValue<Object, Object>> raw = consumer.read(request);
+
+            return raw.stream()
+                    .map(kv -> {
+                        String key = kv.getKey() != null ? kv.getKey().toString() : null;
+                        String value = kv.getValue() != null ? kv.getValue().toString() : null;
+                        return new KeyValue<>(key, value, kv.getHeaders(),
+                                kv.getMetadata().orElse(null));
+                    })
+                    .collect(Collectors.toList());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             LOG.error("Interrupted while reading records from topic {}", topic, e);
             return Collections.emptyList();
+        } catch (Exception e) {
+            LOG.error("Failed to read records from topic {} with deserializers key={}, value={}",
+                    topic, keyDeserializer, valueDeserializer, e);
+            throw new DeserializationException("Unable to deserialize records due to mismatching key/value deserializers.", e);
         }
+    }
+    private String deserializerClassName(String shortName) {
+        if (shortName == null || shortName.isEmpty()) return "org.apache.kafka.common.serialization.StringDeserializer";
+        return switch (shortName) {
+            case "String" -> "org.apache.kafka.common.serialization.StringDeserializer";
+            case "Double" -> "org.apache.kafka.common.serialization.DoubleDeserializer";
+            case "Float" -> "org.apache.kafka.common.serialization.FloatDeserializer";
+            case "Integer" -> "org.apache.kafka.common.serialization.IntegerDeserializer";
+            case "Long" -> "org.apache.kafka.common.serialization.LongDeserializer";
+            case "Short" -> "org.apache.kafka.common.serialization.ShortDeserializer";
+            case "UUID" -> "org.apache.kafka.common.serialization.UUIDDeserializer";
+            default -> "org.apache.kafka.common.serialization.StringDeserializer";
+        };
     }
 
     /**
@@ -119,18 +157,41 @@ public class KafkaBrowserService {
      * Returns up to {@code limit} records.
      */
     public List<KeyValue<String, String>> readRecords(String topic, int limit) {
+        return readRecordsAllPartitions(topic, limit, null, null);
+    }
+
+    /**
+     * Reads records from all partitions of a topic with custom deserializers.
+     * Returns up to {@code limit} records.
+     */
+    @SuppressWarnings("unchecked")
+    public List<KeyValue<String, String>> readRecordsAllPartitions(String topic, int limit,
+                                                                    String keyDeserializer, String valueDeserializer) {
         try {
-            ReadKeyValues<String, String> request = ReadKeyValues.from(topic)
+            ReadKeyValues<Object, Object> request = ReadKeyValues.from(topic, Object.class, Object.class)
                     .withLimit(limit)
                     .includeMetadata()
                     .with(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+                    .with(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, deserializerClassName(keyDeserializer))
+                    .with(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, deserializerClassName(valueDeserializer))
                     .withMaxTotalPollTime(5, TimeUnit.SECONDS)
                     .build();
-            return consumer.read(request);
+
+            List<KeyValue<Object, Object>> raw = consumer.read(request);
+            return raw.stream()
+                    .map(kv -> new KeyValue<>(
+                            kv.getKey() != null ? kv.getKey().toString() : null,
+                            kv.getValue() != null ? kv.getValue().toString() : null,
+                            kv.getHeaders(),
+                            kv.getMetadata().orElse(null)))
+                    .collect(Collectors.toList());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             LOG.error("Interrupted while reading records from topic {}", topic, e);
             return Collections.emptyList();
+        } catch (Exception e) {
+            LOG.error("Failed to read records from all partitions of topic {}", topic, e);
+            throw new DeserializationException("Unable to deserialize records due to mismatching key/value deserializers.", e);
         }
     }
 
@@ -171,18 +232,78 @@ public class KafkaBrowserService {
      * Produces a single key-value record to a topic.
      */
     public RecordMetadata produceRecord(String topic, String key, String value) {
+        return produceRecord(topic, key, value, null, null, null);
+    }
+
+    /**
+     * Produces a single key-value record to a topic with custom serializers and headers.
+     * Converts the string input to the appropriate type based on the serializer class.
+     */
+    public RecordMetadata produceRecord(String topic, String key, String value,
+                                        String keySerializer, String valueSerializer,
+                                        java.util.Map<String, String> headers) {
         try {
-            KeyValue<String, String> record = new KeyValue<>(key, value);
-            SendKeyValues<String, String> request = SendKeyValues
-                    .to(topic, Collections.singletonList(record))
-                    .build();
-            List<RecordMetadata> metadata = producer.send(request);
+            Object typedKey = convertToType(key, keySerializer);
+            Object typedValue = convertToType(value, valueSerializer);
+
+            @SuppressWarnings("unchecked")
+            KeyValue<Object, Object> record = new KeyValue<>(typedKey, typedValue);
+            if (headers != null && !headers.isEmpty()) {
+                for (var entry : headers.entrySet()) {
+                    record.addHeader(entry.getKey(), entry.getValue().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                }
+            }
+
+            @SuppressWarnings("unchecked")
+            SendKeyValues.SendKeyValuesBuilder<Object, Object> builder = SendKeyValues
+                    .to(topic, Collections.singletonList(record));
+            if (keySerializer != null && !keySerializer.isEmpty()) {
+                builder.with(org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, keySerializer);
+            }
+            if (valueSerializer != null && !valueSerializer.isEmpty()) {
+                builder.with(org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, valueSerializer);
+            }
+            List<RecordMetadata> metadata = producer.send(builder.build());
             return metadata.isEmpty() ? null : metadata.get(0);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             LOG.error("Interrupted while producing record to topic {}", topic, e);
             return null;
+        } catch (Exception e) {
+            LOG.error("Failed to produce record to topic {}: {}", topic, e.getMessage(), e);
+            throw new RuntimeException("Failed to produce record: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Converts a string input to the appropriate Java type based on the serializer class name.
+     */
+    private Object convertToType(String input, String serializerClass) {
+        if (serializerClass == null || serializerClass.isEmpty() || serializerClass.contains("StringSerializer")) {
+            return input;
+        }
+        if (serializerClass.contains("UUIDSerializer")) {
+            return java.util.UUID.fromString(input);
+        }
+        if (serializerClass.contains("IntegerSerializer")) {
+            return Integer.parseInt(input);
+        }
+        if (serializerClass.contains("LongSerializer")) {
+            return Long.parseLong(input);
+        }
+        if (serializerClass.contains("DoubleSerializer")) {
+            return Double.parseDouble(input);
+        }
+        if (serializerClass.contains("FloatSerializer")) {
+            return Float.parseFloat(input);
+        }
+        if (serializerClass.contains("ShortSerializer")) {
+            return Short.parseShort(input);
+        }
+        if (serializerClass.contains("VoidSerializer")) {
+            return null;
+        }
+        return input;
     }
 
     /**
@@ -249,6 +370,106 @@ public class KafkaBrowserService {
     public String getBootstrapServers() {
         return bootstrapServers;
     }
+
+    /**
+     * Retrieves cluster information: cluster ID, brokers, controller.
+     */
+    public ClusterInfo getClusterInfo() {
+        Properties props = adminProps();
+        try (AdminClient client = AdminClient.create(props)) {
+            org.apache.kafka.clients.admin.DescribeClusterResult result = client.describeCluster();
+            String clusterId = result.clusterId().get(ADMIN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            org.apache.kafka.common.Node controller = result.controller().get(ADMIN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            java.util.Collection<org.apache.kafka.common.Node> nodes = result.nodes().get(ADMIN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+            List<String> brokers = new ArrayList<>();
+            for (org.apache.kafka.common.Node node : nodes) {
+                brokers.add(node.id() + " @ " + node.host() + ":" + node.port());
+            }
+
+            String controllerInfo = controller != null
+                    ? controller.id() + " @ " + controller.host() + ":" + controller.port()
+                    : "unknown";
+
+            int totalTopics = listTopics().size();
+
+            // Detect Kafka version via inter.broker.protocol.version from any broker
+            String kafkaVersion = "unknown";
+            if (!nodes.isEmpty()) {
+                org.apache.kafka.common.Node anyBroker = nodes.iterator().next();
+                org.apache.kafka.common.config.ConfigResource brokerResource =
+                        new org.apache.kafka.common.config.ConfigResource(
+                                org.apache.kafka.common.config.ConfigResource.Type.BROKER,
+                                String.valueOf(anyBroker.id()));
+                try {
+                    org.apache.kafka.clients.admin.Config brokerConfig = client
+                            .describeConfigs(Collections.singletonList(brokerResource))
+                            .all()
+                            .get(ADMIN_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                            .get(brokerResource);
+                    org.apache.kafka.clients.admin.ConfigEntry entry = brokerConfig.get("inter.broker.protocol.version");
+                    if (entry != null && entry.value() != null) {
+                        kafkaVersion = entry.value();
+                    }
+                } catch (Exception ex) {
+                    LOG.warn("Could not fetch inter.broker.protocol.version: {}", ex.getMessage());
+                }
+            }
+
+            return new ClusterInfo(clusterId, brokers, controllerInfo, totalTopics, kafkaVersion);
+        } catch (Exception e) {
+            LOG.error("Failed to get cluster info from {}", bootstrapServers, e);
+            return new ClusterInfo("unavailable", Collections.emptyList(), "unavailable", 0, "unknown");
+        }
+    }
+
+    /**
+     * Holds cluster metadata.
+     */
+    public record ClusterInfo(String clusterId, List<String> brokers, String controller, int totalTopics, String kafkaVersion) {}
+
+    /**
+     * Creates a new topic using the given TopicConfig.
+     */
+    public void createTopic(net.mguenther.kafka.junit.TopicConfig topicConfig) {
+        net.mguenther.kafka.junit.provider.DefaultTopicManager topicManager =
+                new net.mguenther.kafka.junit.provider.DefaultTopicManager(bootstrapServers);
+        topicManager.createTopic(topicConfig);
+    }
+
+    /**
+     * Fetches detailed metadata for a topic: configuration properties and partition/ISR info.
+     */
+    public TopicDetails fetchTopicDetails(String topic) {
+        try {
+            net.mguenther.kafka.junit.provider.DefaultTopicManager topicManager =
+                    new net.mguenther.kafka.junit.provider.DefaultTopicManager(bootstrapServers);
+            java.util.Properties config = topicManager.fetchTopicConfig(topic);
+            java.util.Map<Integer, net.mguenther.kafka.junit.LeaderAndIsr> leaderAndIsr = topicManager.fetchLeaderAndIsr(topic);
+            Map<Integer, Long> endOffsets = getEndOffsets(topic);
+            Map<Integer, Long> beginOffsets = getBeginningOffsets(topic);
+
+            long totalMessages = 0;
+            for (Map.Entry<Integer, Long> entry : endOffsets.entrySet()) {
+                long begin = beginOffsets.getOrDefault(entry.getKey(), 0L);
+                totalMessages += entry.getValue() - begin;
+            }
+
+            return new TopicDetails(config, leaderAndIsr, totalMessages);
+        } catch (Exception e) {
+            LOG.error("Failed to fetch topic details for {}", topic, e);
+            return new TopicDetails(new java.util.Properties(), Collections.emptyMap(), 0);
+        }
+    }
+
+    /**
+     * Holds detailed topic metadata.
+     */
+    public record TopicDetails(
+            java.util.Properties config,
+            java.util.Map<Integer, net.mguenther.kafka.junit.LeaderAndIsr> partitions,
+            long approximateMessageCount
+    ) {}
 
     private Properties adminProps() {
         Properties props = new Properties();
