@@ -111,11 +111,12 @@ public class InfoPanel extends VBox {
         Environment env = config.getActiveEnvironment();
 
         addInfoRow(connectionSection, "Workspace", ws != null ? ws.getName() : "None");
-        addInfoRow(connectionSection, "Bootstrap Servers", ws != null ? ws.getBootstrapServers() : "\u2014");
-        addInfoRow(connectionSection, "Environment", env != null ? env.getName() : "Global");
+        addInfoRow(connectionSection, "Topic Filter", ws != null && !ws.getTopicFilter().isEmpty() ? ws.getTopicFilter() : "All topics");
+        addInfoRow(connectionSection, "Environment", env != null ? env.getName() : "\u2014");
+        addInfoRow(connectionSection, "Bootstrap Servers", env != null ? env.getBootstrapServers() : "\u2014");
 
-        if (env != null && !env.getParameters().isEmpty()) {
-            addInfoRow(connectionSection, "Parameters", env.getParameters().size() + " overrides");
+        if (env != null && env.getSecurityProtocol() != null && !"PLAINTEXT".equals(env.getSecurityProtocol())) {
+            addInfoRow(connectionSection, "Security", env.getSecurityProtocol());
         }
 
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));

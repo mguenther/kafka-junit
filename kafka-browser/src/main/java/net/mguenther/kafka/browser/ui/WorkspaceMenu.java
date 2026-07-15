@@ -152,12 +152,23 @@ public class WorkspaceMenu extends Popup {
         CreateWorkspaceDialog dialog = new CreateWorkspaceDialog();
         dialog.setOnResult(ws -> {
             if (ws != null) {
-                ws.addEnvironment(new Environment("Global"));
                 config.addWorkspace(ws);
                 config.setActiveWorkspaceName(ws.getName());
-                config.setActiveEnvironmentName("Global");
+                config.setActiveEnvironmentName(null);
                 persistence.save(config);
                 onChanged.run();
+
+                // Immediately prompt for environment creation
+                CustomizeEnvironmentDialog envDialog = new CustomizeEnvironmentDialog(null);
+                envDialog.setOnResult(env -> {
+                    if (env != null) {
+                        ws.addEnvironment(env);
+                        config.setActiveEnvironmentName(env.getName());
+                        persistence.save(config);
+                        onChanged.run();
+                    }
+                });
+                envDialog.showIn(overlayContainer);
             }
         });
         dialog.showIn(overlayContainer);
@@ -168,9 +179,7 @@ public class WorkspaceMenu extends Popup {
         dialog.setOnResult(updated -> {
             if (updated != null) {
                 active.setName(updated.getName());
-                active.setBootstrapServers(updated.getBootstrapServers());
-                active.setZookeeperConnectUrl(updated.getZookeeperConnectUrl());
-                active.setKafkaVersion(updated.getKafkaVersion());
+                active.setTopicFilter(updated.getTopicFilter());
                 config.setActiveWorkspaceName(active.getName());
                 persistence.save(config);
                 onChanged.run();

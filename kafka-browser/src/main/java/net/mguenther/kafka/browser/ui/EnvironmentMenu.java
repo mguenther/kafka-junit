@@ -13,6 +13,9 @@ import net.mguenther.kafka.browser.model.ConfigPersistence;
 import net.mguenther.kafka.browser.model.Environment;
 import net.mguenther.kafka.browser.model.Workspace;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Custom styled dropdown menu for the environment selector.
  * Renders as a Popup with a VBox styled to match the application theme,
@@ -44,30 +47,39 @@ public class EnvironmentMenu extends Popup {
         VBox box = new VBox();
         box.getStyleClass().add("dropdown-menu");
         box.setPadding(new Insets(8, 0, 8, 0));
-        box.setMinWidth(200);
+        box.setMinWidth(220);
 
-        Workspace active = config.getActiveWorkspace();
+        Workspace activeWs = config.getActiveWorkspace();
+        Environment activeEnv = config.getActiveEnvironment();
 
-        // Activate Environment section
-        Label activateHeader = createSectionHeader("Activate Environment");
-        box.getChildren().add(activateHeader);
+        // Current environment section
+        if (activeEnv != null) {
+            Label header = createSectionHeader(activeEnv.getName());
+            box.getChildren().add(header);
 
-        if (active != null) {
-            for (Environment env : active.getEnvironments()) {
-                Label envItem = createMenuItem("Use " + env.getName());
+            Label settingsItem = createMenuItem("Environment Settings");
+            settingsItem.setOnMouseClicked(e -> { hide(); editEnvironmentConfig(); });
+            box.getChildren().add(settingsItem);
+
+            box.getChildren().add(createSeparator());
+        }
+
+        // Switch Environment section
+        Label switchHeader = createSectionHeader("Switch Environment");
+        box.getChildren().add(switchHeader);
+
+        if (activeWs != null) {
+            for (Environment env : activeWs.getEnvironments()) {
+                if (activeEnv != null && env.getName().equals(activeEnv.getName())) continue;
+                Label envItem = createMenuItem("To " + env.getName());
                 envItem.setOnMouseClicked(e -> { hide(); activateEnvironment(env); });
                 box.getChildren().add(envItem);
             }
         }
 
-        Label noEnvItem = createMenuItem("No Environment");
-        noEnvItem.setOnMouseClicked(e -> {
-            hide();
-            config.setActiveEnvironmentName(null);
-            persistence.save(config);
-            onChanged.run();
-        });
-        box.getChildren().add(noEnvItem);
+        Label newEnvItem = createMenuItem("New Environment");
+        newEnvItem.setOnMouseClicked(e -> { hide(); createNewEnvironment(); });
+        box.getChildren().add(newEnvItem);
 
         box.getChildren().add(createSeparator());
 
@@ -76,7 +88,7 @@ public class EnvironmentMenu extends Popup {
         box.getChildren().add(manageHeader);
 
         Label editConfigItem = createMenuItem("Edit Configuration");
-        editConfigItem.setOnMouseClicked(e -> { hide(); editEnvironmentConfig(); });
+        editConfigItem.setOnMouseClicked(e -> { hide(); showManageEnvironments(); });
         box.getChildren().add(editConfigItem);
 
         return box;
@@ -119,14 +131,38 @@ public class EnvironmentMenu extends Popup {
         onChanged.run();
     }
 
+    private void createNewEnvironment() {
+        CustomizeEnvironmentDialog dialog = new CustomizeEnvironmentDialog(null);
+        dialog.setOnResult(env -> {
+            if (env != null) {
+                Workspace ws = config.getActiveWorkspace();
+                if (ws != null) {
+                    ws.addEnvironment(env);
+                    config.setActiveEnvironmentName(env.getName());
+                    persistence.save(config);
+                    onChanged.run();
+                }
+            }
+        });
+        dialog.showIn(overlayContainer);
+    }
+
+    private void showManageEnvironments() {
+        ManageEnvironmentsDialog dialog = new ManageEnvironmentsDialog(config, () -> {
+            persistence.save(config);
+            onChanged.run();
+        });
+        dialog.showIn(overlayContainer);
+    }
+
     private void editEnvironmentConfig() {
         Environment active = config.getActiveEnvironment();
         if (active == null) {
             Workspace ws = config.getActiveWorkspace();
             if (ws == null) return;
-            active = new Environment("Global");
+            active = new Environment("Local", "localhost:9092");
             ws.addEnvironment(active);
-            config.setActiveEnvironmentName("Global");
+            config.setActiveEnvironmentName("Local");
         }
 
         final Environment envToEdit = active;
@@ -135,10 +171,16 @@ public class EnvironmentMenu extends Popup {
             if (updated != null) {
                 Workspace ws = config.getActiveWorkspace();
                 if (ws != null) {
-                    ws.getEnvironments().stream()
-                            .filter(e -> e.getName().equals(updated.getName()))
-                            .findFirst()
-                            .ifPresent(existing -> existing.setParameters(updated.getParameters()));
+                    // Replace the environment in the workspace's list
+                    List<Environment> envs = new ArrayList<>(ws.getEnvironments());
+                    for (int i = 0; i < envs.size(); i++) {
+                        if (envs.get(i).getName().equals(envToEdit.getName())) {
+                            envs.set(i, updated);
+                            break;
+                        }
+                    }
+                    ws.setEnvironments(envs);
+                    config.setActiveEnvironmentName(updated.getName());
                     persistence.save(config);
                     onChanged.run();
                 }

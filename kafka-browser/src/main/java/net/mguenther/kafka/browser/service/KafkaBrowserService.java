@@ -1,7 +1,6 @@
 package net.mguenther.kafka.browser.service;
 
 import net.mguenther.kafka.browser.model.Environment;
-import net.mguenther.kafka.browser.model.Workspace;
 import net.mguenther.kafka.junit.KeyValue;
 import net.mguenther.kafka.junit.ReadKeyValues;
 import net.mguenther.kafka.junit.SendKeyValues;
@@ -37,16 +36,13 @@ public class KafkaBrowserService {
     private static final int ADMIN_TIMEOUT_MS = 10_000;
 
     private final String bootstrapServers;
-    private final Properties additionalProps;
+    private final Properties connectionProps;
     private final DefaultRecordConsumer consumer;
     private final DefaultRecordProducer producer;
 
-    public KafkaBrowserService(Workspace workspace, Environment environment) {
-        this.bootstrapServers = workspace.getBootstrapServers();
-        this.additionalProps = new Properties();
-        if (environment != null) {
-            environment.getParameters().forEach(additionalProps::put);
-        }
+    public KafkaBrowserService(Environment environment) {
+        this.bootstrapServers = environment.getBootstrapServers();
+        this.connectionProps = environment.toKafkaProperties();
         this.consumer = new DefaultRecordConsumer(bootstrapServers);
         this.producer = new DefaultRecordProducer(bootstrapServers);
     }
@@ -473,9 +469,9 @@ public class KafkaBrowserService {
 
     private Properties adminProps() {
         Properties props = new Properties();
+        props.putAll(connectionProps);
         props.put("bootstrap.servers", bootstrapServers);
         props.put("client.id", "kafka-browser-admin");
-        props.putAll(additionalProps);
         return props;
     }
 }

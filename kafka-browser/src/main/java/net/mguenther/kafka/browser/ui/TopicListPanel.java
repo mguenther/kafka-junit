@@ -31,6 +31,7 @@ import java.util.function.Consumer;
 public class TopicListPanel extends VBox {
 
     private KafkaBrowserService service;
+    private net.mguenther.kafka.browser.model.Workspace workspace;
     private final Consumer<String> onTopicSelected;
 
     private Label topicCountLabel;
@@ -42,8 +43,9 @@ public class TopicListPanel extends VBox {
 
     private List<TopicInfo> allTopics = new ArrayList<>();
 
-    public TopicListPanel(KafkaBrowserService service, Consumer<String> onTopicSelected) {
+    public TopicListPanel(KafkaBrowserService service, net.mguenther.kafka.browser.model.Workspace workspace, Consumer<String> onTopicSelected) {
         this.service = service;
+        this.workspace = workspace;
         this.onTopicSelected = onTopicSelected;
 
         getStyleClass().add("topic-list-panel");
@@ -118,15 +120,24 @@ public class TopicListPanel extends VBox {
 
         Thread thread = new Thread(() -> {
             List<TopicInfo> topics = service.listTopics();
+
+            // Apply workspace topic filter
+            if (workspace != null) {
+                topics = topics.stream()
+                        .filter(t -> workspace.matchesTopic(t.getName()))
+                        .collect(java.util.stream.Collectors.toList());
+            }
+
             // Auto-detect formats
             TopicFormatDetector detector = new TopicFormatDetector(service.getBootstrapServers());
             for (TopicInfo topic : topics) {
                 String format = detector.detect(topic.getName());
                 topic.setFormat(format);
             }
+            final List<TopicInfo> finalTopics = topics;
             Platform.runLater(() -> {
-                allTopics = topics;
-                topicCountLabel.setText(topics.size() + (topics.size() == 1 ? " TOPIC" : " TOPICS"));
+                allTopics = finalTopics;
+                topicCountLabel.setText(finalTopics.size() + (finalTopics.size() == 1 ? " TOPIC" : " TOPICS"));
                 loadingIndicator.setVisible(false);
                 applyFilter(filterField.getText());
             });
@@ -164,6 +175,10 @@ public class TopicListPanel extends VBox {
 
     public void setService(KafkaBrowserService service) {
         this.service = service;
+    }
+
+    public void setWorkspace(net.mguenther.kafka.browser.model.Workspace workspace) {
+        this.workspace = workspace;
     }
 
     private void showCreateTopicDialog() {

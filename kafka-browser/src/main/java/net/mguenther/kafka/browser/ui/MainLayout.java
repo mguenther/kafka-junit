@@ -9,6 +9,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import net.mguenther.kafka.browser.model.BrowserConfig;
 import net.mguenther.kafka.browser.model.ConfigPersistence;
+import net.mguenther.kafka.browser.model.Environment;
 import net.mguenther.kafka.browser.model.Workspace;
 import net.mguenther.kafka.browser.service.KafkaBrowserService;
 
@@ -47,8 +48,11 @@ public class MainLayout extends BorderPane {
 
     private void initializeService() {
         Workspace ws = config.getActiveWorkspace();
-        if (ws != null) {
-            service = new KafkaBrowserService(ws, config.getActiveEnvironment());
+        Environment env = config.getActiveEnvironment();
+        if (ws != null && env != null && !env.getBootstrapServers().isEmpty()) {
+            service = new KafkaBrowserService(env);
+        } else {
+            service = null;
         }
     }
 
@@ -84,7 +88,9 @@ public class MainLayout extends BorderPane {
         splitContent = new HBox();
         splitContent.getStyleClass().add("split-content");
 
-        topicListPanel = new TopicListPanel(service, this::onTopicSelected);
+        Workspace ws = config.getActiveWorkspace();
+
+        topicListPanel = new TopicListPanel(service, ws, this::onTopicSelected);
         topicListPanel.setPrefWidth(400);
         topicListPanel.setMinWidth(300);
 
@@ -107,11 +113,22 @@ public class MainLayout extends BorderPane {
 
         StackPane card = new StackPane();
         card.getStyleClass().add("empty-state-card");
-        card.setMaxWidth(500);
+        card.setMaxWidth(550);
         card.setMaxHeight(80);
 
-        Label message = new Label("You have not configured a workspace yet.");
+        Workspace ws = config.getActiveWorkspace();
+        String messageText;
+        if (ws == null) {
+            messageText = "You have not configured a workspace yet.";
+        } else if (ws.getEnvironments().isEmpty() || config.getActiveEnvironment() == null) {
+            messageText = "No environment configured. Add an environment to connect to a Kafka cluster.";
+        } else {
+            messageText = "Unable to connect. Check your environment settings.";
+        }
+
+        Label message = new Label(messageText);
         message.getStyleClass().add("empty-state-message");
+        message.setWrapText(true);
         card.getChildren().add(message);
 
         emptyState.getChildren().add(card);

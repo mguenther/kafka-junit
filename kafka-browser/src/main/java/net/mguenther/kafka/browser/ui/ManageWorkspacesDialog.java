@@ -77,7 +77,7 @@ public class ManageWorkspacesDialog extends OverlayDialog<Void> {
             Label nameLabel = new Label(ws.getName());
             nameLabel.getStyleClass().add("manage-workspace-name");
 
-            Label detailLabel = new Label(ws.getBootstrapServers());
+            Label detailLabel = new Label(ws.getTopicFilter().isEmpty() ? "All topics" : "Filter: " + ws.getTopicFilter());
             detailLabel.getStyleClass().add("manage-workspace-detail");
 
             info.getChildren().addAll(nameLabel, detailLabel);
@@ -106,9 +106,7 @@ public class ManageWorkspacesDialog extends OverlayDialog<Void> {
             editDialog.setOnResult(updated -> {
                 if (updated != null) {
                     ws.setName(updated.getName());
-                    ws.setBootstrapServers(updated.getBootstrapServers());
-                    ws.setZookeeperConnectUrl(updated.getZookeeperConnectUrl());
-                    ws.setKafkaVersion(updated.getKafkaVersion());
+                    ws.setTopicFilter(updated.getTopicFilter());
                     rebuildList();
                     onChanged.run();
                 }
