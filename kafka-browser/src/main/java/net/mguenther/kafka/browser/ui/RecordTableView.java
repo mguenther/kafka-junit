@@ -72,10 +72,7 @@ public class RecordTableView extends VBox {
         topicHeaderLabel.getStyleClass().add("record-topic-header");
         HBox.setHgrow(topicHeaderLabel, Priority.ALWAYS);
 
-        Button settingsBtn = new Button("\uD83D\uDD27");
-        settingsBtn.getStyleClass().add("settings-button");
-
-        headerRow.getChildren().addAll(topicHeaderLabel, settingsBtn);
+        headerRow.getChildren().addAll(topicHeaderLabel);
 
         // Controls row: filter toggle, partition, seek
         HBox controlsRow = new HBox(8);

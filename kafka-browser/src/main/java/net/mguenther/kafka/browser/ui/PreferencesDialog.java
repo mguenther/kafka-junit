@@ -4,7 +4,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
@@ -27,7 +26,6 @@ public class PreferencesDialog extends OverlayDialog<Map<String, String>> {
     private Spinner<Integer> pageSizeSpinner;
     private Spinner<Integer> pollTimeoutSpinner;
     private CheckBox autoDetectFormatCheckBox;
-    private ComboBox<String> themeSelector;
 
     public PreferencesDialog(Map<String, String> currentPrefs) {
         super();
@@ -69,18 +67,6 @@ public class PreferencesDialog extends OverlayDialog<Map<String, String>> {
         autoDetectFormatCheckBox.getStyleClass().add("dialog-checkbox");
         autoDetectFormatCheckBox.setSelected(!"false".equals(currentPrefs.getOrDefault("autoDetectFormat", "true")));
 
-        // Theme
-        Label themeLabel = new Label("Theme");
-        themeLabel.getStyleClass().add("dialog-field-label");
-        themeSelector = new ComboBox<>();
-        themeSelector.getItems().addAll("Dark", "Light");
-        themeSelector.setValue(currentPrefs.getOrDefault("theme", "Dark"));
-        themeSelector.getStyleClass().add("dialog-combo-box");
-
-        HBox themeRow = new HBox(15);
-        themeRow.setAlignment(Pos.CENTER_LEFT);
-        themeRow.getChildren().addAll(themeLabel, themeSelector);
-
         // Buttons
         HBox buttonRow = new HBox(10);
         buttonRow.setAlignment(Pos.CENTER_RIGHT);
@@ -97,7 +83,6 @@ public class PreferencesDialog extends OverlayDialog<Map<String, String>> {
             prefs.put("pageSize", String.valueOf(pageSizeSpinner.getValue()));
             prefs.put("pollTimeout", String.valueOf(pollTimeoutSpinner.getValue()));
             prefs.put("autoDetectFormat", String.valueOf(autoDetectFormatCheckBox.isSelected()));
-            prefs.put("theme", themeSelector.getValue());
             close(prefs);
         });
 
@@ -109,7 +94,6 @@ public class PreferencesDialog extends OverlayDialog<Map<String, String>> {
                 pageSizeRow,
                 pollTimeoutRow,
                 autoDetectFormatCheckBox,
-                themeRow,
                 buttonRow
         );
     }

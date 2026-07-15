@@ -49,10 +49,7 @@ public class RecordSearchView extends VBox {
         topicHeaderLabel.getStyleClass().add("record-topic-header");
         HBox.setHgrow(topicHeaderLabel, Priority.ALWAYS);
 
-        Button settingsBtn = new Button("\uD83D\uDD27");
-        settingsBtn.getStyleClass().add("settings-button");
-
-        headerRow.getChildren().addAll(topicHeaderLabel, settingsBtn);
+        headerRow.getChildren().addAll(topicHeaderLabel);
 
         // Search bar
         HBox searchRow = new HBox(10);

@@ -864,6 +864,28 @@
     -fx-border-radius: 3;
 }
 
+.save-feedback-success {
+    -fx-text-fill: #2d8a2d;
+    -fx-font-size: 12px;
+    -fx-padding: 6 10;
+    -fx-background-color: #e8f5e8;
+    -fx-background-radius: 3;
+    -fx-border-color: #2d8a2d;
+    -fx-border-radius: 3;
+    -fx-border-width: 1;
+}
+
+.save-feedback-error {
+    -fx-text-fill: #cc8800;
+    -fx-font-size: 12px;
+    -fx-padding: 6 10;
+    -fx-background-color: #fff8e0;
+    -fx-background-radius: 3;
+    -fx-border-color: #cc8800;
+    -fx-border-radius: 3;
+    -fx-border-width: 1;
+}
+
 /* === Dialogs === */
 .overlay-backdrop {
     -fx-background-color: rgba(0, 0, 0, 0.5);

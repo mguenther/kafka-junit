@@ -104,17 +104,81 @@ public class RecordDetailDialog extends OverlayDialog<Void> {
 
         dialogPane.getChildren().addAll(valueLabel, valueArea);
 
-        // Close button
-        HBox buttonRow = new HBox();
+        // Feedback label (hidden until save is attempted)
+        Label feedbackLabel = new Label();
+        feedbackLabel.setWrapText(true);
+        feedbackLabel.setVisible(false);
+        feedbackLabel.setManaged(false);
+        dialogPane.getChildren().add(feedbackLabel);
+
+        // Buttons
+        HBox buttonRow = new HBox(10);
         buttonRow.setAlignment(Pos.CENTER_RIGHT);
         buttonRow.setPadding(new Insets(10, 0, 0, 0));
+
+        Button saveBtn = new Button("Save");
+        saveBtn.getStyleClass().add("dialog-save-button");
+        saveBtn.setOnAction(e -> saveRecord(topicName, key, value, feedbackLabel));
 
         Button closeBtn = new Button("Close");
         closeBtn.getStyleClass().add("dialog-cancel-button");
         closeBtn.setOnAction(e -> close(null));
 
-        buttonRow.getChildren().add(closeBtn);
+        buttonRow.getChildren().addAll(saveBtn, closeBtn);
         dialogPane.getChildren().add(buttonRow);
+    }
+
+    private void saveRecord(String topic, String key, String value, Label feedbackLabel) {
+        String sanitizedKey = sanitizeFilename(key != null && !key.isEmpty() ? key : "null");
+        String extension = looksLikeJson(value) ? ".json" : ".txt";
+        String suggestedName = topic + "_" + sanitizedKey + extension;
+
+        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+        fileChooser.setTitle("Save Record");
+        fileChooser.setInitialFileName(suggestedName);
+        if (extension.equals(".json")) {
+            fileChooser.getExtensionFilters().add(
+                    new javafx.stage.FileChooser.ExtensionFilter("JSON files", "*.json"));
+        }
+        fileChooser.getExtensionFilters().add(
+                new javafx.stage.FileChooser.ExtensionFilter("Text files", "*.txt"));
+        fileChooser.getExtensionFilters().add(
+                new javafx.stage.FileChooser.ExtensionFilter("All files", "*.*"));
+
+        javafx.stage.Window window = getScene() != null ? getScene().getWindow() : null;
+        java.io.File file = fileChooser.showSaveDialog(window);
+        if (file != null) {
+            try {
+                String contentToSave = looksLikeJson(value) ? formatValue(value) : value;
+                java.nio.file.Files.writeString(file.toPath(), contentToSave);
+                showFeedback(feedbackLabel, "\u2713 Record saved to " + file.getName(), true);
+            } catch (java.io.IOException ex) {
+                showFeedback(feedbackLabel, "\u26A0 Failed to save record: " + ex.getMessage(), false);
+            }
+        }
+    }
+
+    private void showFeedback(Label label, String message, boolean success) {
+        label.setText(message);
+        label.getStyleClass().removeAll("save-feedback-success", "save-feedback-error");
+        label.getStyleClass().add(success ? "save-feedback-success" : "save-feedback-error");
+        label.setVisible(true);
+        label.setManaged(true);
+    }
+
+    private String sanitizeFilename(String name) {
+        String sanitized = name.replaceAll("[\\\\/:*?\"<>|]", "_");
+        if (sanitized.length() > 80) {
+            sanitized = sanitized.substring(0, 80);
+        }
+        return sanitized;
+    }
+
+    private boolean looksLikeJson(String value) {
+        if (value == null || value.isBlank()) return false;
+        String trimmed = value.trim();
+        return (trimmed.startsWith("{") && trimmed.endsWith("}"))
+                || (trimmed.startsWith("[") && trimmed.endsWith("]"));
     }
 
     private String formatValue(String value) {
